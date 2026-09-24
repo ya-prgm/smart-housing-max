@@ -1,46 +1,63 @@
+version: '3.8'
+
 services:
-  db:
+  postgres:
     image: postgres:16-alpine
-    restart: unless-stopped
+    container_name: max_postgres
+    restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: ${POSTGRES_DB:-smart_housing}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smart_housing_secure_db_password_2026}
     volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-smart_housing}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app_network
 
   backend:
-    build: ./backend
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: max_backend
+    restart: always
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      BOT_TOKEN: ${BOT_TOKEN}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_ALGORITHM: ${JWT_ALGORITHM}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
-      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-smart_housing_secure_db_password_2026}@postgres:5432/${POSTGRES_DB:-smart_housing}
     volumes:
-      - ./backend/data/uploads:/app/data/uploads
+      - uploads_data:/app/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app_network
 
   frontend:
-    build: ./frontend
-    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: max_frontend
+    restart: always
+    ports:
+      # Пробрасываем порт 3000 для хостового Nginx
+      - "${HTTP_PORT:-3000}:80"
     depends_on:
       - backend
-    ports:
-      - "${FRONTEND_PORT:-80}:80"
+    networks:
+      - app_network
 
 volumes:
-  pgdata:
+  postgres_data:
+    name: max_postgres_data
+  uploads_data:
+    name: max_uploads_data
+
+networks:
+  app_network:
+    name: max_network
+    driver: bridge
