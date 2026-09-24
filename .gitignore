@@ -69,9 +69,9 @@ backend/data/*.db
 backend/data/*.sqlite3
 pgdata/
 
-backend/data/uploads/**/*
-!backend/data/uploads/**/.gitkeep
-!backend/data/uploads/**/.gitignore
+backend/data/uploads *
+!backend/data/uploads .gitkeep
+!backend/data/uploads .gitignore
 !backend/data/uploads/demo/**
 
 node_modules/
@@ -170,8 +170,8 @@ max_token.txt
 *.csv
 *.xlsx
 *.parquet
-!docs/**/*.csv
-!docs/**/*.xlsx
+!docs *.csv
+!docs *.xlsx
 
 docs/presentation.pdf
 !docs/presentation.final.pdf
