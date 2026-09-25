@@ -169,7 +169,7 @@ export const WelcomePage: React.FC = () => {
                 </div>
                 <div className="flex flex-col min-w-0 pt-0.5">
                   <div className="text-[16px] font-semibold text-on-surface mb-0.5">
-                    Заявки в УО и РСО
+                    Обращения в УО и РСО
                   </div>
                   <p className="text-[13px] text-[#3e4850] leading-snug">
                     Быстрая подача обращений в УК/УО/ТСЖ и РСО с возможностью фото-фиксации проблемы.

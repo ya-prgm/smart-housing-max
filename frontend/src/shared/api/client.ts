@@ -18,6 +18,7 @@ export const getAccessToken = (): string | null => {
       return val;
     }
   }
+  
   return localStorage.getItem('access_token');
 };
 

@@ -5,6 +5,11 @@ import { LoginPage } from './features/auth/pages/LoginPage';
 import { PinSetupPage } from './features/auth/pages/PinSetupPage';
 import { PinEnterPage } from './features/auth/pages/PinEnterPage';
 import { PinResetPage } from './features/auth/pages/PinResetPage';
+import { MobileLayout } from './features/mobile/layouts/MobileLayout';
+import { FeedPage } from './features/mobile/feed/pages/FeedPage';
+import { PostDetailsPage } from './features/mobile/feed/pages/PostDetailsPage';
+import { TicketsPage } from './features/mobile/tickets/pages/TicketsPage';
+import { NewTicketPage } from './features/mobile/tickets/pages/NewTicketPage';
 
 export const App: React.FC = () => {
   useEffect(() => {
@@ -30,18 +35,21 @@ export const App: React.FC = () => {
       }}
     >
       <Routes>
-         
         <Route path="/" element={<WelcomePage />} />
         <Route path="/welcome" element={<WelcomePage />} />
-
-         
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/pin-setup" element={<PinSetupPage />} />
         <Route path="/auth/pin-enter" element={<PinEnterPage />} />
         <Route path="/auth/pin-reset" element={<PinResetPage />} />
-
-         
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/feed/:id" element={<PostDetailsPage />} />
+        <Route path="/tickets/new" element={<NewTicketPage />} />
+        <Route element={<MobileLayout />}>
+          <Route path="/feed" element={<FeedPage />} />
+          <Route path="/tickets" element={<TicketsPage />} />
+          <Route path="/votes" element={<div className="p-6 text-center text-slate-500">Раздел «Опросы»</div>} />
+          <Route path="/profile" element={<div className="p-6 text-center text-slate-500">Раздел «Профиль»</div>} />
+        </Route>
+        <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>
     </BrowserRouter>
   );
