@@ -17,6 +17,8 @@ import { VoteFinishPage } from './features/mobile/votes/pages/VoteFinishPage';
 import { ProfilePage } from './features/mobile/profile/pages/ProfilePage';
 import { HouseInfoPage } from './features/mobile/profile/pages/HouseInfoPage';
 import { NotificationsPage } from './features/mobile/notifications/pages/NotificationsPage';
+import { HousesListPage } from './features/uk/houses/pages/HousesListPage';
+import { DashboardPage } from './features/uk/dashboard/DashboardPage';
 
 export const App: React.FC = () => {
   useEffect(() => {
@@ -55,6 +57,9 @@ export const App: React.FC = () => {
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
         <Route path="/profile/house" element={<HouseInfoPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/uk" element={<HousesListPage />} />
+        <Route path="/uk/houses" element={<HousesListPage />} />
+        <Route path="/uk/dashboard" element={<DashboardPage />} />
         <Route element={<MobileLayout />}>
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
