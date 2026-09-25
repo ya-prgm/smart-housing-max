@@ -10,6 +10,10 @@ import { FeedPage } from './features/mobile/feed/pages/FeedPage';
 import { PostDetailsPage } from './features/mobile/feed/pages/PostDetailsPage';
 import { TicketsPage } from './features/mobile/tickets/pages/TicketsPage';
 import { NewTicketPage } from './features/mobile/tickets/pages/NewTicketPage';
+import { VotesPage } from './features/mobile/votes/pages/VotesPage';
+import { VoteDetailsPage } from './features/mobile/votes/pages/VoteDetailsPage';
+import { VoteStepPage } from './features/mobile/votes/pages/VoteStepPage';
+import { VoteFinishPage } from './features/mobile/votes/pages/VoteFinishPage';
 
 export const App: React.FC = () => {
   useEffect(() => {
@@ -43,12 +47,16 @@ export const App: React.FC = () => {
         <Route path="/auth/pin-reset" element={<PinResetPage />} />
         <Route path="/feed/:id" element={<PostDetailsPage />} />
         <Route path="/tickets/new" element={<NewTicketPage />} />
+        <Route path="/votes/:id" element={<VoteDetailsPage />} />
+        <Route path="/votes/:id/step" element={<VoteStepPage />} />
+        <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
         <Route element={<MobileLayout />}>
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
-          <Route path="/votes" element={<div className="p-6 text-center text-slate-500">Раздел «Опросы»</div>} />
+          <Route path="/votes" element={<VotesPage />} />
           <Route path="/profile" element={<div className="p-6 text-center text-slate-500">Раздел «Профиль»</div>} />
         </Route>
+
         <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>
     </BrowserRouter>
