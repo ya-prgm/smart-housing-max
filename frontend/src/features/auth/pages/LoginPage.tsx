@@ -24,6 +24,15 @@ export const LoginPage: React.FC = () => {
     impact('medium');
     setIsLoading(true);
 
+    const chairmanProfile = {
+      fullName: 'Елена Смирнова',
+      role: 'chairman',
+      roleLabel: 'Председатель',
+      houseAddress: 'ул. Баумана, д. 12',
+      apartment: '48',
+    };
+    localStorage.setItem('current_user', JSON.stringify(chairmanProfile));
+
     try {
       await authApi.loginWithEsia(identifier, password);
       notification('success');
@@ -47,10 +56,7 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="bg-[#18181b] sm:bg-[#E2E7EE] flex justify-center items-center min-h-screen p-0 sm:p-4 font-sans antialiased text-gray-900 select-none">
-       
       <main className="w-full max-w-[412px] h-[100dvh] sm:h-[860px] bg-white sm:bg-[#EEF2F6] flex flex-col justify-between shadow-2xl relative sm:rounded-[36px] overflow-hidden sm:border sm:border-slate-300">
-        
-         
         <header className="w-full flex items-center px-4 pt-3 pb-1 z-10">
           <button
             type="button"
@@ -70,9 +76,7 @@ export const LoginPage: React.FC = () => {
         </header>
 
         {viewMode === 'welcome' ? (
-           
           <div className="flex-1 flex flex-col items-center justify-center px-6 -mt-12">
-             
             <div className="w-32 h-32 mb-6 flex items-center justify-center">
               <img
                 alt="Госуслуги"
@@ -81,16 +85,13 @@ export const LoginPage: React.FC = () => {
               />
             </div>
 
-             
             <h1 className="text-[22px] sm:text-[23px] font-semibold text-gray-900 text-center tracking-tight mb-8">
               Войдите через Госуслуги
             </h1>
 
-             
             <div className="w-full max-w-[340px] flex flex-col items-center gap-4">
               <EsiaButton onClick={handleStartLogin} text="По логину и паролю" />
 
-               
               <p className="text-center text-[13.5px] leading-[1.4] text-gray-500 font-normal px-2">
                 Для авторизации нужна подтверждённая учётная запись.{' '}
                 <a
@@ -107,10 +108,8 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
         ) : (
-           
           <div className="flex-1 px-3.5 pt-1 pb-4 flex flex-col justify-start overflow-y-auto">
             <div className="w-full bg-white rounded-[22px] border border-[#D5DCE5] shadow-sm px-5 py-6 flex flex-col items-center">
-               
               <div className="w-full max-w-[210px] my-1 flex justify-center items-center">
                 <img
                   alt="Госуслуги"
@@ -119,7 +118,6 @@ export const LoginPage: React.FC = () => {
                 />
               </div>
 
-               
               <button
                 type="button"
                 className="mt-2.5 mb-5 inline-flex items-center space-x-1.5 text-[13px] font-medium text-slate-600 hover:text-slate-900 transition cursor-pointer"
@@ -128,7 +126,6 @@ export const LoginPage: React.FC = () => {
                 <span className="w-2.5 h-2.5 rounded-full border border-slate-300 bg-white shadow-inner" />
               </button>
 
-               
               <form className="w-full flex flex-col" onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label
