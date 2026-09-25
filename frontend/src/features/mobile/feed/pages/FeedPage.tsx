@@ -93,11 +93,12 @@ export const FeedPage: React.FC = () => {
               <button
                 type="button"
                 aria-label="Уведомления"
-                className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 border border-slate-200/60 flex items-center justify-center text-slate-700 transition-all"
+                onClick={() => navigate('/notifications')}
+                className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 border border-slate-200/60 flex items-center justify-center text-slate-700 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[20px]">notifications</span>
               </button>
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white"></span>
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
             </div>
           </div>
 

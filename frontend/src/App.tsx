@@ -14,6 +14,9 @@ import { VotesPage } from './features/mobile/votes/pages/VotesPage';
 import { VoteDetailsPage } from './features/mobile/votes/pages/VoteDetailsPage';
 import { VoteStepPage } from './features/mobile/votes/pages/VoteStepPage';
 import { VoteFinishPage } from './features/mobile/votes/pages/VoteFinishPage';
+import { ProfilePage } from './features/mobile/profile/pages/ProfilePage';
+import { HouseInfoPage } from './features/mobile/profile/pages/HouseInfoPage';
+import { NotificationsPage } from './features/mobile/notifications/pages/NotificationsPage';
 
 export const App: React.FC = () => {
   useEffect(() => {
@@ -50,13 +53,14 @@ export const App: React.FC = () => {
         <Route path="/votes/:id" element={<VoteDetailsPage />} />
         <Route path="/votes/:id/step" element={<VoteStepPage />} />
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
+        <Route path="/profile/house" element={<HouseInfoPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route element={<MobileLayout />}>
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
           <Route path="/votes" element={<VotesPage />} />
-          <Route path="/profile" element={<div className="p-6 text-center text-slate-500">Раздел «Профиль»</div>} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
-
         <Route path="*" element={<Navigate to="/feed" replace />} />
       </Routes>
     </BrowserRouter>
