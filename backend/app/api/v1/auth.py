@@ -1,6 +1,6 @@
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -13,47 +13,62 @@ from app.core.security import (
     check_auth_date,
     hash_pin,
     verify_pin,
+    verify_password,
 )
 from app.api.deps import get_current_user
-from app.models.user import User, UserPin, RefreshToken, UserRole
+from app.models.user import User, UserPin, RefreshToken, UserApartment
+from app.models.house import Apartment
+from app.core.constants import UserRole
+from app.schemas.auth import (
+    MaxLoginRequest,
+    EsiaLoginRequest,
+    RefreshTokenRequest,
+    PinSetupRequest,
+    PinVerifyRequest,
+    LoginResponse,
+    AuthUser,
+    AuthTokens,
+)
 
 router = APIRouter()
 
 
-class MaxLoginRequest(BaseModel):
-    initData: str
+async def build_login_response(user: User, db: AsyncSession) -> LoginResponse:
+    token_data = {"sub": str(user.max_user_id), "role": user.role.value}
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
 
+    refresh_expiry = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    db.add(RefreshToken(user_id=user.id, token_hash=refresh_token, expires_at=refresh_expiry))
+    await db.commit()
 
-class RefreshTokenRequest(BaseModel):
-    refreshToken: str
+    house_id = None
+    house_address = None
+    apt_number = None
 
+    if user.apartments:
+        ua = user.apartments[0]
+        apt_stmt = select(Apartment).where(Apartment.id == ua.apartment_id).options(selectinload(Apartment.house))
+        apt = (await db.execute(apt_stmt)).scalars().first()
+        if apt:
+            house_id = apt.house_id
+            apt_number = apt.number
+            if apt.house:
+                house_address = apt.house.address
 
-class PinSetupRequest(BaseModel):
-    pin: str
-
-
-class PinVerifyRequest(BaseModel):
-    pin: str
-
-
-class AuthUser(BaseModel):
-    id: int
-    maxUserId: int
-    fullName: str
-    role: UserRole
-    houseId: int | None = 1
-    apartmentNumber: str | None = "48"
-
-
-class AuthTokens(BaseModel):
-    accessToken: str
-    refreshToken: str
-
-
-class LoginResponse(BaseModel):
-    tokens: AuthTokens
-    user: AuthUser
-    hasPin: bool
+    return LoginResponse(
+        tokens=AuthTokens(accessToken=access_token, refreshToken=refresh_token),
+        user=AuthUser(
+            id=user.id,
+            max_user_id=user.max_user_id,
+            full_name=user.full_name,
+            role=user.role,
+            house_id=house_id,
+            house_address=house_address,
+            apartment_number=apt_number,
+        ),
+        hasPin=bool(user.pin is not None),
+    )
 
 
 @router.post("/max-login", response_model=LoginResponse)
@@ -102,25 +117,47 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
         db.add(user)
         await db.flush()
 
-    token_data = {"sub": str(user.max_user_id), "role": user.role.value}
-    access_token = create_access_token(token_data)
-    refresh_token = create_refresh_token(token_data)
+    return await build_login_response(user, db)
 
-    db.add(RefreshToken(user_id=user.id, token_hash=refresh_token, expires_at=settings.REFRESH_TOKEN_EXPIRE_DAYS))
-    await db.commit()
 
-    return LoginResponse(
-        tokens=AuthTokens(accessToken=access_token, refreshToken=refresh_token),
-        user=AuthUser(
-            id=user.id,
-            maxUserId=user.max_user_id,
-            fullName=user.full_name,
-            role=user.role,
-            houseId=1,
-            apartmentNumber="48",
-        ),
-        hasPin=bool(user.pin is not None),
+@router.post(
+    "/esia-login",
+    response_model=LoginResponse,
+    summary="Login ESIA (MOCK)",
+    description="Имитация входа через ЕСИА (Госуслуги). Реальная интеграция требует аккредитации в Минцифры и подключения к СМЭВ ЕСИА. Для демонстрации используются тестовые учётные записи."
+)
+async def login_esia(payload: EsiaLoginRequest, db: AsyncSession = Depends(get_db)):
+    clean_identifier = payload.identifier.strip()
+    compact_identifier = clean_identifier.replace(" ", "").replace("-", "")
+
+    stmt = (
+        select(User)
+        .where(
+            or_(
+                User.snils == clean_identifier,
+                User.snils == compact_identifier,
+                User.phone == clean_identifier,
+                User.phone == compact_identifier,
+                User.email == clean_identifier.lower(),
+            )
+        )
+        .options(selectinload(User.pin), selectinload(User.apartments))
     )
+    user = (await db.execute(stmt)).scalars().first()
+
+    if not user or not user.is_active or not user.esia_password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}},
+        )
+
+    if not verify_password(payload.password, user.esia_password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}},
+        )
+
+    return await build_login_response(user, db)
 
 
 @router.post("/refresh", response_model=AuthTokens)
@@ -142,7 +179,8 @@ async def refresh_tokens(payload: RefreshTokenRequest, db: AsyncSession = Depend
     new_access = create_access_token({"sub": str(user.max_user_id), "role": user.role.value})
     new_refresh = create_refresh_token({"sub": str(user.max_user_id), "role": user.role.value})
 
-    db.add(RefreshToken(user_id=user.id, token_hash=new_refresh, expires_at=settings.REFRESH_TOKEN_EXPIRE_DAYS))
+    refresh_expiry = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    db.add(RefreshToken(user_id=user.id, token_hash=new_refresh, expires_at=refresh_expiry))
     await db.commit()
 
     return AuthTokens(accessToken=new_access, refreshToken=new_refresh)

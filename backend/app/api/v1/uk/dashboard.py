@@ -1,7 +1,8 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.api.deps import require_roles
@@ -10,7 +11,8 @@ from app.models.house import House, Apartment
 from app.models.ticket import Ticket, TicketStatus
 from app.models.vote import Poll, PollStatus
 from app.models.feed import FeedPost
-from app.schemas.uk import UkDashboardResponse, RecentActivityItem
+from app.core.constants import ActivityType
+from app.schemas.uk import UkDashboardResponse, TicketsByStatus, RecentActivityItem
 
 router = APIRouter()
 
@@ -41,21 +43,21 @@ async def get_dashboard(
         select(func.count(FeedPost.id)).where(FeedPost.created_at >= today_start, FeedPost.is_deleted == False)
     )).scalar() or 0
 
-    status_counts = {}
-    for st in TicketStatus:
-        cnt = (await db.execute(
-            select(func.count(Ticket.id)).where(Ticket.status == st, Ticket.is_deleted == False)
-        )).scalar() or 0
-        status_counts[st.value] = cnt
+    status_counts = TicketsByStatus(
+        active=(await db.execute(select(func.count(Ticket.id)).where(Ticket.status == TicketStatus.ACTIVE, Ticket.is_deleted == False))).scalar() or 0,
+        in_progress=(await db.execute(select(func.count(Ticket.id)).where(Ticket.status == TicketStatus.IN_PROGRESS, Ticket.is_deleted == False))).scalar() or 0,
+        completed=(await db.execute(select(func.count(Ticket.id)).where(Ticket.status == TicketStatus.COMPLETED, Ticket.is_deleted == False))).scalar() or 0,
+        rejected=(await db.execute(select(func.count(Ticket.id)).where(Ticket.status == TicketStatus.REJECTED, Ticket.is_deleted == False))).scalar() or 0,
+    )
 
     recent_tickets = (await db.execute(
-        select(Ticket).order_by(Ticket.id.desc()).limit(5)
+        select(Ticket).options(selectinload(Ticket.house)).order_by(Ticket.id.desc()).limit(5)
     )).scalars().all()
 
     activity = [
         RecentActivityItem(
-            type="ticket_created",
-            house_address="ул. Баумана, 12",
+            type=ActivityType.TICKET_CREATED,
+            house_address=t.house.address if t.house else "",
             title=t.title,
             created_at=t.created_at,
         )

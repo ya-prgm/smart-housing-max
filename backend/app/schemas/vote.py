@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from app.schemas.common import BaseSchema
+from app.schemas.feed import PostAuthor
 from app.core.constants import PollStatus, PollQuestionType
 
 
@@ -33,7 +34,7 @@ class PollQuestionResponse(BaseSchema):
 
 class PollDetailResponse(BaseSchema):
     id: int
-    author_role_badge: str
+    author: PostAuthor
     title: str
     description: str
     image_url: str | None = None
@@ -48,7 +49,7 @@ class PollDetailResponse(BaseSchema):
 
 class PollCardResponse(BaseSchema):
     id: int
-    author_title: str
+    author: PostAuthor
     status: PollStatus
     title: str
     description: str

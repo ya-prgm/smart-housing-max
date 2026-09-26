@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.uk import dashboard, houses, residents, tickets, feed, votes, journal
+from app.api.v1.uk import dashboard, houses, residents, tickets, feed, votes, journal, documents
 
 uk_router = APIRouter()
 
@@ -9,4 +9,5 @@ uk_router.include_router(residents.router, prefix="/residents", tags=["UK-Reside
 uk_router.include_router(tickets.router, prefix="/tickets", tags=["UK-Tickets"])
 uk_router.include_router(feed.router, prefix="/feed", tags=["UK-Feed"])
 uk_router.include_router(votes.router, prefix="/votes", tags=["UK-Votes"])
+uk_router.include_router(documents.router, prefix="/documents", tags=["UK-Documents"])
 uk_router.include_router(journal.router, prefix="/journal", tags=["UK-Journal"])

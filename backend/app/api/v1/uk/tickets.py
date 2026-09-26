@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -8,7 +8,8 @@ from app.api.deps import require_roles
 from app.models.user import User, UserRole
 from app.models.ticket import Ticket, TicketStatus, TicketStatusHistory
 from app.models.audit import AuditLog
-from app.schemas.ticket import TicketResponse
+from app.core.constants import JournalAction, JournalEntityType
+from app.schemas.ticket import TicketResponse, TicketAttachmentResponse
 from app.schemas.uk import TicketStatusUpdateRequest
 from app.schemas.common import PaginatedResponse
 
@@ -47,6 +48,7 @@ async def get_uk_all_tickets(
             selectinload(Ticket.house),
             selectinload(Ticket.author),
             selectinload(Ticket.supports),
+            selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
         )
         .order_by(desc(Ticket.id))
         .offset((page - 1) * page_size)
@@ -54,25 +56,38 @@ async def get_uk_all_tickets(
     )
     tickets = (await db.execute(stmt)).scalars().all()
 
-    items = [
-        TicketResponse(
-            id=t.id,
-            code=t.code,
-            category=t.category,
-            title=t.title,
-            description=t.description,
-            status=t.status,
-            priority=t.priority,
-            created_at=t.created_at,
-            is_my=False,
-            votes_count=len(t.supports),
-            is_voted=False,
-            recipient_name=t.recipient_name,
-            house_address=t.house.address if t.house else None,
-            author_full_name=t.author.full_name if t.author else None,
+    items = []
+    for t in tickets:
+        attachments = [
+            TicketAttachmentResponse(
+                id=att.file.id,
+                url=f"/api/v1/files/{att.file.id}",
+                filename=att.file.original_name,
+                size=att.file.size_bytes,
+                mime_type=att.file.mime_type,
+            )
+            for att in t.attachments
+            if att.file
+        ]
+        items.append(
+            TicketResponse(
+                id=t.id,
+                code=t.code,
+                category=t.category,
+                title=t.title,
+                description=t.description,
+                status=t.status,
+                priority=t.priority,
+                created_at=t.created_at,
+                is_my=False,
+                votes_count=len(t.supports),
+                is_voted=False,
+                recipient_name=t.recipient_name,
+                house_address=t.house.address if t.house else "",
+                author_full_name=t.author.full_name if t.author else None,
+                attachments=attachments,
+            )
         )
-        for t in tickets
-    ]
 
     pages = (total + page_size - 1) // page_size if total > 0 else 1
 
@@ -82,6 +97,57 @@ async def get_uk_all_tickets(
         page=page,
         page_size=page_size,
         pages=pages,
+    )
+
+
+@router.get("/{ticket_id}", response_model=TicketResponse)
+async def get_uk_ticket_details(
+    ticket_id: int,
+    current_user: User = Depends(require_roles(UserRole.UK_STAFF)),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(Ticket)
+        .where(Ticket.id == ticket_id, Ticket.is_deleted == False)
+        .options(
+            selectinload(Ticket.house),
+            selectinload(Ticket.author),
+            selectinload(Ticket.supports),
+            selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
+        )
+    )
+    t = (await db.execute(stmt)).scalars().first()
+    if not t:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Заявка не найдена")
+
+    attachments = [
+        TicketAttachmentResponse(
+            id=att.file.id,
+            url=f"/api/v1/files/{att.file.id}",
+            filename=att.file.original_name,
+            size=att.file.size_bytes,
+            mime_type=att.file.mime_type,
+        )
+        for att in t.attachments
+        if att.file
+    ]
+
+    return TicketResponse(
+        id=t.id,
+        code=t.code,
+        category=t.category,
+        title=t.title,
+        description=t.description,
+        status=t.status,
+        priority=t.priority,
+        created_at=t.created_at,
+        is_my=False,
+        votes_count=len(t.supports),
+        is_voted=False,
+        recipient_name=t.recipient_name,
+        house_address=t.house.address if t.house else "",
+        author_full_name=t.author.full_name if t.author else None,
+        attachments=attachments,
     )
 
 
@@ -109,8 +175,8 @@ async def update_ticket_status(
 
     db.add(AuditLog(
         user_id=current_user.id,
-        action="update_ticket_status",
-        entity_type="ticket",
+        action=JournalAction.STATUS_CHANGE,
+        entity_type=JournalEntityType.TICKET,
         entity_id=ticket.id,
         house_id=ticket.house_id,
         details={"old_status": old_status.value, "new_status": payload.status.value, "comment": payload.comment},

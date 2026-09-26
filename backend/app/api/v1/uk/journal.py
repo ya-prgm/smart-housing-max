@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
 from app.models.audit import AuditLog
+from app.models.house import House
 from app.schemas.uk import JournalEventResponse
 from app.schemas.common import PaginatedResponse
 
@@ -31,19 +32,26 @@ async def get_uk_journal(
     )
     logs = (await db.execute(stmt)).scalars().all()
 
-    items = [
-        JournalEventResponse(
-            id=log.id,
-            action=log.action,
-            entity_type=log.entity_type,
-            entity_id=log.entity_id,
-            user_name=log.user.full_name if log.user else "Система",
-            house_address="ул. Баумана, 12",
-            details=log.details,
-            created_at=log.created_at,
+    items = []
+    for log in logs:
+        house_addr = None
+        if log.house_id:
+            h = await db.get(House, log.house_id)
+            if h:
+                house_addr = h.address
+
+        items.append(
+            JournalEventResponse(
+                id=log.id,
+                action=log.action,
+                entity_type=log.entity_type,
+                entity_id=log.entity_id,
+                user_name=log.user.full_name if log.user else "Система",
+                house_address=house_addr,
+                details=log.details,
+                created_at=log.created_at,
+            )
         )
-        for log in logs
-    ]
 
     pages = (total + page_size - 1) // page_size if total > 0 else 1
 

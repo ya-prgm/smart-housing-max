@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.core.constants import PollQuestionType
 from app.repositories.vote_repo import VoteRepository
+from app.schemas.feed import PostAuthor
 from app.schemas.vote import (
     PollCardResponse,
     PollDetailResponse,
@@ -22,17 +24,17 @@ class VoteService:
         for p in polls:
             is_completed = any(r.user_id == current_user.id for r in p.responses)
             participants = len(p.responses) * 45 + 15
+            author_role = UserRole.CHAIRMAN if "Председатель" in p.author_role_badge else UserRole.UK_STAFF
 
             results.append(
                 PollCardResponse(
                     id=p.id,
-                    author_title=p.author_role_badge,
-                    author_icon="shield_person" if "Председатель" in p.author_role_badge else "corporate_fare",
-                    status=p.status.value,
-                    deadline_text=p.deadline_text,
+                    author=PostAuthor(name=p.author_role_badge, role=author_role),
+                    status=p.status,
                     title=p.title,
                     description=p.description,
-                    estimated_time=p.estimated_time,
+                    created_at=p.created_at,
+                    deadline=None,
                     questions_count=len(p.questions),
                     participants_count=participants,
                     is_completed=is_completed,
@@ -46,6 +48,7 @@ class VoteService:
             return None
 
         is_completed = any(r.user_id == current_user.id for r in p.responses)
+        author_role = UserRole.CHAIRMAN if "Председатель" in p.author_role_badge else UserRole.UK_STAFF
 
         q_list = []
         for q in p.questions:
@@ -58,13 +61,20 @@ class VoteService:
                 )
                 for o in q.options
             ]
+
+            q_type = PollQuestionType.SINGLE_CHOICE
+            if q.question_type.value == "multiple":
+                q_type = PollQuestionType.MULTIPLE_CHOICE
+            elif q.question_type.value == "text":
+                q_type = PollQuestionType.TEXT
+
             q_list.append(
                 PollQuestionResponse(
                     id=q.id,
                     order_num=q.order_num,
                     question_text=q.question_text,
                     subtext=q.subtext,
-                    question_type=q.question_type.value,
+                    question_type=q_type,
                     image_url=q.image_url,
                     options=opts,
                 )
@@ -72,13 +82,13 @@ class VoteService:
 
         return PollDetailResponse(
             id=p.id,
-            author_role_badge=p.author_role_badge,
+            author=PostAuthor(name=p.author_role_badge, role=author_role),
             title=p.title,
             description=p.description,
             image_url=p.image_url,
-            status=p.status.value,
-            estimated_time=p.estimated_time,
-            deadline_text=p.deadline_text,
+            status=p.status,
+            created_at=p.created_at,
+            deadline=None,
             protocol_number=p.protocol_number,
             total_questions=len(p.questions),
             is_completed_by_me=is_completed,

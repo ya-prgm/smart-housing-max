@@ -5,12 +5,10 @@ from app.core.constants import TicketStatus, TicketPriority, RecipientType
 
 
 class TicketCreate(BaseModel):
-    recipient_type: RecipientType = RecipientType.UK
-    recipient_name: str = "ООО «ЖилКомФорт»"
-    category: str = "Сантехника"
-    topic_code: str = "2.16"
+    category: str
     title: str
     description: str
+    recipient_type: RecipientType = RecipientType.UK
     is_public_in_feed: bool = True
     attachment_ids: list[int] = []
 
@@ -25,6 +23,8 @@ class TicketAttachmentResponse(BaseSchema):
     id: int
     url: str
     filename: str
+    size: int
+    mime_type: str
 
 
 class TicketResponse(BaseSchema):
@@ -36,10 +36,11 @@ class TicketResponse(BaseSchema):
     status: TicketStatus
     priority: TicketPriority
     created_at: datetime
+    resolved_at: datetime | None = None
     is_my: bool
     votes_count: int
     is_voted: bool
     recipient_name: str
-    house_address: str | None = None
+    house_address: str
     author_full_name: str | None = None
     attachments: list[TicketAttachmentResponse] = []

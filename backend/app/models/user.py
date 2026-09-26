@@ -13,10 +13,11 @@ class User(Base, TimestampMixin):
     max_user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True, nullable=False)
     
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
-    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(30), nullable=True, index=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    snils: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    snils: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    esia_password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role_enum"),

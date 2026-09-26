@@ -1,11 +1,11 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from app.schemas.common import BaseSchema
 from app.core.constants import UserRole
 
 
 class UserUpdateRequest(BaseModel):
     email: EmailStr | None = None
-    phone: str | None = None
+    phone: str | None = Field(default=None, pattern=r"^\+?7\d{10}$")
     notifications_enabled: bool | None = None
 
 

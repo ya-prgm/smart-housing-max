@@ -1,9 +1,8 @@
-from typing import Sequence
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.house import House, Apartment, HouseServiceProvider
+from app.models.house import House, Apartment
 from app.models.ticket import Ticket, TicketStatus
 from app.models.vote import Poll, PollStatus
 from app.models.feed import FeedPost
@@ -80,7 +79,6 @@ class HouseRepository(BaseRepository[House]):
                 "active_tickets": active_tickets,
                 "active_polls": active_polls,
                 "new_posts": new_posts,
-                "is_selected": (h.id == 1),
             })
 
         return results

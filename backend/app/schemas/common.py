@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Generic, TypeVar
 from pydantic import BaseModel, ConfigDict
 
@@ -20,6 +21,13 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
+
+
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    database: str
+    timestamp: datetime
 
 
 class PaginatedResponse(BaseModel, Generic[T]):

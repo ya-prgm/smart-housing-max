@@ -5,10 +5,11 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 from app.core.config import settings
 from app.core.database import engine, AsyncSessionLocal
+from app.core.security import hash_password, hash_pin
 from app.models.base import Base
-from app.models.user import User, UserApartment, UserRole, OwnershipType
+from app.models.user import User, UserPin, UserApartment, UserRole, OwnershipType
 from app.models.house import House, Apartment, HouseServiceProvider, ManagementType, ProviderCategory
-from app.models.ticket import Ticket, TicketSupport, TicketStatus, TicketPriority
+from app.models.ticket import Ticket, TicketSupport, TicketStatus, TicketPriority, RecipientType
 from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
 from app.models.vote import (
     Poll,
@@ -27,8 +28,6 @@ async def ensure_database_exists():
     db_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
     parsed = urlparse(db_url)
     target_db = parsed.path.lstrip("/")
-    
-    print(f"Подключение к PostgreSQL: {parsed.hostname}:{parsed.port}, пользователь: {parsed.username}, целевая база: {target_db}")
 
     conn = await asyncpg.connect(
         user=parsed.username,
@@ -43,11 +42,7 @@ async def ensure_database_exists():
             "SELECT 1 FROM pg_database WHERE datname = $1", target_db
         )
         if not exists:
-            print(f"База данных {target_db} не найдена. Создаю...")
             await conn.execute(f'CREATE DATABASE "{target_db}"')
-            print(f"База данных {target_db} успешно создана.")
-        else:
-            print(f"База данных {target_db} уже существует.")
     finally:
         await conn.close()
 
@@ -55,12 +50,10 @@ async def ensure_database_exists():
 async def seed_data():
     await ensure_database_exists()
 
-    print("Создание таблиц через SQLAlchemy...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    print("Наполнение начальными данными...")
     async with AsyncSessionLocal() as session:
         houses_data = [
             House(
@@ -203,29 +196,35 @@ async def seed_data():
         session.add(apt_48)
         await session.flush()
 
+        demo_pwd_hash = hash_password("demo_password")
+
         users_data = [
             User(
                 max_user_id=123456789,
                 full_name="Смирнов Александр Сергеевич",
-                phone="+7 (903) 123-45-67",
+                phone="+79031234567",
                 email="alex.smirnov@example.com",
                 role=UserRole.RESIDENT,
                 snils="123-456-789 01",
+                esia_password_hash=demo_pwd_hash,
             ),
             User(
                 max_user_id=987654321,
                 full_name="Смирнова Елена Васильевна",
-                phone="+7 (903) 987-65-43",
+                phone="+79039876543",
                 email="elena.smirnova@example.com",
                 role=UserRole.CHAIRMAN,
                 snils="987-654-321 00",
+                esia_password_hash=demo_pwd_hash,
             ),
             User(
                 max_user_id=555555555,
                 full_name="Демьянов Игорь",
-                phone="+7 (843) 210-00-10",
+                phone="+78432100010",
                 email="demyanov@zhilkomfort.ru",
                 role=UserRole.UK_STAFF,
+                snils="111-222-333 44",
+                esia_password_hash=demo_pwd_hash,
             ),
         ]
         session.add_all(users_data)
@@ -233,6 +232,11 @@ async def seed_data():
 
         resident_user = users_data[0]
         chairman_user = users_data[1]
+
+        session.add_all([
+            UserPin(user_id=resident_user.id, pin_hash=hash_pin("1234")),
+            UserPin(user_id=chairman_user.id, pin_hash=hash_pin("1234")),
+        ])
 
         session.add_all([
             UserApartment(
@@ -254,14 +258,14 @@ async def seed_data():
         providers = [
             HouseServiceProvider(
                 house_id=main_house.id,
-                category=ProviderCategory.HEATING_HOT_WATER,
+                category=ProviderCategory.HEATING,
                 name="АО «УСТЭК»",
                 service_description="Отопление и горячее водоснабжение",
                 phone="+7 (843) 277-00-00",
             ),
             HouseServiceProvider(
                 house_id=main_house.id,
-                category=ProviderCategory.COLD_WATER,
+                category=ProviderCategory.WATER,
                 name="МУП «Водоканал Казань»",
                 service_description="Холодное водоснабжение и водоотведение",
                 phone="+7 (843) 293-11-22",
@@ -275,14 +279,14 @@ async def seed_data():
             ),
             HouseServiceProvider(
                 house_id=main_house.id,
-                category=ProviderCategory.TELECOM,
+                category=ProviderCategory.INTERNET,
                 name="АО «ЭР-Телеком Холдинг»",
                 service_description="Оптика до 1 Гбит/с, ТВ, Умный домофон",
                 brand_badge="Дом.ру",
             ),
             HouseServiceProvider(
                 house_id=main_house.id,
-                category=ProviderCategory.TELECOM,
+                category=ProviderCategory.INTERCOM,
                 name="ПАО «МТС»",
                 service_description="Домашний интернет, цифровое ТВ",
                 brand_badge="GPON",
@@ -303,7 +307,7 @@ async def seed_data():
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type="uk",
+                recipient_type=RecipientType.UK,
                 recipient_name="ООО «ЖилКомФорт»",
                 category="Сантехника",
                 topic_code="2.16",
@@ -318,14 +322,14 @@ async def seed_data():
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type="uk",
+                recipient_type=RecipientType.UK,
                 recipient_name="ООО «ЖилКомФорт»",
                 category="Электрика",
                 topic_code="3.04",
                 title="Не работает свет на 4 этаже",
                 description="Перегорела лампа в коридоре у кв. 48. Вечером темно выходить к лифту.",
                 status=TicketStatus.ACTIVE,
-                priority=TicketPriority.NORMAL,
+                priority=TicketPriority.MEDIUM,
                 is_public_in_feed=True,
             ),
             Ticket(
@@ -333,14 +337,14 @@ async def seed_data():
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type="rso",
+                recipient_type=RecipientType.RSO,
                 recipient_name="МУП «Водоканал»",
                 category="Водоснабжение",
                 topic_code="2.01",
                 title="Слабый напор горячей воды",
                 description="По вечерам после 20:00 падает давление по всему стояку.",
                 status=TicketStatus.ACTIVE,
-                priority=TicketPriority.NORMAL,
+                priority=TicketPriority.MEDIUM,
                 is_public_in_feed=True,
             ),
             Ticket(
@@ -348,14 +352,14 @@ async def seed_data():
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=chairman_user.id,
-                recipient_type="uk",
+                recipient_type=RecipientType.UK,
                 recipient_name="ООО «ЖилКомФорт»",
                 category="Лифты",
                 topic_code="5.12",
                 title="Скрип створок лифта",
                 description="Лифт во 2 подъезде издает скрежет при закрытии. Мастер вызван.",
                 status=TicketStatus.IN_PROGRESS,
-                priority=TicketPriority.NORMAL,
+                priority=TicketPriority.MEDIUM,
                 is_public_in_feed=True,
             ),
             Ticket(
@@ -363,15 +367,14 @@ async def seed_data():
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type="uk",
+                recipient_type=RecipientType.UK,
                 recipient_name="ООО «ЖилКомФорт»",
                 category="Двор",
                 topic_code="7.02",
                 title="Регулировка доводчика",
                 description="Дверь сильно хлопала, отрегулировали гидроцилиндр входа.",
                 status=TicketStatus.COMPLETED,
-                priority=TicketPriority.NORMAL,
-                resolved_label="Решено УК • 19 чел",
+                priority=TicketPriority.LOW,
                 is_public_in_feed=True,
             ),
             Ticket(
@@ -379,15 +382,14 @@ async def seed_data():
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type="uk",
+                recipient_type=RecipientType.UK,
                 recipient_name="ООО «ЖилКомФорт»",
                 category="Благоустройство",
                 topic_code="7.10",
                 title="Плитка на крыльце",
                 description="Заменили сколотые ступени у входа, швы загерметизированы.",
                 status=TicketStatus.COMPLETED,
-                priority=TicketPriority.NORMAL,
-                resolved_label="Решено УК • 24 чел",
+                priority=TicketPriority.LOW,
                 is_public_in_feed=True,
             ),
         ]
@@ -557,7 +559,7 @@ async def seed_data():
         session.add_all(notifications_data)
 
         await session.commit()
-    print("База данных успешно инициализирована и наполнена!")
+    print("База данных успешно инициализирована с esia_password_hash в модели User!")
 
 
 if __name__ == "__main__":

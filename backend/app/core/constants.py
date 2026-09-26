@@ -19,10 +19,11 @@ class ManagementType(str, enum.Enum):
 
 
 class ProviderCategory(str, enum.Enum):
-    HEATING_HOT_WATER = "heating_hot_water"
-    COLD_WATER = "cold_water"
+    HEATING = "heating"
+    WATER = "water"
     ELECTRICITY = "electricity"
-    TELECOM = "telecom"
+    INTERNET = "internet"
+    INTERCOM = "intercom"
     MUNICIPAL = "municipal"
 
 
@@ -69,6 +70,39 @@ class NotificationCategory(str, enum.Enum):
     SYSTEM = "system"
     UK = "uk"
     CHAIRMAN = "chairman"
+
+
+class PostType(str, enum.Enum):
+    ANNOUNCEMENT = "announcement"
+    REPORT = "report"
+    INFO = "info"
+    EMERGENCY = "emergency"
+
+
+class ActivityType(str, enum.Enum):
+    TICKET_CREATED = "ticket_created"
+    TICKET_STATUS = "ticket_status"
+    POST_PUBLISHED = "post_published"
+    POLL_STARTED = "poll_started"
+    ROLE_ASSIGNED = "role_assigned"
+
+
+class JournalAction(str, enum.Enum):
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+    STATUS_CHANGE = "status_change"
+    ROLE_CHANGE = "role_change"
+    ASSIGN = "assign"
+
+
+class JournalEntityType(str, enum.Enum):
+    TICKET = "ticket"
+    POST = "post"
+    POLL = "poll"
+    USER = "user"
+    COMMENT = "comment"
+    FILE = "file"
 
 
 class FileContext(str, enum.Enum):

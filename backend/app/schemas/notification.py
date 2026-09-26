@@ -1,14 +1,15 @@
 from datetime import datetime
 from app.schemas.common import BaseSchema
+from app.core.constants import NotificationCategory
 
 
 class NotificationResponse(BaseSchema):
     id: int
-    category: str
+    category: NotificationCategory
     author_name: str
     author_badge: str | None = None
     title: str
     text: str
     is_read: bool
     action_url: str | None = None
-    time_formatted: str
+    created_at: datetime

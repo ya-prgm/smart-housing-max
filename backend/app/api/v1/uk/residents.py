@@ -9,6 +9,7 @@ from app.api.deps import require_roles
 from app.models.user import User, UserRole, UserApartment
 from app.models.house import House, Apartment
 from app.models.audit import AuditLog
+from app.core.constants import JournalAction, JournalEntityType
 from app.schemas.uk import ResidentResponse, ResidentUpdateRequest
 from app.schemas.common import PaginatedResponse
 
@@ -27,9 +28,9 @@ async def get_residents_registry(
 ):
     base_query = (
         select(User)
-        .join(UserApartment, UserApartment.user_id == User.id)
-        .join(Apartment, Apartment.id == UserApartment.apartment_id)
-        .join(House, House.id == Apartment.house_id)
+        .outerjoin(UserApartment, UserApartment.user_id == User.id)
+        .outerjoin(Apartment, Apartment.id == UserApartment.apartment_id)
+        .outerjoin(House, House.id == Apartment.house_id)
     )
 
     if house_id:
@@ -54,9 +55,9 @@ async def get_residents_registry(
 
     items = []
     for u in users:
-        h_addr = "ул. Баумана, 12"
-        apt_num = "48"
-        p_acc = "8492-3019-44"
+        h_addr = None
+        apt_num = None
+        p_acc = None
 
         if u.apartments:
             ua = u.apartments[0]
@@ -102,13 +103,21 @@ async def update_resident_role(
     if not user:
         raise HTTPException(status_code=404, detail="Житель не найден")
 
+    house = await db.get(House, payload.house_id)
+    if not house:
+        raise HTTPException(status_code=404, detail="Дом не найден")
+
+    apt = await db.get(Apartment, payload.apartment_id)
+    if not apt or apt.house_id != house.id:
+        raise HTTPException(status_code=404, detail="Квартира не найдена в этом доме")
+
     old_role = user.role.value
     user.role = payload.role
 
     db.add(AuditLog(
         user_id=current_user.id,
-        action="update_resident_role",
-        entity_type="user",
+        action=JournalAction.ROLE_CHANGE,
+        entity_type=JournalEntityType.USER,
         entity_id=user.id,
         house_id=payload.house_id,
         details={"old_role": old_role, "new_role": payload.role.value, "apartment_id": payload.apartment_id},
@@ -122,9 +131,9 @@ async def update_resident_role(
         max_user_id=user.max_user_id,
         full_name=user.full_name,
         role=user.role,
-        house_address="ул. Баумана, 12",
-        apartment_number=str(payload.apartment_id),
-        personal_account="8492-3019-44",
+        house_address=house.address,
+        apartment_number=apt.number,
+        personal_account=apt.personal_account,
         registered_at=user.created_at,
-        last_active_at=datetime.utcnow(),
+        last_active_at=user.updated_at,
     )

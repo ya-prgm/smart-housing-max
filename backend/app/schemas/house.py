@@ -1,10 +1,11 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from app.schemas.common import BaseSchema
+from app.core.constants import ProviderCategory, ManagementType
 
 
 class HouseServiceProviderResponse(BaseSchema):
     id: int
-    category: str
+    category: ProviderCategory
     name: str
     service_description: str
     phone: str | None = None
@@ -14,13 +15,13 @@ class HouseServiceProviderResponse(BaseSchema):
 class ApartmentResponse(BaseSchema):
     id: int
     number: str
-    entrance: int
-    floor: int
-    area: float
+    entrance: int | None = None
+    floor: int | None = None
+    area: float | None = None
     personal_account: str
-    debt_amount: float
-    payment_deadline: str
-    is_debt_free: bool
+    debt_amount: float = 0.0
+    payment_deadline: str | None = None
+    is_debt_free: bool = True
 
 
 class HouseCardResponse(BaseSchema):
@@ -34,7 +35,6 @@ class HouseCardResponse(BaseSchema):
     active_tickets: int
     active_polls: int
     new_posts: int
-    is_selected: bool = False
 
 
 class HouseDetailResponse(BaseSchema):
@@ -46,19 +46,19 @@ class HouseDetailResponse(BaseSchema):
     fias_code: str | None = None
     cadastral_number: str | None = None
     oktmo: str | None = None
-    year_built: int
-    wear_percentage: int
-    total_area: float
-    living_area: float
-    floors: int
-    entrances: int
-    apartments_count: int
+    year_built: int | None = None
+    wear_percentage: int | None = None
+    total_area: float | None = None
+    living_area: float | None = None
+    floors: int | None = None
+    entrances: int | None = None
+    apartments_count: int | None = None
     project_series: str | None = None
     wall_material: str | None = None
-    management_type: str
-    uk_name: str
-    uk_inn: str
+    management_type: ManagementType | None = None
+    uk_name: str | None = None
+    uk_inn: str | None = None
     chairman_name: str | None = None
-    dispatcher_phone: str
-    emergency_phone: str
+    dispatcher_phone: str | None = None
+    emergency_phone: str | None = None
     providers: list[HouseServiceProviderResponse] = []

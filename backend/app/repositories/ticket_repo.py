@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.ticket import Ticket, TicketSupport, TicketStatus
+from app.models.file import File as FileModel
 from app.repositories.base import BaseRepository
 
 
@@ -11,10 +12,24 @@ class TicketRepository(BaseRepository[Ticket]):
     def __init__(self, db: AsyncSession):
         super().__init__(Ticket, db)
 
+    async def get_ticket_by_id_detailed(self, ticket_id: int) -> Ticket | None:
+        stmt = (
+            select(Ticket)
+            .where(Ticket.id == ticket_id, Ticket.is_deleted == False)
+            .options(
+                selectinload(Ticket.supports),
+                selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
+                selectinload(Ticket.house),
+                selectinload(Ticket.author),
+            )
+        )
+        res = await self.db.execute(stmt)
+        return res.scalars().first()
+
     async def get_house_tickets(
         self,
         house_id: int,
-        status_filter: str | None = None,
+        status_filter: TicketStatus | None = None,
         only_my_user_id: int | None = None,
         search_query: str | None = None,
     ) -> Sequence[Ticket]:
@@ -23,7 +38,9 @@ class TicketRepository(BaseRepository[Ticket]):
             .where(Ticket.house_id == house_id, Ticket.is_deleted == False)
             .options(
                 selectinload(Ticket.supports),
-                selectinload(Ticket.attachments),
+                selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
+                selectinload(Ticket.house),
+                selectinload(Ticket.author),
             )
             .order_by(desc(Ticket.id))
         )
@@ -31,13 +48,8 @@ class TicketRepository(BaseRepository[Ticket]):
         if only_my_user_id:
             stmt = stmt.where(Ticket.author_id == only_my_user_id)
 
-        if status_filter and status_filter != "all":
-            if status_filter == "active":
-                stmt = stmt.where(Ticket.status == TicketStatus.ACTIVE)
-            elif status_filter == "in_progress":
-                stmt = stmt.where(Ticket.status == TicketStatus.IN_PROGRESS)
-            elif status_filter == "completed":
-                stmt = stmt.where(Ticket.status == TicketStatus.COMPLETED)
+        if status_filter:
+            stmt = stmt.where(Ticket.status == status_filter)
 
         if search_query:
             q = f"%{search_query.lower()}%"

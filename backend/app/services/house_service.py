@@ -19,7 +19,7 @@ class HouseService:
         providers = [
             HouseServiceProviderResponse(
                 id=p.id,
-                category=p.category.value,
+                category=p.category,
                 name=p.name,
                 service_description=p.service_description,
                 phone=p.phone,
@@ -46,7 +46,7 @@ class HouseService:
             apartments_count=house.apartments_count,
             project_series=house.project_series,
             wall_material=house.wall_material,
-            management_type=house.management_type.value,
+            management_type=house.management_type,
             uk_name=house.uk_name,
             uk_inn=house.uk_inn,
             chairman_name=house.chairman_name,

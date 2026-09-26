@@ -1,12 +1,19 @@
 from datetime import datetime
 from pydantic import BaseModel
 from app.schemas.common import BaseSchema
-from app.core.constants import ReactionType
+from app.core.constants import ReactionType, PostType, UserRole
+
+
+class PostAuthor(BaseModel):
+    name: str
+    role: UserRole
+    avatar_url: str | None = None
 
 
 class FeedPostCreate(BaseModel):
     title: str | None = None
     content: str
+    post_type: PostType = PostType.INFO
     image_id: int | None = None
     image_label: str | None = None
 
@@ -30,17 +37,11 @@ class ReactionToggleResponse(BaseSchema):
 class CommentResponse(BaseSchema):
     id: int
     author_name: str
-    author_role: str
+    author_role: UserRole
     author_avatar: str | None = None
     content: str
     created_at: datetime
     replies: list["CommentResponse"] = []
-
-
-class PostAuthor(BaseModel):
-    name: str
-    role: str
-    avatar_url: str | None = None
 
 
 class FeedPostResponse(BaseSchema):
@@ -54,6 +55,6 @@ class FeedPostResponse(BaseSchema):
     dislikes: int
     comments_count: int
     views: int
-    post_type: str
+    post_type: PostType
     created_at: datetime
     my_reaction: ReactionType | None = None

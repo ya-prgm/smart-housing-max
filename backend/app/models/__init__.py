@@ -1,7 +1,7 @@
 from app.models.base import Base, TimestampMixin, SoftDeleteMixin
-from app.models.user import User, UserApartment, RefreshToken, UserRole, OwnershipType
-from app.models.house import House, Apartment, HouseServiceProvider, ManagementType, ProviderCategory
-from app.models.ticket import Ticket, TicketSupport, TicketAttachment, TicketStatus, TicketPriority
+from app.models.user import User, UserPin, UserApartment, RefreshToken
+from app.models.house import House, Apartment, HouseServiceProvider
+from app.models.ticket import Ticket, TicketSupport, TicketAttachment, TicketStatusHistory
 from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
 from app.models.vote import (
     Poll,
@@ -9,30 +9,26 @@ from app.models.vote import (
     PollOption,
     PollResponse,
     PollResponseAnswer,
-    QuestionType,
-    PollStatus,
 )
-from app.models.notification import Notification, NotificationCategory
+from app.models.notification import Notification
+from app.models.file import File
+from app.models.audit import AuditLog
 
 __all__ = [
     "Base",
     "TimestampMixin",
     "SoftDeleteMixin",
     "User",
+    "UserPin",
     "UserApartment",
     "RefreshToken",
-    "UserRole",
-    "OwnershipType",
     "House",
     "Apartment",
     "HouseServiceProvider",
-    "ManagementType",
-    "ProviderCategory",
     "Ticket",
     "TicketSupport",
     "TicketAttachment",
-    "TicketStatus",
-    "TicketPriority",
+    "TicketStatusHistory",
     "FeedPost",
     "FeedPostComment",
     "FeedPostReaction",
@@ -41,8 +37,7 @@ __all__ = [
     "PollOption",
     "PollResponse",
     "PollResponseAnswer",
-    "QuestionType",
-    "PollStatus",
     "Notification",
-    "NotificationCategory",
+    "File",
+    "AuditLog",
 ]

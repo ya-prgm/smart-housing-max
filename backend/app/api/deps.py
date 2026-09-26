@@ -1,4 +1,3 @@
-from typing import AsyncGenerator
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
@@ -18,18 +17,9 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if not credentials:
-        stmt = (
-            select(User)
-            .where(User.role == UserRole.RESIDENT)
-            .options(selectinload(User.apartments))
-        )
-        res = await db.execute(stmt)
-        user = res.scalars().first()
-        if user:
-            return user
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Необходима авторизация",
+            detail={"error": {"code": "UNAUTHORIZED", "message": "Требуется авторизация"}},
         )
 
     token = credentials.credentials
@@ -43,12 +33,12 @@ async def get_current_user(
         if not sub:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Недействительный токен",
+                detail={"error": {"code": "INVALID_TOKEN", "message": "Недействительный токен"}},
             )
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Недействительный или истекший токен",
+            detail={"error": {"code": "INVALID_TOKEN", "message": "Недействительный или истекший токен"}},
         )
 
     stmt = (
@@ -62,7 +52,7 @@ async def get_current_user(
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Пользователь не найден или заблокирован",
+            detail={"error": {"code": "USER_NOT_FOUND", "message": "Пользователь не найден или заблокирован"}},
         )
 
     return user
@@ -73,7 +63,7 @@ def require_roles(*allowed_roles: UserRole):
         if user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Недостаточно прав для выполнения действия",
+                detail={"error": {"code": "FORBIDDEN", "message": "Недостаточно прав для выполнения действия"}},
             )
         return user
 
