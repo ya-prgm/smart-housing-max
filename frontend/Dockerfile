@@ -1,4 +1,3 @@
-# Этап 1: Сборка Vite React SPA
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -8,8 +7,6 @@ RUN npm ci
 
 COPY . .
 RUN npm run build
-
-# Этап 2: Production Nginx
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html

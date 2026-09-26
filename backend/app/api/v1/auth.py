@@ -90,7 +90,6 @@ async def login_max(payload: MaxLoginRequest):
 
 @router.post("/esia-login", response_model=LoginResponse)
 async def login_esia(payload: EsiaLoginRequest):
-    # Прототип авторизации через Госуслуги (ЕСИА)
     token_data = {"sub": "123456789", "role": "resident"}
     tokens = AuthTokens(
         accessToken=create_access_token(token_data),

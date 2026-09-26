@@ -44,7 +44,6 @@ services:
     container_name: max_frontend
     restart: always
     ports:
-      # Пробрасываем порт 3000 для хостового Nginx
       - "${HTTP_PORT:-3000}:80"
     depends_on:
       - backend
