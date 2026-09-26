@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.ticket import Ticket, TicketSupport, TicketStatus
-from app.models.file import File as FileModel
+from app.models.topic import TicketTopic, TicketRecipient
 from app.repositories.base import BaseRepository
 
 
@@ -21,6 +21,8 @@ class TicketRepository(BaseRepository[Ticket]):
                 selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
                 selectinload(Ticket.house),
                 selectinload(Ticket.author),
+                selectinload(Ticket.topic),
+                selectinload(Ticket.recipients),
             )
         )
         res = await self.db.execute(stmt)
@@ -41,6 +43,8 @@ class TicketRepository(BaseRepository[Ticket]):
                 selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
                 selectinload(Ticket.house),
                 selectinload(Ticket.author),
+                selectinload(Ticket.topic),
+                selectinload(Ticket.recipients),
             )
             .order_by(desc(Ticket.id))
         )

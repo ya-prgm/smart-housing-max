@@ -3,13 +3,15 @@ import sys
 import asyncpg
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+from sqlalchemy import text, select
 from app.core.config import settings
 from app.core.database import engine, AsyncSessionLocal
 from app.core.security import hash_password, hash_pin
 from app.models.base import Base
 from app.models.user import User, UserPin, UserApartment, UserRole, OwnershipType
 from app.models.house import House, Apartment, HouseServiceProvider, ManagementType, ProviderCategory
-from app.models.ticket import Ticket, TicketSupport, TicketStatus, TicketPriority, RecipientType
+from app.models.topic import TicketTopic, TicketRecipient
+from app.models.ticket import Ticket, TicketSupport, TicketStatus, TicketPriority
 from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
 from app.models.vote import (
     Poll,
@@ -19,6 +21,7 @@ from app.models.vote import (
     QuestionType,
 )
 from app.models.notification import Notification, NotificationCategory
+from app.scripts.seed_topics import seed_topics_and_recipients
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -51,10 +54,13 @@ async def seed_data():
     await ensure_database_exists()
 
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent;"))
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
+        await seed_topics_and_recipients(session)
+
         houses_data = [
             House(
                 address="ул. Баумана, д. 12",
@@ -301,96 +307,103 @@ async def seed_data():
         ]
         session.add_all(providers)
 
+        topic_pipe = (await session.execute(select(TicketTopic).where(TicketTopic.code == "2.16"))).scalars().first()
+        topic_light = (await session.execute(select(TicketTopic).where(TicketTopic.code == "2.22"))).scalars().first()
+        topic_water = (await session.execute(select(TicketTopic).where(TicketTopic.code == "2.3"))).scalars().first()
+        topic_elevator = (await session.execute(select(TicketTopic).where(TicketTopic.code == "2.5"))).scalars().first()
+        topic_door = (await session.execute(select(TicketTopic).where(TicketTopic.code == "1.10"))).scalars().first()
+        topic_tile = (await session.execute(select(TicketTopic).where(TicketTopic.code == "1.4"))).scalars().first()
+
+        recip_uo = (await session.execute(select(TicketRecipient).where(TicketRecipient.code == "1"))).scalars().first()
+        recip_rso = (await session.execute(select(TicketRecipient).where(TicketRecipient.code == "2"))).scalars().first()
+        recip_gzhi = (await session.execute(select(TicketRecipient).where(TicketRecipient.code == "4"))).scalars().first()
+
+        default_recips = [r for r in [recip_uo, recip_rso, recip_gzhi] if r]
+
         tickets_data = [
             Ticket(
                 code="#4812",
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type=RecipientType.UK,
-                recipient_name="ООО «ЖилКомФорт»",
-                category="Сантехника",
-                topic_code="2.16",
+                topic_id=topic_pipe.id if topic_pipe else 1,
+                category="Внутридомовая территория",
                 title="Капает стояк ГВС на кухне",
                 description="В районе вентиля появилась влага и подкапывает в стыке трубы.",
                 status=TicketStatus.IN_PROGRESS,
                 priority=TicketPriority.HIGH,
                 is_public_in_feed=True,
+                recipients=default_recips,
             ),
             Ticket(
                 code="#4809",
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type=RecipientType.UK,
-                recipient_name="ООО «ЖилКомФорт»",
-                category="Электрика",
-                topic_code="3.04",
+                topic_id=topic_light.id if topic_light else 1,
+                category="Внутридомовая территория",
                 title="Не работает свет на 4 этаже",
                 description="Перегорела лампа в коридоре у кв. 48. Вечером темно выходить к лифту.",
                 status=TicketStatus.ACTIVE,
                 priority=TicketPriority.MEDIUM,
                 is_public_in_feed=True,
+                recipients=default_recips,
             ),
             Ticket(
                 code="#4806",
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type=RecipientType.RSO,
-                recipient_name="МУП «Водоканал»",
-                category="Водоснабжение",
-                topic_code="2.01",
+                topic_id=topic_water.id if topic_water else 1,
+                category="Внутридомовая территория",
                 title="Слабый напор горячей воды",
                 description="По вечерам после 20:00 падает давление по всему стояку.",
                 status=TicketStatus.ACTIVE,
                 priority=TicketPriority.MEDIUM,
                 is_public_in_feed=True,
+                recipients=default_recips,
             ),
             Ticket(
                 code="#4804",
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=chairman_user.id,
-                recipient_type=RecipientType.UK,
-                recipient_name="ООО «ЖилКомФорт»",
-                category="Лифты",
-                topic_code="5.12",
+                topic_id=topic_elevator.id if topic_elevator else 1,
+                category="Внутридомовая территория",
                 title="Скрип створок лифта",
                 description="Лифт во 2 подъезде издает скрежет при закрытии. Мастер вызван.",
                 status=TicketStatus.IN_PROGRESS,
                 priority=TicketPriority.MEDIUM,
                 is_public_in_feed=True,
+                recipients=default_recips,
             ),
             Ticket(
                 code="#4795",
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type=RecipientType.UK,
-                recipient_name="ООО «ЖилКомФорт»",
-                category="Двор",
-                topic_code="7.02",
+                topic_id=topic_door.id if topic_door else 1,
+                category="Придомовая территория",
                 title="Регулировка доводчика",
                 description="Дверь сильно хлопала, отрегулировали гидроцилиндр входа.",
                 status=TicketStatus.COMPLETED,
                 priority=TicketPriority.LOW,
                 is_public_in_feed=True,
+                recipients=default_recips,
             ),
             Ticket(
                 code="#4782",
                 house_id=main_house.id,
                 apartment_id=apt_48.id,
                 author_id=resident_user.id,
-                recipient_type=RecipientType.UK,
-                recipient_name="ООО «ЖилКомФорт»",
-                category="Благоустройство",
-                topic_code="7.10",
+                topic_id=topic_tile.id if topic_tile else 1,
+                category="Придомовая территория",
                 title="Плитка на крыльце",
                 description="Заменили сколотые ступени у входа, швы загерметизированы.",
                 status=TicketStatus.COMPLETED,
                 priority=TicketPriority.LOW,
                 is_public_in_feed=True,
+                recipients=default_recips,
             ),
         ]
         session.add_all(tickets_data)
@@ -511,7 +524,7 @@ async def seed_data():
             ),
             Notification(
                 user_id=resident_user.id,
-                category=NotificationCategory.CHAIRPERSON,
+                category=NotificationCategory.CHAIRMAN,
                 author_name="Елена Смирнова",
                 author_badge="Председатель",
                 title="Запущен новый опрос по шлагбауму",
@@ -559,7 +572,7 @@ async def seed_data():
         session.add_all(notifications_data)
 
         await session.commit()
-    print("База данных успешно инициализирована с esia_password_hash в модели User!")
+    print("База данных успешно инициализирована с классификатором тем, получателями и FTS-индексами!")
 
 
 if __name__ == "__main__":

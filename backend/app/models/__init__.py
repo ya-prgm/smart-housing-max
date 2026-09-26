@@ -1,6 +1,7 @@
 from app.models.base import Base, TimestampMixin, SoftDeleteMixin
 from app.models.user import User, UserPin, UserApartment, RefreshToken
 from app.models.house import House, Apartment, HouseServiceProvider
+from app.models.topic import TicketTopic, TicketRecipient, topic_recipient_map, ticket_recipient_map
 from app.models.ticket import Ticket, TicketSupport, TicketAttachment, TicketStatusHistory
 from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
 from app.models.vote import (
@@ -25,6 +26,10 @@ __all__ = [
     "House",
     "Apartment",
     "HouseServiceProvider",
+    "TicketTopic",
+    "TicketRecipient",
+    "topic_recipient_map",
+    "ticket_recipient_map",
     "Ticket",
     "TicketSupport",
     "TicketAttachment",

@@ -1,8 +1,16 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from sqlalchemy import String, Text, ForeignKey, Boolean, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, SoftDeleteMixin
-from app.core.constants import TicketStatus, TicketPriority, RecipientType
+from app.models.topic import ticket_recipient_map, TicketRecipient, TicketTopic
+from app.core.constants import TicketStatus, TicketPriority
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.house import House
+    from app.models.file import File
 
 
 class Ticket(Base, TimestampMixin, SoftDeleteMixin):
@@ -14,12 +22,9 @@ class Ticket(Base, TimestampMixin, SoftDeleteMixin):
     house_id: Mapped[int] = mapped_column(ForeignKey("houses.id", ondelete="CASCADE"), nullable=False, index=True)
     apartment_id: Mapped[int] = mapped_column(ForeignKey("apartments.id", ondelete="CASCADE"), nullable=False)
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    
-    recipient_type: Mapped[RecipientType] = mapped_column(Enum(RecipientType, name="recipient_type_enum"), default=RecipientType.UK, nullable=False)
-    recipient_name: Mapped[str] = mapped_column(String(255), default="ООО «ЖилКомФорт»", nullable=False)
+    topic_id: Mapped[int] = mapped_column(ForeignKey("ticket_topics.id", ondelete="RESTRICT"), nullable=False, index=True)
     
     category: Mapped[str] = mapped_column(String(100), nullable=False)
-    topic_code: Mapped[str] = mapped_column(String(20), default="2.16", nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     
@@ -36,11 +41,13 @@ class Ticket(Base, TimestampMixin, SoftDeleteMixin):
     )
     is_public_in_feed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
-    house: Mapped["House"] = relationship()
-    author: Mapped["User"] = relationship()
-    supports: Mapped[list["TicketSupport"]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
-    attachments: Mapped[list["TicketAttachment"]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
-    history: Mapped[list["TicketStatusHistory"]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
+    house: Mapped[House] = relationship()
+    author: Mapped[User] = relationship()
+    topic: Mapped[TicketTopic] = relationship()
+    recipients: Mapped[list[TicketRecipient]] = relationship(secondary=ticket_recipient_map)
+    supports: Mapped[list[TicketSupport]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
+    attachments: Mapped[list[TicketAttachment]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
+    history: Mapped[list[TicketStatusHistory]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
 
 
 class TicketSupport(Base, TimestampMixin):
@@ -51,7 +58,7 @@ class TicketSupport(Base, TimestampMixin):
     ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
-    ticket: Mapped["Ticket"] = relationship(back_populates="supports")
+    ticket: Mapped[Ticket] = relationship(back_populates="supports")
 
 
 class TicketAttachment(Base):
@@ -61,8 +68,8 @@ class TicketAttachment(Base):
     ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
     file_id: Mapped[int] = mapped_column(ForeignKey("files.id", ondelete="CASCADE"), nullable=False)
 
-    ticket: Mapped["Ticket"] = relationship(back_populates="attachments")
-    file: Mapped["File"] = relationship()
+    ticket: Mapped[Ticket] = relationship(back_populates="attachments")
+    file: Mapped[File] = relationship()
 
 
 class TicketStatusHistory(Base, TimestampMixin):
@@ -75,5 +82,5 @@ class TicketStatusHistory(Base, TimestampMixin):
     new_status: Mapped[TicketStatus] = mapped_column(Enum(TicketStatus, name="ticket_status_enum"))
     comment: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
-    ticket: Mapped["Ticket"] = relationship(back_populates="history")
-    changed_by: Mapped["User"] = relationship()
+    ticket: Mapped[Ticket] = relationship(back_populates="history")
+    changed_by: Mapped[User] = relationship()

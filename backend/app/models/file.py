@@ -1,7 +1,12 @@
-from sqlalchemy import String, Integer, BigInteger, ForeignKey, Enum
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from sqlalchemy import String, BigInteger, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin
 from app.core.constants import FileContext
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class File(Base, TimestampMixin):
@@ -16,4 +21,4 @@ class File(Base, TimestampMixin):
     storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     context: Mapped[FileContext] = mapped_column(Enum(FileContext, name="file_context_enum"), default=FileContext.TICKET, nullable=False)
 
-    uploader: Mapped["User"] = relationship()
+    uploader: Mapped[User] = relationship()

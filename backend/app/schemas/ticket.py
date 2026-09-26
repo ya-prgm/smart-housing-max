@@ -1,14 +1,15 @@
 from datetime import datetime
 from pydantic import BaseModel
 from app.schemas.common import BaseSchema
-from app.core.constants import TicketStatus, TicketPriority, RecipientType
+from app.schemas.topic import RecipientItem
+from app.core.constants import TicketStatus, TicketPriority
 
 
 class TicketCreate(BaseModel):
-    category: str
+    topic_code: str
     title: str
     description: str
-    recipient_type: RecipientType = RecipientType.UK
+    recipient_codes: list[str] = []
     is_public_in_feed: bool = True
     attachment_ids: list[int] = []
 
@@ -31,6 +32,8 @@ class TicketResponse(BaseSchema):
     id: int
     code: str
     category: str
+    topic_code: str
+    topic_title: str
     title: str
     description: str
     status: TicketStatus
@@ -40,7 +43,7 @@ class TicketResponse(BaseSchema):
     is_my: bool
     votes_count: int
     is_voted: bool
-    recipient_name: str
+    recipients: list[RecipientItem] = []
     house_address: str
     author_full_name: str | None = None
     attachments: list[TicketAttachmentResponse] = []

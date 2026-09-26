@@ -1,6 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from sqlalchemy import String, JSON, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 class AuditLog(Base, TimestampMixin):
@@ -14,4 +19,4 @@ class AuditLog(Base, TimestampMixin):
     house_id: Mapped[int | None] = mapped_column(ForeignKey("houses.id", ondelete="CASCADE"), nullable=True, index=True)
     details: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
-    user: Mapped["User"] = relationship()
+    user: Mapped[User] = relationship()
