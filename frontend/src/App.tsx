@@ -20,6 +20,24 @@ import { NotificationsPage } from './features/mobile/notifications/pages/Notific
 import { HousesListPage } from './features/uk/houses/pages/HousesListPage';
 import { DashboardPage } from './features/uk/dashboard/DashboardPage';
 
+const ProtectedAppFlow: React.FC = () => {
+  const rawUser = localStorage.getItem('current_user');
+  const token = localStorage.getItem('access_token');
+
+  if (!token || !rawUser) {
+    return <Navigate to="/welcome" replace />;
+  }
+
+  try {
+    const user = JSON.parse(rawUser);
+    if (user.role === 'uk_staff') {
+      return <Navigate to="/uk/houses" replace />;
+    }
+  } catch {}
+
+  return <Navigate to="/feed" replace />;
+};
+
 export const App: React.FC = () => {
   useEffect(() => {
     try {
@@ -31,9 +49,7 @@ export const App: React.FC = () => {
           window.WebApp.expand();
         }
       }
-    } catch (err) {
-      console.warn('[MAX Bridge] Инициализация вне нативного клиента:', err);
-    }
+    } catch {}
   }, []);
 
   return (
@@ -50,6 +66,7 @@ export const App: React.FC = () => {
         <Route path="/auth/pin-setup" element={<PinSetupPage />} />
         <Route path="/auth/pin-enter" element={<PinEnterPage />} />
         <Route path="/auth/pin-reset" element={<PinResetPage />} />
+        
         <Route path="/feed/:id" element={<PostDetailsPage />} />
         <Route path="/tickets/new" element={<NewTicketPage />} />
         <Route path="/votes/:id" element={<VoteDetailsPage />} />
@@ -57,16 +74,19 @@ export const App: React.FC = () => {
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
         <Route path="/profile/house" element={<HouseInfoPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+
         <Route path="/uk" element={<HousesListPage />} />
         <Route path="/uk/houses" element={<HousesListPage />} />
         <Route path="/uk/dashboard" element={<DashboardPage />} />
+
         <Route element={<MobileLayout />}>
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
           <Route path="/votes" element={<VotesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
-        <Route path="*" element={<Navigate to="/feed" replace />} />
+
+        <Route path="*" element={<ProtectedAppFlow />} />
       </Routes>
     </BrowserRouter>
   );

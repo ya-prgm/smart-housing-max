@@ -5,7 +5,10 @@ export const useHaptic = () => {
   const impact = useCallback((style: HapticImpactStyle = 'light') => {
     try {
       if (window.WebApp?.HapticFeedback?.impactOccurred) {
-        window.WebApp.HapticFeedback.impactOccurred(style);
+        const res = window.WebApp.HapticFeedback.impactOccurred(style) as unknown as Promise<void> | undefined;
+        if (res && typeof res.catch === 'function') {
+          res.catch(() => {});
+        }
       } else if (navigator.vibrate) {
         const durations: Record<HapticImpactStyle, number> = {
           light: 10,
@@ -16,15 +19,16 @@ export const useHaptic = () => {
         };
         navigator.vibrate(durations[style] || 15);
       }
-    } catch {
-      
-    }
+    } catch {}
   }, []);
 
   const notification = useCallback((type: HapticNotificationType = 'success') => {
     try {
       if (window.WebApp?.HapticFeedback?.notificationOccurred) {
-        window.WebApp.HapticFeedback.notificationOccurred(type);
+        const res = window.WebApp.HapticFeedback.notificationOccurred(type) as unknown as Promise<void> | undefined;
+        if (res && typeof res.catch === 'function') {
+          res.catch(() => {});
+        }
       } else if (navigator.vibrate) {
         if (type === 'error') {
           navigator.vibrate([30, 40, 30]);
@@ -34,21 +38,20 @@ export const useHaptic = () => {
           navigator.vibrate(25);
         }
       }
-    } catch {
-      
-    }
+    } catch {}
   }, []);
 
   const selection = useCallback(() => {
     try {
       if (window.WebApp?.HapticFeedback?.selectionChanged) {
-        window.WebApp.HapticFeedback.selectionChanged();
+        const res = window.WebApp.HapticFeedback.selectionChanged() as unknown as Promise<void> | undefined;
+        if (res && typeof res.catch === 'function') {
+          res.catch(() => {});
+        }
       } else if (navigator.vibrate) {
         navigator.vibrate(8);
       }
-    } catch {
-      
-    }
+    } catch {}
   }, []);
 
   return {

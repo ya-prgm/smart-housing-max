@@ -5,53 +5,65 @@ import { PinKeypad } from '../components/PinKeypad';
 import { usePinAuth } from '../hooks/usePinAuth';
 import { useBiometric } from '../hooks/useBiometric';
 import { useHaptic } from '../../../shared/hooks/useHaptic';
+import { authApi } from '../api';
 
 export const PinSetupPage: React.FC = () => {
   const navigate = useNavigate();
-  const { pin, maxDigits, isComplete, handleDigitPress, handleBackspace, savePinLocally } =
-    usePinAuth();
+  const { pin, maxDigits, isComplete, handleDigitPress, handleBackspace, clearPin } = usePinAuth();
   const { authenticate } = useBiometric();
-  const { impact } = useHaptic();
+  const { impact, notification } = useHaptic();
 
-  // Двухэтапный ввод: сначала придумать, затем подтвердить
   const [firstPin, setFirstPin] = useState<string>('');
   const [isConfirmStep, setIsConfirmStep] = useState<boolean>(false);
   const [isMismatchError, setIsMismatchError] = useState<boolean>(false);
 
+  const getDestinationRoute = () => {
+    try {
+      const raw = localStorage.getItem('current_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u.role === 'uk_staff') return '/uk/houses';
+      }
+    } catch {}
+    return '/feed';
+  };
+
   useEffect(() => {
     if (isComplete) {
       if (!isConfirmStep) {
-        // Шаг 1 завершён -> переходим к подтверждению
         const timer = setTimeout(() => {
           setFirstPin(pin);
           setIsConfirmStep(true);
+          clearPin();
         }, 150);
         return () => clearTimeout(timer);
       } else {
-        // Шаг 2: проверка на совпадение
         if (pin === firstPin) {
-          savePinLocally(pin);
-          const timer = setTimeout(() => {
-            navigate('/feed');
-          }, 200);
-          return () => clearTimeout(timer);
+          authApi.setPinCode(pin).then(() => {
+            notification('success');
+            setTimeout(() => {
+              navigate(getDestinationRoute());
+            }, 200);
+          });
         } else {
           setIsMismatchError(true);
           impact('heavy');
+          notification('error');
           const timer = setTimeout(() => {
             setIsMismatchError(false);
             setIsConfirmStep(false);
             setFirstPin('');
+            clearPin();
           }, 800);
           return () => clearTimeout(timer);
         }
       }
     }
-  }, [isComplete, isConfirmStep, pin, firstPin, savePinLocally, navigate, impact]);
+  }, [isComplete, isConfirmStep, pin, firstPin, clearPin, navigate, impact, notification]);
 
   const handleSkip = () => {
     impact('light');
-    navigate('/feed');
+    navigate(getDestinationRoute());
   };
 
   const handleBack = () => {
@@ -59,6 +71,7 @@ export const PinSetupPage: React.FC = () => {
     if (isConfirmStep) {
       setIsConfirmStep(false);
       setFirstPin('');
+      clearPin();
     } else {
       navigate(-1);
     }
@@ -66,7 +79,6 @@ export const PinSetupPage: React.FC = () => {
 
   return (
     <div className="bg-[#f7f9ff] font-sans text-[#141c24] flex flex-col min-h-screen select-none">
-       
       <header className="fixed top-0 w-full z-50 pt-[env(safe-area-inset-top,0px)] bg-[#f7f9ff]/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
         <div className="h-14 px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -107,19 +119,12 @@ export const PinSetupPage: React.FC = () => {
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </button>
-            <img
-              alt="Profile"
-              className="w-8 h-8 rounded-full object-cover"
-              src="https://lh3.googleusercontent.com/aida/AEtjO1VG7_mBuAj3pwVBjqOrhZuBjx4syJmvEHhW7OcpeZ2v5lKuPjw1gnb0i5kb5YAPOSqeWffq3dRK_uxpoDNoHLEcviIrm-hO-tn9UkS0MkXWpflS3gz7mIYP5yDTdOv3pCSjNzei0eWDr5jPSE6VBpj0G07uD1Mud9iwnl_6iUc4-_xJHZD1oPWyLl9fHNDbJJUhnU8EIMhAOQpE3khR5Tv7so8YA02x6EtWvOcL65ynD3m3RZXm2Xszt6zRfY6v-niCId7ihXQ"
-            />
           </div>
         </div>
       </header>
 
-       
       <main className="flex-1 flex flex-col relative w-full pt-14 pb-[env(safe-area-inset-bottom,0px)] bg-[#f7f9ff]">
         <div className="flex flex-col w-full max-w-md mx-auto px-4 pb-4 select-none">
-           
           <div className="flex flex-col items-center mt-3 mb-4 text-center">
             <div className="relative w-20 h-20 rounded-full bg-white shadow-sm flex items-center justify-center p-2 mb-3">
               <img
@@ -134,7 +139,6 @@ export const PinSetupPage: React.FC = () => {
               </div>
             </div>
 
-             
             <h2 className="text-[26px] font-bold text-[#141c24] mb-1 tracking-tight">
               {isConfirmStep ? 'Повторите пин-код' : 'Придумайте пин-код'}
             </h2>
@@ -144,7 +148,6 @@ export const PinSetupPage: React.FC = () => {
                 : 'Для быстрого и безопасного входа в приложение Мой Дом'}
             </p>
 
-             
             <div className="mt-4">
               <PinDots
                 length={pin.length}
@@ -155,7 +158,6 @@ export const PinSetupPage: React.FC = () => {
             </div>
           </div>
 
-           
           <PinKeypad
             onDigitPress={handleDigitPress}
             onBackspace={handleBackspace}
@@ -163,7 +165,6 @@ export const PinSetupPage: React.FC = () => {
             showBiometric={true}
           />
 
-           
           <div className="mt-6 flex flex-col items-center gap-2 text-center">
             <button
               type="button"

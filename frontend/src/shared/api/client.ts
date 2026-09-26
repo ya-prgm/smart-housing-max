@@ -10,48 +10,33 @@ export const apiClient = axios.create({
   timeout: 15000,
 });
 
-
 export const getAccessToken = (): string | null => {
-  if (window.WebApp?.SecureStorage?.getItem) {
-    const val = window.WebApp.SecureStorage.getItem('access_token');
-    if (val !== undefined && val !== null) {
-      return val;
-    }
+  const token = localStorage.getItem('access_token');
+  if (token && typeof token === 'string' && token !== '[object Promise]') {
+    return token;
   }
-  
-  return localStorage.getItem('access_token');
+  return null;
 };
 
 export const getRefreshToken = (): string | null => {
-  if (window.WebApp?.SecureStorage?.getItem) {
-    const val = window.WebApp.SecureStorage.getItem('refresh_token');
-    if (val !== undefined && val !== null) {
-      return val;
-    }
+  const token = localStorage.getItem('refresh_token');
+  if (token && typeof token === 'string' && token !== '[object Promise]') {
+    return token;
   }
-  return localStorage.getItem('refresh_token');
+  return null;
 };
 
 export const setAuthTokens = (accessToken: string, refreshToken: string): void => {
-  if (window.WebApp?.SecureStorage?.setItem) {
-    window.WebApp.SecureStorage.setItem('access_token', accessToken);
-    window.WebApp.SecureStorage.setItem('refresh_token', refreshToken);
-  } else {
+  if (typeof accessToken === 'string' && typeof refreshToken === 'string') {
     localStorage.setItem('access_token', accessToken);
     localStorage.setItem('refresh_token', refreshToken);
   }
 };
 
 export const clearAuthTokens = (): void => {
-  if (window.WebApp?.SecureStorage?.removeItem) {
-    window.WebApp.SecureStorage.removeItem('access_token');
-    window.WebApp.SecureStorage.removeItem('refresh_token');
-  } else {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-  }
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
 };
-
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -63,7 +48,6 @@ apiClient.interceptors.request.use(
   },
   (error: AxiosError) => Promise.reject(error)
 );
-
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -92,7 +76,8 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (
         originalRequest.url?.includes('/auth/refresh') ||
-        originalRequest.url?.includes('/auth/max-login')
+        originalRequest.url?.includes('/auth/max-login') ||
+        originalRequest.url?.includes('/auth/esia-login')
       ) {
         clearAuthTokens();
         return Promise.reject(error);

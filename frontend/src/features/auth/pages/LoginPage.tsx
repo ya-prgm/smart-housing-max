@@ -9,37 +9,42 @@ export const LoginPage: React.FC = () => {
   const { impact, notification } = useHaptic();
 
   const [viewMode, setViewMode] = useState<'welcome' | 'credentials'>('welcome');
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [identifier, setIdentifier] = useState('123-456-789 01');
+  const [password, setPassword] = useState('demo_password');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleStartLogin = () => {
     impact('light');
     setViewMode('credentials');
   };
 
+  const handleQuickSelectRole = (snils: string) => {
+    impact('light');
+    setIdentifier(snils);
+    setPassword('demo_password');
+    setErrorMessage(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     impact('medium');
     setIsLoading(true);
-
-    const chairmanProfile = {
-      fullName: 'Елена Смирнова',
-      role: 'chairman',
-      roleLabel: 'Председатель',
-      houseAddress: 'ул. Баумана, д. 12',
-      apartment: '48',
-    };
-    localStorage.setItem('current_user', JSON.stringify(chairmanProfile));
+    setErrorMessage(null);
 
     try {
-      await authApi.loginWithEsia(identifier, password);
+      const response = await authApi.loginWithEsia(identifier, password);
       notification('success');
-      navigate('/auth/pin-setup');
+
+      if (response.hasPin) {
+        navigate('/auth/pin-enter');
+      } else {
+        navigate('/auth/pin-setup');
+      }
     } catch {
-      notification('success');
-      navigate('/auth/pin-setup');
+      notification('error');
+      setErrorMessage('Неверный логин или пароль в ЕСИА');
     } finally {
       setIsLoading(false);
     }
@@ -118,13 +123,41 @@ export const LoginPage: React.FC = () => {
                 />
               </div>
 
-              <button
-                type="button"
-                className="mt-2.5 mb-5 inline-flex items-center space-x-1.5 text-[13px] font-medium text-slate-600 hover:text-slate-900 transition cursor-pointer"
-              >
-                <span>Русский</span>
-                <span className="w-2.5 h-2.5 rounded-full border border-slate-300 bg-white shadow-inner" />
-              </button>
+              <div className="w-full flex items-center justify-center gap-1.5 my-3 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => handleQuickSelectRole('123-456-789 01')}
+                  className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                    identifier === '123-456-789 01' ? 'bg-[#0C73FE] text-white' : 'text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Житель
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickSelectRole('987-654-321 00')}
+                  className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                    identifier === '987-654-321 00' ? 'bg-[#0C73FE] text-white' : 'text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Председатель
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickSelectRole('111-222-333 44')}
+                  className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition-all ${
+                    identifier === '111-222-333 44' ? 'bg-[#0C73FE] text-white' : 'text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  УК
+                </button>
+              </div>
+
+              {errorMessage && (
+                <div className="w-full mb-3 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs text-center font-medium">
+                  {errorMessage}
+                </div>
+              )}
 
               <form className="w-full flex flex-col" onSubmit={handleSubmit}>
                 <div className="mb-4">

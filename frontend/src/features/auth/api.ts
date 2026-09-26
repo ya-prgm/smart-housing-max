@@ -1,8 +1,4 @@
-import { apiClient, setAuthTokens } from '../../shared/api/client';
-
-export interface MaxAuthRequest {
-  initData: string;
-}
+import { apiClient, setAuthTokens, clearAuthTokens } from '../../shared/api/client';
 
 export interface AuthTokens {
   accessToken: string;
@@ -11,12 +7,12 @@ export interface AuthTokens {
 
 export interface AuthUser {
   id: number;
-  maxUserId: number;
-  fullName: string;
+  max_user_id: number;
+  full_name: string;
   role: 'resident' | 'chairman' | 'uk_staff';
-  avatarUrl?: string;
-  houseId?: number;
-  apartmentNumber?: string;
+  house_id: number | null;
+  house_address: string | null;
+  apartment_number: string | null;
 }
 
 export interface LoginResponse {
@@ -25,93 +21,52 @@ export interface LoginResponse {
   hasPin: boolean;
 }
 
-
-const DEMO_RESIDENT: LoginResponse = {
-  tokens: {
-    accessToken: 'demo_access_token_resident_123',
-    refreshToken: 'demo_refresh_token_resident_30d',
-  },
-  user: {
-    id: 1,
-    maxUserId: 123456789,
-    fullName: 'Алексей Смирнов',
-    role: 'resident',
-    houseId: 1,
-    apartmentNumber: '42',
-  },
-  hasPin: false,
-};
-
 export const authApi = {
-
   async loginWithMax(initData: string): Promise<LoginResponse> {
-    try {
-      const response = await apiClient.post<LoginResponse>('/auth/max-login', {
-        initData,
-      });
-      setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
-      return response.data;
-    } catch {
-      setAuthTokens(DEMO_RESIDENT.tokens.accessToken, DEMO_RESIDENT.tokens.refreshToken);
-      return DEMO_RESIDENT;
-    }
+    const response = await apiClient.post<LoginResponse>('/auth/max-login', {
+      initData,
+    });
+    setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+    localStorage.setItem('current_user', JSON.stringify(response.data.user));
+    return response.data;
   },
-
 
   async refreshTokens(refreshToken: string): Promise<AuthTokens> {
     const response = await apiClient.post<AuthTokens>('/auth/refresh', {
       refreshToken,
     });
+    setAuthTokens(response.data.accessToken, response.data.refreshToken);
     return response.data;
   },
 
-
   async loginWithEsia(identifier: string, password?: string): Promise<LoginResponse> {
-    try {
-      const response = await apiClient.post<LoginResponse>('/auth/esia-login', {
-        identifier,
-        password,
-      });
-      setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
-      return response.data;
-    } catch {
-
-      setAuthTokens(DEMO_RESIDENT.tokens.accessToken, DEMO_RESIDENT.tokens.refreshToken);
-      return DEMO_RESIDENT;
-    }
+    const response = await apiClient.post<LoginResponse>('/auth/esia-login', {
+      identifier: identifier.trim(),
+      password: password || 'demo_password',
+    });
+    setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+    localStorage.setItem('current_user', JSON.stringify(response.data.user));
+    return response.data;
   },
 
-
-  async setPinCode(pin: string): Promise<{ success: boolean }> {
-    try {
-      const response = await apiClient.post<{ success: boolean }>('/auth/pin/setup', {
-        pin,
-      });
-      return response.data;
-    } catch {
-      return { success: true };
-    }
+  async setPinCode(pin: string): Promise<{ status: string }> {
+    const response = await apiClient.post<{ status: string }>('/auth/pin/setup', {
+      pin,
+    });
+    return response.data;
   },
-
 
   async verifyPinCode(pin: string): Promise<{ valid: boolean }> {
-    try {
-      const response = await apiClient.post<{ valid: boolean }>('/auth/pin/verify', {
-        pin,
-      });
-      return response.data;
-    } catch {
-      return { valid: true };
-    }
+    const response = await apiClient.post<{ valid: boolean }>('/auth/pin/verify', {
+      pin,
+    });
+    return response.data;
   },
 
-
-  async resetPinCode(): Promise<{ success: boolean }> {
-    try {
-      const response = await apiClient.post<{ success: boolean }>('/auth/pin/reset');
-      return response.data;
-    } catch {
-      return { success: true };
-    }
+  async resetPinCode(): Promise<{ status: string }> {
+    const response = await apiClient.post<{ status: string }>('/auth/pin/reset');
+    clearAuthTokens();
+    localStorage.removeItem('current_user');
+    return response.data;
   },
 };

@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PinDots } from '../components/PinDots';
 import { PinKeypad } from '../components/PinKeypad';
 import { usePinAuth } from '../hooks/usePinAuth';
 import { useBiometric } from '../hooks/useBiometric';
 import { useHaptic } from '../../../shared/hooks/useHaptic';
+import { authApi } from '../api';
 
 export const PinEnterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,33 +13,61 @@ export const PinEnterPage: React.FC = () => {
     pin,
     maxDigits,
     isComplete,
-    isError,
-    isSuccess,
     handleDigitPress,
     handleBackspace,
-    verifyPinLocally,
     clearPin,
   } = usePinAuth();
 
   const { authenticate } = useBiometric();
-  const { impact } = useHaptic();
+  const { impact, notification } = useHaptic();
+  const [isError, setIsError] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const getDestinationRoute = () => {
+    try {
+      const raw = localStorage.getItem('current_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u.role === 'uk_staff') return '/uk/houses';
+      }
+    } catch {}
+    return '/feed';
+  };
 
   useEffect(() => {
     if (isComplete) {
-      const isValid = verifyPinLocally(pin);
-      if (isValid) {
-        const timer = setTimeout(() => {
-          navigate('/feed');
-        }, 150);
-        return () => clearTimeout(timer);
-      } else {
-        const timer = setTimeout(() => {
+      authApi.verifyPinCode(pin).then((res) => {
+        if (res.valid) {
+          notification('success');
+          setIsSuccess(true);
+          setIsError(false);
+          const timer = setTimeout(() => {
+            navigate(getDestinationRoute());
+          }, 150);
+          return () => clearTimeout(timer);
+        } else {
+          notification('error');
+          impact('heavy');
+          setIsError(true);
+          setIsSuccess(false);
+          const timer = setTimeout(() => {
+            clearPin();
+            setIsError(false);
+          }, 650);
+          return () => clearTimeout(timer);
+        }
+      }).catch(() => {
+        notification('error');
+        impact('heavy');
+        setIsError(true);
+        setIsSuccess(false);
+        setTimeout(() => {
           clearPin();
+          setIsError(false);
         }, 650);
-        return () => clearTimeout(timer);
-      }
+      });
     }
-  }, [isComplete, pin, verifyPinLocally, clearPin, navigate]);
+  }, [isComplete, pin, clearPin, navigate, notification, impact]);
 
   const handleForgotPin = () => {
     impact('light');
@@ -49,7 +78,6 @@ export const PinEnterPage: React.FC = () => {
     <div className="bg-[#f7f9ff] font-sans text-[#141c24] flex flex-col min-h-screen select-none">
       <main className="flex-1 flex flex-col relative w-full pt-[env(safe-area-inset-top,16px)] pb-[env(safe-area-inset-bottom,16px)] bg-[#f7f9ff]">
         <div className="flex flex-col w-full px-4 py-3 justify-between select-none max-w-md mx-auto">
-           
           <div className="flex flex-col items-center text-center mt-1">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center p-1.5">
@@ -63,9 +91,10 @@ export const PinEnterPage: React.FC = () => {
             </div>
 
             <h2 className="text-[26px] font-bold text-[#141c24] mt-1">Пин-код</h2>
-            <p className="text-[14px] text-[#3e4850] mt-1">Введите код быстрого входа</p>
+            <p className="text-[14px] text-[#3e4850] mt-1">
+              {isError ? 'Неверный пин-код. Попробуйте снова' : 'Введите код быстрого входа'}
+            </p>
 
-             
             <div className="mt-6 mb-2">
               <PinDots
                 length={pin.length}
@@ -76,7 +105,6 @@ export const PinEnterPage: React.FC = () => {
             </div>
           </div>
 
-           
           <div className="w-full max-w-[320px] mx-auto my-4">
             <PinKeypad
               onDigitPress={handleDigitPress}
@@ -86,7 +114,6 @@ export const PinEnterPage: React.FC = () => {
             />
           </div>
 
-           
           <div className="flex flex-col items-center pb-2 pt-1">
             <button
               type="button"
