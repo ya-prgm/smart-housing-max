@@ -10,6 +10,7 @@ from app.models.ticket import Ticket, TicketStatus, TicketStatusHistory
 from app.models.audit import AuditLog
 from app.core.constants import JournalAction, JournalEntityType
 from app.schemas.ticket import TicketResponse, TicketAttachmentResponse
+from app.schemas.topic import RecipientItem
 from app.schemas.uk import TicketStatusUpdateRequest
 from app.schemas.common import PaginatedResponse
 
@@ -41,13 +42,16 @@ async def get_uk_all_tickets(
             func.lower(Ticket.title).like(q) | func.lower(Ticket.description).like(q)
         )
 
-    total = (await db.execute(select(func.count(Ticket.id)).select_from(base_query.subquery()))).scalar() or 0
+    count_subq = base_query.subquery()
+    total = (await db.execute(select(func.count()).select_from(count_subq))).scalar() or 0
 
     stmt = (
         base_query.options(
             selectinload(Ticket.house),
             selectinload(Ticket.author),
             selectinload(Ticket.supports),
+            selectinload(Ticket.topic),
+            selectinload(Ticket.recipients),
             selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
         )
         .order_by(desc(Ticket.id))
@@ -69,11 +73,26 @@ async def get_uk_all_tickets(
             for att in t.attachments
             if att.file
         ]
+        recips = [
+            RecipientItem(
+                id=r.id,
+                code=r.code,
+                short_name=r.short_name,
+                full_name=r.full_name,
+                category=r.category,
+                icon=r.icon,
+            )
+            for r in t.recipients
+        ]
+        recip_str = t.recipient_name or (", ".join(r.short_name for r in t.recipients) if t.recipients else "УК")
+
         items.append(
             TicketResponse(
                 id=t.id,
                 code=t.code,
                 category=t.category,
+                topic_code=t.topic.code if t.topic else "4",
+                topic_title=t.topic.title if t.topic else t.title,
                 title=t.title,
                 description=t.description,
                 status=t.status,
@@ -82,7 +101,8 @@ async def get_uk_all_tickets(
                 is_my=False,
                 votes_count=len(t.supports),
                 is_voted=False,
-                recipient_name=t.recipient_name,
+                recipient_name=recip_str,
+                recipients=recips,
                 house_address=t.house.address if t.house else "",
                 author_full_name=t.author.full_name if t.author else None,
                 attachments=attachments,
@@ -113,6 +133,8 @@ async def get_uk_ticket_details(
             selectinload(Ticket.house),
             selectinload(Ticket.author),
             selectinload(Ticket.supports),
+            selectinload(Ticket.topic),
+            selectinload(Ticket.recipients),
             selectinload(Ticket.attachments).selectinload(Ticket.attachments.property.mapper.class_.file),
         )
     )
@@ -131,11 +153,25 @@ async def get_uk_ticket_details(
         for att in t.attachments
         if att.file
     ]
+    recips = [
+        RecipientItem(
+            id=r.id,
+            code=r.code,
+            short_name=r.short_name,
+            full_name=r.full_name,
+            category=r.category,
+            icon=r.icon,
+        )
+        for r in t.recipients
+    ]
+    recip_str = t.recipient_name or (", ".join(r.short_name for r in t.recipients) if t.recipients else "УК")
 
     return TicketResponse(
         id=t.id,
         code=t.code,
         category=t.category,
+        topic_code=t.topic.code if t.topic else "4",
+        topic_title=t.topic.title if t.topic else t.title,
         title=t.title,
         description=t.description,
         status=t.status,
@@ -144,7 +180,8 @@ async def get_uk_ticket_details(
         is_my=False,
         votes_count=len(t.supports),
         is_voted=False,
-        recipient_name=t.recipient_name,
+        recipient_name=recip_str,
+        recipients=recips,
         house_address=t.house.address if t.house else "",
         author_full_name=t.author.full_name if t.author else None,
         attachments=attachments,

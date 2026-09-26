@@ -1,5 +1,8 @@
+from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User, UserRole
+from app.models.vote import PollResponse
 from app.core.constants import PollQuestionType
 from app.repositories.vote_repo import VoteRepository
 from app.schemas.feed import PostAuthor
@@ -98,6 +101,17 @@ class VoteService:
     async def submit_vote(
         self, poll_id: int, current_user: User, payload: PollSubmitRequest
     ) -> None:
+        check_stmt = select(PollResponse).where(
+            PollResponse.poll_id == poll_id,
+            PollResponse.user_id == current_user.id,
+        )
+        already_voted = (await self.db.execute(check_stmt)).scalars().first()
+        if already_voted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Вы уже приняли участие в этом опросе",
+            )
+
         apt_id = 1
         if current_user.apartments:
             apt_id = current_user.apartments[0].apartment_id

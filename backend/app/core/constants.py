@@ -59,6 +59,11 @@ class PollQuestionType(str, enum.Enum):
     SINGLE_CHOICE = "single_choice"
     MULTIPLE_CHOICE = "multiple_choice"
     TEXT = "text"
+    SINGLE = "single_choice"
+    MULTIPLE = "multiple_choice"
+
+
+QuestionType = PollQuestionType
 
 
 class ReactionType(str, enum.Enum):
@@ -70,6 +75,7 @@ class NotificationCategory(str, enum.Enum):
     SYSTEM = "system"
     UK = "uk"
     CHAIRMAN = "chairman"
+    CHAIRPERSON = "chairman"
 
 
 class PostType(str, enum.Enum):

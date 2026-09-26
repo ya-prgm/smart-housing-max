@@ -9,7 +9,7 @@ from app.models.user import User, UserRole, UserApartment
 from app.models.house import Apartment
 from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
 from app.models.file import File as FileModel
-from app.core.constants import ReactionType
+from app.core.constants import ReactionType, PostType
 from app.schemas.feed import (
     FeedPostCreate,
     FeedPostResponse,
@@ -22,6 +22,17 @@ from app.schemas.feed import (
 from app.schemas.common import PaginatedResponse, StatusResponse
 
 router = APIRouter()
+
+
+def resolve_post_type(raw_type: str) -> PostType:
+    if raw_type == "chairman":
+        return PostType.ANNOUNCEMENT
+    if raw_type == "uk":
+        return PostType.REPORT
+    try:
+        return PostType(raw_type)
+    except ValueError:
+        return PostType.INFO
 
 
 @router.get("", response_model=list[FeedPostResponse])
@@ -63,7 +74,7 @@ async def get_feed(
                 id=p.id,
                 author=PostAuthor(
                     name=p.author_title,
-                    role=p.author.role.value if p.author else "uk_staff",
+                    role=p.author.role if p.author else UserRole.UK_STAFF,
                     avatar_url=p.author.avatar_url if p.author else None,
                 ),
                 title=p.title,
@@ -74,12 +85,56 @@ async def get_feed(
                 dislikes=dislikes,
                 comments_count=len(p.comments),
                 views=p.views_count,
-                post_type=p.post_type,
+                post_type=resolve_post_type(p.post_type),
                 created_at=p.created_at,
                 my_reaction=my_r,
             )
         )
     return results
+
+
+@router.get("/{post_id}", response_model=FeedPostResponse)
+async def get_post(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    stmt = (
+        select(FeedPost)
+        .where(FeedPost.id == post_id, FeedPost.is_deleted == False)
+        .options(
+            selectinload(FeedPost.comments),
+            selectinload(FeedPost.reactions),
+            selectinload(FeedPost.author),
+        )
+    )
+    p = (await db.execute(stmt)).scalars().first()
+    if not p:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пост не найден")
+
+    likes = sum(1 for r in p.reactions if r.reaction_type == "like")
+    dislikes = sum(1 for r in p.reactions if r.reaction_type == "dislike")
+    my_r = next((ReactionType(r.reaction_type) for r in p.reactions if r.user_id == current_user.id), None)
+
+    return FeedPostResponse(
+        id=p.id,
+        author=PostAuthor(
+            name=p.author_title,
+            role=p.author.role if p.author else UserRole.UK_STAFF,
+            avatar_url=p.author.avatar_url if p.author else None,
+        ),
+        title=p.title,
+        content=p.content,
+        image_url=p.image_url,
+        image_label=p.image_label,
+        likes=likes,
+        dislikes=dislikes,
+        comments_count=len(p.comments),
+        views=p.views_count,
+        post_type=resolve_post_type(p.post_type),
+        created_at=p.created_at,
+        my_reaction=my_r,
+    )
 
 
 @router.post("", response_model=StatusResponse, status_code=201)
@@ -104,7 +159,7 @@ async def create_feed_post(
     post = FeedPost(
         house_id=house_id,
         author_id=current_user.id,
-        post_type="chairman" if current_user.role == UserRole.CHAIRMAN else "uk",
+        post_type=payload.post_type.value,
         author_title=current_user.full_name,
         author_badge="Председатель" if current_user.role == UserRole.CHAIRMAN else "УК",
         title=payload.title,
@@ -172,10 +227,11 @@ async def get_post_comments(
         FeedPostComment.parent_id == parent_id,
     )
 
-    total = (await db.execute(select(func.count()).select_from(base_query.subquery()))).scalar() or 0
+    count_subq = base_query.subquery()
+    total = (await db.execute(select(func.count()).select_from(count_subq))).scalar() or 0
 
     stmt = (
-        base_query.options(selectinload(FeedPostComment.replies))
+        base_query.options(selectinload(FeedPostComment.replies), selectinload(FeedPostComment.author))
         .order_by(FeedPostComment.id.asc())
         .offset((page - 1) * page_size)
         .limit(page_size)
@@ -186,7 +242,7 @@ async def get_post_comments(
         CommentResponse(
             id=c.id,
             author_name=c.author.full_name if c.author else "Житель",
-            author_role=c.author.role.value if c.author else "resident",
+            author_role=c.author.role if c.author else UserRole.RESIDENT,
             author_avatar=c.author.avatar_url if c.author else None,
             content=c.content,
             created_at=c.created_at,

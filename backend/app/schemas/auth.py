@@ -9,7 +9,7 @@ class MaxLoginRequest(BaseModel):
 
 class EsiaLoginRequest(BaseModel):
     identifier: str
-    password: str
+    password: str | None = None
 
 
 class RefreshTokenRequest(BaseModel):

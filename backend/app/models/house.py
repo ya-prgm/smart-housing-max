@@ -44,8 +44,8 @@ class House(Base, TimestampMixin):
     dispatcher_phone: Mapped[str] = mapped_column(String(30), default="+7 (800) 200-12-34", nullable=False)
     emergency_phone: Mapped[str] = mapped_column(String(30), default="+7 (843) 210-00-00", nullable=False)
     
-    apartments: Mapped[list[Apartment]] = relationship(back_populates="house", cascade="all, delete-orphan")
-    providers: Mapped[list[HouseServiceProvider]] = relationship(back_populates="house", cascade="all, delete-orphan")
+    apartments: Mapped[list[Apartment]] = relationship("Apartment", back_populates="house", cascade="all, delete-orphan")
+    providers: Mapped[list[HouseServiceProvider]] = relationship("HouseServiceProvider", back_populates="house", cascade="all, delete-orphan")
 
 
 class Apartment(Base, TimestampMixin):
@@ -64,8 +64,8 @@ class Apartment(Base, TimestampMixin):
     payment_deadline: Mapped[str] = mapped_column(String(50), default="до 10 мая", nullable=False)
     is_debt_free: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    house: Mapped[House] = relationship(back_populates="apartments")
-    users: Mapped[list[UserApartment]] = relationship(back_populates="apartment")
+    house: Mapped[House] = relationship("House", back_populates="apartments")
+    users: Mapped[list[UserApartment]] = relationship("UserApartment", back_populates="apartment")
 
 
 class HouseServiceProvider(Base):
@@ -80,4 +80,4 @@ class HouseServiceProvider(Base):
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     brand_badge: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
-    house: Mapped[House] = relationship(back_populates="providers")
+    house: Mapped[House] = relationship("House", back_populates="providers")

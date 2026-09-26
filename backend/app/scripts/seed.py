@@ -7,20 +7,27 @@ from sqlalchemy import text, select
 from app.core.config import settings
 from app.core.database import engine, AsyncSessionLocal
 from app.core.security import hash_password, hash_pin
-from app.models.base import Base
-from app.models.user import User, UserPin, UserApartment, UserRole, OwnershipType
-from app.models.house import House, Apartment, HouseServiceProvider, ManagementType, ProviderCategory
-from app.models.topic import TicketTopic, TicketRecipient
-from app.models.ticket import Ticket, TicketSupport, TicketStatus, TicketPriority
-from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
-from app.models.vote import (
-    Poll,
-    PollQuestion,
-    PollOption,
+from app.core.constants import (
+    UserRole,
+    OwnershipType,
+    ManagementType,
+    ProviderCategory,
+    TicketStatus,
+    TicketPriority,
+    RecipientType,
     PollStatus,
     QuestionType,
+    PostType,
+    NotificationCategory,
 )
-from app.models.notification import Notification, NotificationCategory
+from app.models.base import Base
+from app.models.user import User, UserPin, UserApartment
+from app.models.house import House, Apartment, HouseServiceProvider
+from app.models.topic import TicketTopic, TicketRecipient
+from app.models.ticket import Ticket, TicketSupport
+from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
+from app.models.vote import Poll, PollQuestion, PollOption
+from app.models.notification import Notification
 from app.scripts.seed_topics import seed_topics_and_recipients
 
 if sys.platform == "win32":
@@ -332,7 +339,7 @@ async def seed_data():
                 description="В районе вентиля появилась влага и подкапывает в стыке трубы.",
                 status=TicketStatus.IN_PROGRESS,
                 priority=TicketPriority.HIGH,
-                is_public_in_feed=True,
+                recipient_name="ООО «ЖилКомФорт»",
                 recipients=default_recips,
             ),
             Ticket(
@@ -346,7 +353,7 @@ async def seed_data():
                 description="Перегорела лампа в коридоре у кв. 48. Вечером темно выходить к лифту.",
                 status=TicketStatus.ACTIVE,
                 priority=TicketPriority.MEDIUM,
-                is_public_in_feed=True,
+                recipient_name="ООО «ЖилКомФорт»",
                 recipients=default_recips,
             ),
             Ticket(
@@ -360,7 +367,7 @@ async def seed_data():
                 description="По вечерам после 20:00 падает давление по всему стояку.",
                 status=TicketStatus.ACTIVE,
                 priority=TicketPriority.MEDIUM,
-                is_public_in_feed=True,
+                recipient_name="МУП «Водоканал»",
                 recipients=default_recips,
             ),
             Ticket(
@@ -374,7 +381,7 @@ async def seed_data():
                 description="Лифт во 2 подъезде издает скрежет при закрытии. Мастер вызван.",
                 status=TicketStatus.IN_PROGRESS,
                 priority=TicketPriority.MEDIUM,
-                is_public_in_feed=True,
+                recipient_name="ООО «ЖилКомФорт»",
                 recipients=default_recips,
             ),
             Ticket(
@@ -388,7 +395,7 @@ async def seed_data():
                 description="Дверь сильно хлопала, отрегулировали гидроцилиндр входа.",
                 status=TicketStatus.COMPLETED,
                 priority=TicketPriority.LOW,
-                is_public_in_feed=True,
+                recipient_name="ООО «ЖилКомФорт»",
                 recipients=default_recips,
             ),
             Ticket(
@@ -402,7 +409,7 @@ async def seed_data():
                 description="Заменили сколотые ступени у входа, швы загерметизированы.",
                 status=TicketStatus.COMPLETED,
                 priority=TicketPriority.LOW,
-                is_public_in_feed=True,
+                recipient_name="ООО «ЖилКомФорт»",
                 recipients=default_recips,
             ),
         ]
@@ -418,7 +425,7 @@ async def seed_data():
             FeedPost(
                 house_id=main_house.id,
                 author_id=chairman_user.id,
-                post_type="chairman",
+                post_type=PostType.ANNOUNCEMENT.value,
                 author_title="Елена Смирнова",
                 author_badge="Председатель",
                 title=None,
@@ -428,7 +435,7 @@ async def seed_data():
             FeedPost(
                 house_id=main_house.id,
                 author_id=users_data[2].id,
-                post_type="uk",
+                post_type=PostType.REPORT.value,
                 author_title="УК «ЖилКомФорт»",
                 author_badge="Управляющая организация",
                 title="Завершён плановый ремонт кровли над 3-м подъездом",
@@ -440,7 +447,7 @@ async def seed_data():
             FeedPost(
                 house_id=main_house.id,
                 author_id=users_data[2].id,
-                post_type="uk",
+                post_type=PostType.INFO.value,
                 author_title="УК «ЖилКомФорт»",
                 author_badge="Управляющая организация",
                 title="Весенняя промывка стволов мусоропроводов",
@@ -480,7 +487,7 @@ async def seed_data():
             order_num=1,
             question_text="Поддерживаете ли вы установку автоматического шлагбаума на главном въезде во двор со стороны ул. Баумана?",
             subtext="В стоимость входит установка шлагбаума, считывателя номеров и 2 радиопульта на каждую квартиру.",
-            question_type=QuestionType.SINGLE,
+            question_type=QuestionType.SINGLE_CHOICE,
             image_url="/uploads/polls/q1_barrier.jpg",
         )
         q2 = PollQuestion(
@@ -495,7 +502,7 @@ async def seed_data():
             order_num=3,
             question_text="Какие способы открытия шлагбаума должны поддерживаться?",
             subtext="Выберите один или несколько вариантов, которые наиболее удобны для вашей семьи.",
-            question_type=QuestionType.MULTIPLE,
+            question_type=QuestionType.MULTIPLE_CHOICE,
         )
         session.add_all([q1, q2, q3])
         await session.flush()
@@ -543,7 +550,7 @@ async def seed_data():
             ),
             Notification(
                 user_id=resident_user.id,
-                category=NotificationCategory.CHAIRPERSON,
+                category=NotificationCategory.CHAIRMAN,
                 author_name="Елена Смирнова",
                 author_badge="Председатель",
                 title="Итоги встречи Совета МКД",

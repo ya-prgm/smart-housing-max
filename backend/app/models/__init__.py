@@ -10,6 +10,9 @@ from app.models.vote import (
     PollOption,
     PollResponse,
     PollResponseAnswer,
+    PollStatus,
+    PollQuestionType,
+    QuestionType,
 )
 from app.models.notification import Notification
 from app.models.file import File
@@ -42,6 +45,9 @@ __all__ = [
     "PollOption",
     "PollResponse",
     "PollResponseAnswer",
+    "PollStatus",
+    "PollQuestionType",
+    "QuestionType",
     "Notification",
     "File",
     "AuditLog",

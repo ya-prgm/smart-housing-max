@@ -24,6 +24,7 @@ class Ticket(Base, TimestampMixin, SoftDeleteMixin):
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     topic_id: Mapped[int] = mapped_column(ForeignKey("ticket_topics.id", ondelete="RESTRICT"), nullable=False, index=True)
     
+    recipient_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     category: Mapped[str] = mapped_column(String(100), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -41,13 +42,13 @@ class Ticket(Base, TimestampMixin, SoftDeleteMixin):
     )
     is_public_in_feed: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
-    house: Mapped[House] = relationship()
-    author: Mapped[User] = relationship()
-    topic: Mapped[TicketTopic] = relationship()
-    recipients: Mapped[list[TicketRecipient]] = relationship(secondary=ticket_recipient_map)
-    supports: Mapped[list[TicketSupport]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
-    attachments: Mapped[list[TicketAttachment]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
-    history: Mapped[list[TicketStatusHistory]] = relationship(back_populates="ticket", cascade="all, delete-orphan")
+    house: Mapped[House] = relationship("House")
+    author: Mapped[User] = relationship("User")
+    topic: Mapped[TicketTopic] = relationship("TicketTopic")
+    recipients: Mapped[list[TicketRecipient]] = relationship("TicketRecipient", secondary=ticket_recipient_map)
+    supports: Mapped[list[TicketSupport]] = relationship("TicketSupport", back_populates="ticket", cascade="all, delete-orphan")
+    attachments: Mapped[list[TicketAttachment]] = relationship("TicketAttachment", back_populates="ticket", cascade="all, delete-orphan")
+    history: Mapped[list[TicketStatusHistory]] = relationship("TicketStatusHistory", back_populates="ticket", cascade="all, delete-orphan")
 
 
 class TicketSupport(Base, TimestampMixin):
@@ -58,7 +59,7 @@ class TicketSupport(Base, TimestampMixin):
     ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
-    ticket: Mapped[Ticket] = relationship(back_populates="supports")
+    ticket: Mapped[Ticket] = relationship("Ticket", back_populates="supports")
 
 
 class TicketAttachment(Base):
@@ -68,8 +69,8 @@ class TicketAttachment(Base):
     ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
     file_id: Mapped[int] = mapped_column(ForeignKey("files.id", ondelete="CASCADE"), nullable=False)
 
-    ticket: Mapped[Ticket] = relationship(back_populates="attachments")
-    file: Mapped[File] = relationship()
+    ticket: Mapped[Ticket] = relationship("Ticket", back_populates="attachments")
+    file: Mapped[File] = relationship("File")
 
 
 class TicketStatusHistory(Base, TimestampMixin):
@@ -82,5 +83,5 @@ class TicketStatusHistory(Base, TimestampMixin):
     new_status: Mapped[TicketStatus] = mapped_column(Enum(TicketStatus, name="ticket_status_enum"))
     comment: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
-    ticket: Mapped[Ticket] = relationship(back_populates="history")
-    changed_by: Mapped[User] = relationship()
+    ticket: Mapped[Ticket] = relationship("Ticket", back_populates="history")
+    changed_by: Mapped[User] = relationship("User")

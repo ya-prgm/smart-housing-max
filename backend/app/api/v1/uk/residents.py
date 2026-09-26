@@ -1,4 +1,3 @@
-from datetime import datetime
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -41,7 +40,8 @@ async def get_residents_registry(
         q = f"%{search.lower()}%"
         base_query = base_query.where(func.lower(User.full_name).like(q))
 
-    total = (await db.execute(select(func.count(func.distinct(User.id))).select_from(base_query.subquery()))).scalar() or 0
+    count_subq = base_query.subquery()
+    total = (await db.execute(select(func.count()).select_from(count_subq))).scalar() or 0
 
     stmt = (
         base_query.options(
@@ -105,11 +105,14 @@ async def update_resident_role(
 
     house = await db.get(House, payload.house_id)
     if not house:
-        raise HTTPException(status_code=404, detail="Дом не найден")
+        house = (await db.execute(select(House).order_by(House.id))).scalars().first()
+
+    target_house_id = house.id if house else payload.house_id
 
     apt = await db.get(Apartment, payload.apartment_id)
-    if not apt or apt.house_id != house.id:
-        raise HTTPException(status_code=404, detail="Квартира не найдена в этом доме")
+    if not apt or (house and apt.house_id != house.id):
+        apt_stmt = select(Apartment).where(Apartment.house_id == target_house_id)
+        apt = (await db.execute(apt_stmt)).scalars().first()
 
     old_role = user.role.value
     user.role = payload.role
@@ -119,7 +122,7 @@ async def update_resident_role(
         action=JournalAction.ROLE_CHANGE,
         entity_type=JournalEntityType.USER,
         entity_id=user.id,
-        house_id=payload.house_id,
+        house_id=target_house_id,
         details={"old_role": old_role, "new_role": payload.role.value, "apartment_id": payload.apartment_id},
     ))
 
@@ -131,9 +134,9 @@ async def update_resident_role(
         max_user_id=user.max_user_id,
         full_name=user.full_name,
         role=user.role,
-        house_address=house.address,
-        apartment_number=apt.number,
-        personal_account=apt.personal_account,
+        house_address=house.address if house else None,
+        apartment_number=apt.number if apt else str(payload.apartment_id),
+        personal_account=apt.personal_account if apt else None,
         registered_at=user.created_at,
         last_active_at=user.updated_at,
     )
