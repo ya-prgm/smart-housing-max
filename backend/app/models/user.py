@@ -1,21 +1,9 @@
-import enum
 from datetime import datetime
 from sqlalchemy import String, BigInteger, Enum, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
-
-
-class UserRole(str, enum.Enum):
-    RESIDENT = "resident"       # Житель
-    CHAIRMAN = "chairman"       # Председатель Совета МКД / ТСЖ
-    UK_STAFF = "uk_staff"       # Сотрудник управляющей компании
-
-
-class OwnershipType(str, enum.Enum):
-    OWNER = "owner"             # Собственник
-    TENANT = "tenant"           # Наниматель / Арендатор
-    REGISTERED = "registered"   # Зарегистрирован / Прописан
+from app.core.constants import UserRole, OwnershipType
 
 
 class User(Base, TimestampMixin):
@@ -23,11 +11,13 @@ class User(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     max_user_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True, nullable=False)
+    
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     avatar_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    snils: Mapped[str | None] = mapped_column(String(20), nullable=True)  # СНИЛС (замаскированный)
+    snils: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role_enum"),
         default=UserRole.RESIDENT,
@@ -35,12 +25,25 @@ class User(Base, TimestampMixin):
         index=True,
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    
     apartments: Mapped[list["UserApartment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    pin: Mapped["UserPin"] = relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+
+class UserPin(Base):
+    __tablename__ = "user_pins"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    pin_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    user: Mapped["User"] = relationship(back_populates="pin")
 
 
 class UserApartment(Base, TimestampMixin):
-    """Связь пользователя с квартирой (подтверждение ГИС ЖКХ / ЕСИА)"""
     __tablename__ = "user_apartments"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
@@ -53,14 +56,13 @@ class UserApartment(Base, TimestampMixin):
         nullable=False,
     )
     is_verified_esia: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    is_primary: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)  # Основная квартира в шапке
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="apartments")
     apartment: Mapped["Apartment"] = relationship(back_populates="users")
 
 
 class RefreshToken(Base):
-    """Хранение refresh-токенов в БД с ротацией для защиты по ГОСТ/OWASP"""
     __tablename__ = "refresh_tokens"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

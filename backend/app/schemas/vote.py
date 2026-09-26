@@ -1,5 +1,7 @@
+from datetime import datetime
 from pydantic import BaseModel
 from app.schemas.common import BaseSchema
+from app.core.constants import PollStatus, PollQuestionType
 
 
 class PollAnswerSubmission(BaseModel):
@@ -24,7 +26,7 @@ class PollQuestionResponse(BaseSchema):
     order_num: int
     question_text: str
     subtext: str | None = None
-    question_type: str
+    question_type: PollQuestionType
     image_url: str | None = None
     options: list[PollOptionResponse] = []
 
@@ -35,9 +37,9 @@ class PollDetailResponse(BaseSchema):
     title: str
     description: str
     image_url: str | None = None
-    status: str
-    estimated_time: str
-    deadline_text: str
+    status: PollStatus
+    created_at: datetime
+    deadline: datetime | None = None
     protocol_number: str | None = None
     total_questions: int
     is_completed_by_me: bool
@@ -47,12 +49,11 @@ class PollDetailResponse(BaseSchema):
 class PollCardResponse(BaseSchema):
     id: int
     author_title: str
-    author_icon: str
-    status: str
-    deadline_text: str
+    status: PollStatus
     title: str
     description: str
-    estimated_time: str
+    created_at: datetime
+    deadline: datetime | None = None
     questions_count: int
     participants_count: int
     is_completed: bool

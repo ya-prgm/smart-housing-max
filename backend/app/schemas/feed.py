@@ -1,13 +1,13 @@
 from datetime import datetime
 from pydantic import BaseModel
 from app.schemas.common import BaseSchema
+from app.core.constants import ReactionType
 
 
 class FeedPostCreate(BaseModel):
-    house_id: int
     title: str | None = None
     content: str
-    image_url: str | None = None
+    image_id: int | None = None
     image_label: str | None = None
 
 
@@ -17,37 +17,43 @@ class CommentCreate(BaseModel):
 
 
 class ReactionCreate(BaseModel):
-    reaction_type: str
+    reaction_type: ReactionType
+
+
+class ReactionToggleResponse(BaseSchema):
+    post_id: int
+    likes: int
+    dislikes: int
+    my_reaction: ReactionType | None = None
 
 
 class CommentResponse(BaseSchema):
     id: int
     author_name: str
-    author_badge: str | None = None
-    avatar_text: str
-    avatar_bg: str
-    text: str
-    time_formatted: str
+    author_role: str
+    author_avatar: str | None = None
+    content: str
+    created_at: datetime
     replies: list["CommentResponse"] = []
+
+
+class PostAuthor(BaseModel):
+    name: str
+    role: str
+    avatar_url: str | None = None
 
 
 class FeedPostResponse(BaseSchema):
     id: int
-    author_name: str
-    role_badge: str | None = None
-    avatar_text: str
-    is_org: bool
-    time_formatted: str
-    subtitle: str | None = None
+    author: PostAuthor
     title: str | None = None
     content: str
-    image: str | None = None
+    image_url: str | None = None
     image_label: str | None = None
-    schedule_title: str | None = None
-    schedule_rows: list[str] | None = None
     likes: int
     dislikes: int
     comments_count: int
-    views: str
+    views: int
     post_type: str
-    my_reaction: str | None = None
+    created_at: datetime
+    my_reaction: ReactionType | None = None
