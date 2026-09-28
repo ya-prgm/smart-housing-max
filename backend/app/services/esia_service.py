@@ -6,13 +6,14 @@ from sqlalchemy.orm import selectinload
 
 from app.models.user import User
 from app.core.security import verify_password
+from app.core.constants import EsiaSyncStatus
 
 
 class EsiaService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def authenticate(self, identifier: str, password: str | None) -> User | None:
+    async def authenticate(self, identifier: str, password: str) -> User | None:
         clean = identifier.strip()
         compact = clean.replace(" ", "").replace("-", "")
 
@@ -30,8 +31,7 @@ class EsiaService:
         if not user or not user.is_active or not user.esia_password_hash:
             return None
 
-        pwd_to_check = password if password else "demo_password"
-        if not verify_password(pwd_to_check, user.esia_password_hash):
+        if not verify_password(password, user.esia_password_hash):
             return None
 
         return user
@@ -52,7 +52,7 @@ class EsiaService:
         current_user.esia_token_expires_at = now + timedelta(days=30)
         current_user.esia_linked_at = now
         current_user.esia_last_sync_at = now
-        current_user.esia_sync_status = "success"
+        current_user.esia_sync_status = EsiaSyncStatus.SUCCESS
 
         await self.db.commit()
         await self.db.refresh(current_user)
@@ -61,19 +61,19 @@ class EsiaService:
     async def sync_user(self, user: User) -> bool:
         now = datetime.now(timezone.utc)
         if not user.esia_access_token:
-            user.esia_sync_status = "never"
+            user.esia_sync_status = EsiaSyncStatus.NEVER
             await self.db.commit()
             return False
 
         if user.esia_token_expires_at and user.esia_token_expires_at < now:
             user.esia_access_token = None
             user.esia_refresh_token = None
-            user.esia_sync_status = "failed"
+            user.esia_sync_status = EsiaSyncStatus.EXPIRED
             await self.db.commit()
             return False
 
         user.esia_last_sync_at = now
-        user.esia_sync_status = "success"
+        user.esia_sync_status = EsiaSyncStatus.SUCCESS
         await self.db.commit()
         return True
 
@@ -83,5 +83,5 @@ class EsiaService:
         user.esia_refresh_token = None
         user.esia_token_expires_at = None
         user.esia_linked_at = None
-        user.esia_sync_status = "never"
+        user.esia_sync_status = EsiaSyncStatus.NEVER
         await self.db.commit()

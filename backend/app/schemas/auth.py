@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 from app.schemas.common import BaseSchema
-from app.core.constants import UserRole
+from app.core.constants import UserRole, EsiaSyncStatus
 
 
 class MaxLoginRequest(BaseModel):
@@ -10,7 +10,7 @@ class MaxLoginRequest(BaseModel):
 
 class EsiaLoginRequest(BaseModel):
     identifier: str
-    password: str | None = None
+    password: str
 
 
 class RefreshTokenRequest(BaseModel):
@@ -49,5 +49,5 @@ class LoginResponse(BaseModel):
     needs_esia_auth: bool = Field(alias="needsEsiaAuth")
     esia_linked_at: datetime | None = Field(default=None, alias="esiaLinkedAt")
     esia_last_sync_at: datetime | None = Field(default=None, alias="esiaLastSyncAt")
-    esia_sync_status: str = Field(default="never", alias="esiaSyncStatus")
+    esia_sync_status: EsiaSyncStatus = Field(default=EsiaSyncStatus.NEVER, alias="esiaSyncStatus")
     esia_token_expires_at: datetime | None = Field(default=None, alias="esiaTokenExpiresAt")

@@ -5,7 +5,7 @@ from sqlalchemy import String, BigInteger, Enum, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
-from app.core.constants import UserRole, OwnershipType
+from app.core.constants import UserRole, OwnershipType, EsiaSyncStatus
 
 if TYPE_CHECKING:
     from app.models.house import Apartment
@@ -30,7 +30,11 @@ class User(Base, TimestampMixin):
     esia_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     esia_linked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     esia_last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    esia_sync_status: Mapped[str] = mapped_column(String(20), default="never", nullable=False)
+    esia_sync_status: Mapped[EsiaSyncStatus] = mapped_column(
+        Enum(EsiaSyncStatus, name="esia_sync_status_enum"),
+        default=EsiaSyncStatus.NEVER,
+        nullable=False,
+    )
 
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role_enum"),
@@ -54,7 +58,7 @@ class UserPin(Base):
     pin_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    user: Mapped[User] = relationship("User", back_populates="pin")
+    user: Mapped[User] = relationship(back_populates="pin")
 
 
 class UserApartment(Base, TimestampMixin):
@@ -72,8 +76,8 @@ class UserApartment(Base, TimestampMixin):
     is_verified_esia: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
-    user: Mapped[User] = relationship("User", back_populates="apartments")
-    apartment: Mapped[Apartment] = relationship("Apartment", back_populates="users")
+    user: Mapped[User] = relationship(back_populates="apartments")
+    apartment: Mapped[Apartment] = relationship(back_populates="users")
 
 
 class RefreshToken(Base):
@@ -86,4 +90,4 @@ class RefreshToken(Base):
     revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
-    user: Mapped[User] = relationship("User", back_populates="refresh_tokens")
+    user: Mapped[User] = relationship(back_populates="refresh_tokens")

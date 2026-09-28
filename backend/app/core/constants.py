@@ -59,11 +59,6 @@ class PollQuestionType(str, enum.Enum):
     SINGLE_CHOICE = "single_choice"
     MULTIPLE_CHOICE = "multiple_choice"
     TEXT = "text"
-    SINGLE = "single_choice"
-    MULTIPLE = "multiple_choice"
-
-
-QuestionType = PollQuestionType
 
 
 class ReactionType(str, enum.Enum):
@@ -75,7 +70,6 @@ class NotificationCategory(str, enum.Enum):
     SYSTEM = "system"
     UK = "uk"
     CHAIRMAN = "chairman"
-    CHAIRPERSON = "chairman"
 
 
 class PostType(str, enum.Enum):
@@ -83,6 +77,13 @@ class PostType(str, enum.Enum):
     REPORT = "report"
     INFO = "info"
     EMERGENCY = "emergency"
+
+
+class EsiaSyncStatus(str, enum.Enum):
+    NEVER = "never"
+    SUCCESS = "success"
+    FAILED = "failed"
+    EXPIRED = "expired"
 
 
 class ActivityType(str, enum.Enum):

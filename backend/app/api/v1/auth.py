@@ -17,7 +17,7 @@ from app.core.security import (
 from app.api.deps import get_current_user
 from app.models.user import User, UserPin, RefreshToken
 from app.models.house import Apartment
-from app.core.constants import UserRole
+from app.core.constants import UserRole, EsiaSyncStatus
 from app.services.esia_service import EsiaService
 from app.schemas.auth import (
     MaxLoginRequest,
@@ -29,7 +29,7 @@ from app.schemas.auth import (
     AuthUser,
     AuthTokens,
 )
-from app.schemas.common import StatusResponse
+from app.schemas.common import StatusResponse, ErrorResponse
 
 router = APIRouter()
 
@@ -77,7 +77,16 @@ async def build_login_response(user: User, db: AsyncSession, needs_esia: bool) -
     )
 
 
-@router.post("/max-login", response_model=LoginResponse)
+@router.post(
+    "/max-login",
+    response_model=LoginResponse,
+    responses={
+        401: {
+            "model": ErrorResponse,
+            "description": "INVALID_INIT_DATA или INIT_DATA_EXPIRED",
+        }
+    },
+)
 async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)):
     if not payload.initData:
         raise HTTPException(
@@ -119,7 +128,7 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
             max_user_id=max_user_id,
             full_name=full_name,
             role=UserRole.RESIDENT,
-            esia_sync_status="never",
+            esia_sync_status=EsiaSyncStatus.NEVER,
         )
         db.add(user)
         await db.flush()
@@ -135,7 +144,13 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
     "/esia-login",
     response_model=LoginResponse,
     summary="Login ESIA (MOCK)",
-    description="Имитация входа через ЕСИА (Госуслуги). Реальная интеграция требует аккредитации в Минцифры и подключения к СМЭВ ЕСИА. Для демонстрации используются тестовые учётные записи."
+    description="Имитация входа через ЕСИА (Госуслуги). Реальная интеграция требует аккредитации в Минцифры и подключения к СМЭВ ЕСИА. Для демонстрации используются тестовые учётные записи.",
+    responses={
+        401: {
+            "model": ErrorResponse,
+            "description": "INVALID_CREDENTIALS",
+        }
+    },
 )
 async def login_esia(
     payload: EsiaLoginRequest,
@@ -155,7 +170,16 @@ async def login_esia(
     return await build_login_response(updated_user, db, needs_esia=False)
 
 
-@router.post("/esia-sync", response_model=LoginResponse)
+@router.post(
+    "/esia-sync",
+    response_model=LoginResponse,
+    responses={
+        401: {
+            "model": ErrorResponse,
+            "description": "ESIA_TOKEN_EXPIRED",
+        }
+    },
+)
 async def sync_esia_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

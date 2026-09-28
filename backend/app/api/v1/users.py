@@ -55,6 +55,11 @@ async def get_my_profile(
         debt_amount=debt,
         is_debt_free=debt_free,
         notifications_enabled=current_user.notifications_enabled,
+        esia_linked=bool(current_user.esia_access_token is not None),
+        esia_linked_at=current_user.esia_linked_at,
+        esia_last_sync_at=current_user.esia_last_sync_at,
+        esia_sync_status=current_user.esia_sync_status,
+        esia_token_expires_at=current_user.esia_token_expires_at,
     )
 
 

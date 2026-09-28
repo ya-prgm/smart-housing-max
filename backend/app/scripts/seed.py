@@ -16,9 +16,10 @@ from app.core.constants import (
     TicketPriority,
     RecipientType,
     PollStatus,
-    QuestionType,
+    PollQuestionType,
     PostType,
     NotificationCategory,
+    EsiaSyncStatus,
 )
 from app.models.base import Base
 from app.models.user import User, UserPin, UserApartment
@@ -227,7 +228,7 @@ async def seed_data():
                 esia_token_expires_at=now + timedelta(days=30),
                 esia_linked_at=now,
                 esia_last_sync_at=now,
-                esia_sync_status="success",
+                esia_sync_status=EsiaSyncStatus.SUCCESS,
             ),
             User(
                 max_user_id=987654321,
@@ -243,7 +244,7 @@ async def seed_data():
                 esia_token_expires_at=now + timedelta(days=30),
                 esia_linked_at=now,
                 esia_last_sync_at=now,
-                esia_sync_status="success",
+                esia_sync_status=EsiaSyncStatus.SUCCESS,
             ),
             User(
                 max_user_id=555555555,
@@ -259,7 +260,7 @@ async def seed_data():
                 esia_token_expires_at=now + timedelta(days=30),
                 esia_linked_at=now,
                 esia_last_sync_at=now,
-                esia_sync_status="success",
+                esia_sync_status=EsiaSyncStatus.SUCCESS,
             ),
         ]
         session.add_all(users_data)
@@ -509,7 +510,7 @@ async def seed_data():
             order_num=1,
             question_text="Поддерживаете ли вы установку автоматического шлагбаума на главном въезде во двор со стороны ул. Баумана?",
             subtext="В стоимость входит установка шлагбаума, считывателя номеров и 2 радиопульта на каждую квартиру.",
-            question_type=QuestionType.SINGLE_CHOICE,
+            question_type=PollQuestionType.SINGLE_CHOICE,
             image_url="/uploads/polls/q1_barrier.jpg",
         )
         q2 = PollQuestion(
@@ -517,14 +518,14 @@ async def seed_data():
             order_num=2,
             question_text="Какие пожелания или ограничения по проезду транспорта во двор вы хотите учесть?",
             subtext="Например, гостевой доступ, график разгрузки курьеров, машины экстренных служб или доставка крупногабаритных товаров.",
-            question_type=QuestionType.TEXT,
+            question_type=PollQuestionType.TEXT,
         )
         q3 = PollQuestion(
             poll_id=poll.id,
             order_num=3,
             question_text="Какие способы открытия шлагбаума должны поддерживаться?",
             subtext="Выберите один или несколько вариантов, которые наиболее удобны для вашей семьи.",
-            question_type=QuestionType.MULTIPLE_CHOICE,
+            question_type=PollQuestionType.MULTIPLE_CHOICE,
         )
         session.add_all([q1, q2, q3])
         await session.flush()
