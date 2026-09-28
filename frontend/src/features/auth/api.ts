@@ -19,6 +19,11 @@ export interface LoginResponse {
   tokens: AuthTokens;
   user: AuthUser;
   hasPin: boolean;
+  needsEsiaAuth: boolean;
+  esiaLinkedAt: string | null;
+  esiaLastSyncAt: string | null;
+  esiaSyncStatus: 'never' | 'success' | 'failed';
+  esiaTokenExpiresAt: string | null;
 }
 
 export const authApi = {
@@ -46,6 +51,18 @@ export const authApi = {
     });
     setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
     localStorage.setItem('current_user', JSON.stringify(response.data.user));
+    return response.data;
+  },
+
+  async syncEsia(): Promise<LoginResponse> {
+    const response = await apiClient.post<LoginResponse>('/auth/esia-sync');
+    setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
+    localStorage.setItem('current_user', JSON.stringify(response.data.user));
+    return response.data;
+  },
+
+  async unlinkEsia(): Promise<{ status: string }> {
+    const response = await apiClient.post<{ status: string }>('/auth/esia-unlink');
     return response.data;
   },
 

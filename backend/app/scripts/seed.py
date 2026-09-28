@@ -1,7 +1,7 @@
 import asyncio
 import sys
 import asyncpg
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
 from sqlalchemy import text, select
 from app.core.config import settings
@@ -209,6 +209,7 @@ async def seed_data():
         session.add(apt_48)
         await session.flush()
 
+        now = datetime.now(timezone.utc)
         demo_pwd_hash = hash_password("demo_password")
 
         users_data = [
@@ -220,6 +221,13 @@ async def seed_data():
                 role=UserRole.RESIDENT,
                 snils="123-456-789 01",
                 esia_password_hash=demo_pwd_hash,
+                esia_user_id="123-456-789 01",
+                esia_access_token="esia_at_resident_demo_token",
+                esia_refresh_token="esia_rt_resident_demo_token",
+                esia_token_expires_at=now + timedelta(days=30),
+                esia_linked_at=now,
+                esia_last_sync_at=now,
+                esia_sync_status="success",
             ),
             User(
                 max_user_id=987654321,
@@ -229,6 +237,13 @@ async def seed_data():
                 role=UserRole.CHAIRMAN,
                 snils="987-654-321 00",
                 esia_password_hash=demo_pwd_hash,
+                esia_user_id="987-654-321 00",
+                esia_access_token="esia_at_chairman_demo_token",
+                esia_refresh_token="esia_rt_chairman_demo_token",
+                esia_token_expires_at=now + timedelta(days=30),
+                esia_linked_at=now,
+                esia_last_sync_at=now,
+                esia_sync_status="success",
             ),
             User(
                 max_user_id=555555555,
@@ -238,6 +253,13 @@ async def seed_data():
                 role=UserRole.UK_STAFF,
                 snils="111-222-333 44",
                 esia_password_hash=demo_pwd_hash,
+                esia_user_id="111-222-333 44",
+                esia_access_token="esia_at_uk_demo_token",
+                esia_refresh_token="esia_rt_uk_demo_token",
+                esia_token_expires_at=now + timedelta(days=30),
+                esia_linked_at=now,
+                esia_last_sync_at=now,
+                esia_sync_status="success",
             ),
         ]
         session.add_all(users_data)
@@ -579,7 +601,7 @@ async def seed_data():
         session.add_all(notifications_data)
 
         await session.commit()
-    print("База данных успешно инициализирована с классификатором тем, получателями и FTS-индексами!")
+    print("База данных успешно инициализирована с полями ЕСИА и FTS!")
 
 
 if __name__ == "__main__":

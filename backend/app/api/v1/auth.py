@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, or_
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -13,12 +13,12 @@ from app.core.security import (
     check_auth_date,
     hash_pin,
     verify_pin,
-    verify_password,
 )
 from app.api.deps import get_current_user
-from app.models.user import User, UserPin, RefreshToken, UserApartment
+from app.models.user import User, UserPin, RefreshToken
 from app.models.house import Apartment
 from app.core.constants import UserRole
+from app.services.esia_service import EsiaService
 from app.schemas.auth import (
     MaxLoginRequest,
     EsiaLoginRequest,
@@ -29,11 +29,12 @@ from app.schemas.auth import (
     AuthUser,
     AuthTokens,
 )
+from app.schemas.common import StatusResponse
 
 router = APIRouter()
 
 
-async def build_login_response(user: User, db: AsyncSession) -> LoginResponse:
+async def build_login_response(user: User, db: AsyncSession, needs_esia: bool) -> LoginResponse:
     token_data = {"sub": str(user.max_user_id), "role": user.role.value}
     access_token = create_access_token(token_data)
     refresh_token = create_refresh_token(token_data)
@@ -67,7 +68,12 @@ async def build_login_response(user: User, db: AsyncSession) -> LoginResponse:
             house_address=house_address,
             apartment_number=apt_number,
         ),
-        hasPin=bool(user.pin is not None),
+        has_pin=bool(user.pin is not None),
+        needs_esia_auth=needs_esia,
+        esia_linked_at=user.esia_linked_at,
+        esia_last_sync_at=user.esia_last_sync_at,
+        esia_sync_status=user.esia_sync_status,
+        esia_token_expires_at=user.esia_token_expires_at,
     )
 
 
@@ -103,7 +109,7 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
     max_user_id = user_raw["id"]
     first_name = user_raw.get("first_name", "")
     last_name = user_raw.get("last_name", "")
-    full_name = f"{first_name} {last_name}".strip() or "Житель МКД"
+    full_name = f"{first_name} {last_name}".strip() or "Пользователь MAX"
 
     stmt = select(User).where(User.max_user_id == max_user_id).options(selectinload(User.pin), selectinload(User.apartments))
     user = (await db.execute(stmt)).scalars().first()
@@ -113,11 +119,16 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
             max_user_id=max_user_id,
             full_name=full_name,
             role=UserRole.RESIDENT,
+            esia_sync_status="never",
         )
         db.add(user)
         await db.flush()
 
-    return await build_login_response(user, db)
+    esia_service = EsiaService(db)
+    synced = await esia_service.sync_user(user)
+    needs_esia = not synced or not user.esia_access_token
+
+    return await build_login_response(user, db, needs_esia=needs_esia)
 
 
 @router.post(
@@ -126,39 +137,47 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
     summary="Login ESIA (MOCK)",
     description="Имитация входа через ЕСИА (Госуслуги). Реальная интеграция требует аккредитации в Минцифры и подключения к СМЭВ ЕСИА. Для демонстрации используются тестовые учётные записи."
 )
-async def login_esia(payload: EsiaLoginRequest, db: AsyncSession = Depends(get_db)):
-    clean_identifier = payload.identifier.strip()
-    compact_identifier = clean_identifier.replace(" ", "").replace("-", "")
+async def login_esia(
+    payload: EsiaLoginRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    esia_service = EsiaService(db)
+    esia_user = await esia_service.authenticate(payload.identifier, payload.password)
 
-    stmt = (
-        select(User)
-        .where(
-            or_(
-                User.snils == clean_identifier,
-                User.snils == compact_identifier,
-                User.phone == clean_identifier,
-                User.phone == compact_identifier,
-                User.email == clean_identifier.lower(),
-            )
-        )
-        .options(selectinload(User.pin), selectinload(User.apartments))
-    )
-    user = (await db.execute(stmt)).scalars().first()
-
-    if not user or not user.is_active or not user.esia_password_hash:
+    if not esia_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}},
         )
 
-    password_to_check = payload.password if payload.password else "demo_password"
-    if not verify_password(password_to_check, user.esia_password_hash):
+    updated_user = await esia_service.link_to_user(current_user, esia_user)
+    return await build_login_response(updated_user, db, needs_esia=False)
+
+
+@router.post("/esia-sync", response_model=LoginResponse)
+async def sync_esia_profile(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    esia_service = EsiaService(db)
+    success = await esia_service.sync_user(current_user)
+    if not success:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}},
+            detail={"error": {"code": "ESIA_TOKEN_EXPIRED", "message": "Сессия Госуслуг устарела, требуется повторный вход"}},
         )
+    return await build_login_response(current_user, db, needs_esia=False)
 
-    return await build_login_response(user, db)
+
+@router.post("/esia-unlink", response_model=StatusResponse)
+async def unlink_esia_profile(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    esia_service = EsiaService(db)
+    await esia_service.unlink(current_user)
+    return StatusResponse(status="ok", message="Учетная запись Госуслуг отвязана")
 
 
 @router.post("/refresh", response_model=AuthTokens)

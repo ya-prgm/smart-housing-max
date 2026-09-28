@@ -24,6 +24,14 @@ class User(Base, TimestampMixin):
     snils: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     esia_password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     
+    esia_user_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True, nullable=True)
+    esia_access_token: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    esia_refresh_token: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    esia_token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    esia_linked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    esia_last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    esia_sync_status: Mapped[str] = mapped_column(String(20), default="never", nullable=False)
+
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role_enum"),
         default=UserRole.RESIDENT,

@@ -1,12 +1,15 @@
 from datetime import datetime, timezone
+import os
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.schemas.common import HealthResponse
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -38,4 +41,13 @@ async def health_check():
         version=settings.VERSION,
         database="connected",
         timestamp=datetime.now(timezone.utc),
+    )
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
     )

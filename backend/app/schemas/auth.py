@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from datetime import datetime
+from pydantic import BaseModel, Field, ConfigDict
 from app.schemas.common import BaseSchema
 from app.core.constants import UserRole
 
@@ -40,6 +41,13 @@ class AuthTokens(BaseModel):
 
 
 class LoginResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
     tokens: AuthTokens
     user: AuthUser
-    hasPin: bool
+    has_pin: bool = Field(alias="hasPin")
+    needs_esia_auth: bool = Field(alias="needsEsiaAuth")
+    esia_linked_at: datetime | None = Field(default=None, alias="esiaLinkedAt")
+    esia_last_sync_at: datetime | None = Field(default=None, alias="esiaLastSyncAt")
+    esia_sync_status: str = Field(default="never", alias="esiaSyncStatus")
+    esia_token_expires_at: datetime | None = Field(default=None, alias="esiaTokenExpiresAt")
