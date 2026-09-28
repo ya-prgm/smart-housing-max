@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.api.deps import require_roles
 from app.models.user import User, UserRole
-from app.models.vote import Poll, PollQuestion, PollOption, PollStatus, QuestionType
+from app.models.vote import Poll, PollQuestion, PollOption, PollStatus
 from app.models.audit import AuditLog
 from app.core.constants import JournalAction, JournalEntityType
 from app.schemas.uk import UkPollCreate, UkPollUpdate, UkPollStatusUpdate

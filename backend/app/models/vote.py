@@ -3,7 +3,7 @@ from sqlalchemy import String, Text, ForeignKey, Boolean, Integer, Enum, UniqueC
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, SoftDeleteMixin
-from app.core.constants import PollQuestionType, QuestionType, PollStatus
+from app.core.constants import PollQuestionType, PollStatus
 
 
 class Poll(Base, TimestampMixin, SoftDeleteMixin):

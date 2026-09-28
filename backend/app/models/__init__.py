@@ -12,7 +12,6 @@ from app.models.vote import (
     PollResponseAnswer,
     PollStatus,
     PollQuestionType,
-    QuestionType,
 )
 from app.models.notification import Notification
 from app.models.file import File

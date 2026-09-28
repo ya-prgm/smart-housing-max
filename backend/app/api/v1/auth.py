@@ -154,21 +154,19 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
 )
 async def login_esia(
     payload: EsiaLoginRequest,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     esia_service = EsiaService(db)
-    esia_user = await esia_service.authenticate(payload.identifier, payload.password)
+    user = await esia_service.authenticate(payload.identifier, payload.password)
 
-    if not esia_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}},
-        )
+    if not user:
+        raise HTTPException(401, detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}})
 
-    updated_user = await esia_service.link_to_user(current_user, esia_user)
-    return await build_login_response(updated_user, db, needs_esia=False)
+    user.esia_sync_status = EsiaSyncStatus.SUCCESS
+    user.esia_last_sync_at = datetime.now(timezone.utc)
+    await db.commit()
 
+    return await build_login_response(user, db, needs_esia=False)
 
 @router.post(
     "/esia-sync",
