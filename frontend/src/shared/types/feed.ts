@@ -21,6 +21,7 @@ export interface Comment {
   roleBadge?: string;
   text: string;
   time: string;
+  createdAt?: string;
   attachment?: Attachment;
   replies?: Comment[];
 }
@@ -37,6 +38,7 @@ export interface Post {
   content: string;
   image?: string;
   imageLabel?: string;
+  images?: string[];
   likes: number;
   dislikes: number;
   commentsCount: number;

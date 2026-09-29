@@ -15,6 +15,8 @@ class FeedPostCreate(BaseModel):
     content: str
     post_type: PostType = PostType.INFO
     image_id: int | None = None
+    image_ids: list[int] = []
+    images: list[str] = []
     image_label: str | None = None
 
 
@@ -51,6 +53,7 @@ class FeedPostResponse(BaseSchema):
     content: str
     image_url: str | None = None
     image_label: str | None = None
+    images: list[str] = []
     likes: int
     dislikes: int
     comments_count: int

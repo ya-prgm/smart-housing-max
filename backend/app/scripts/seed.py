@@ -451,8 +451,17 @@ async def seed_data():
                 post_type=PostType.ANNOUNCEMENT.value,
                 author_title="Елена Смирнова",
                 author_badge="Председатель",
-                title=None,
+                title="План весеннего благоустройства дворовой территории",
                 content="Уважаемые соседи! Совместно с УК согласовали план весеннего благоустройства дворовой территории. Пожалуйста, примите участие в голосовании по установке шлагбаума и камер во дворе на вкладке «Опросы»!",
+                image_url="/uploads/feed/playground_plan.jpg",
+                image_label="План благоустройства (3 фото)",
+                schedule_data={
+                    "images": [
+                        "/uploads/feed/playground_plan.jpg",
+                        "/uploads/feed/courtyard_park.jpg",
+                        "/uploads/feed/barrier_gate.jpg",
+                    ]
+                },
                 views_count=1400,
             ),
             FeedPost(
@@ -465,6 +474,11 @@ async def seed_data():
                 content="Приемка работ проведена комиссионно с участием членов Совета МКД. Подписан акт гарантийных обязательств подрядчика на 3 года.",
                 image_url="/uploads/feed/roof_repair.jpg",
                 image_label="Фотоотчет приёмки",
+                schedule_data={
+                    "images": [
+                        "/uploads/feed/roof_repair.jpg"
+                    ]
+                },
                 views_count=890,
             ),
             FeedPost(

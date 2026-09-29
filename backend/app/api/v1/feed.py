@@ -58,8 +58,19 @@ async def get_feed(
         )
         .order_by(FeedPost.is_pinned.desc(), FeedPost.id.desc())
     )
-    if type in ["uk", "chairman"]:
-        post_stmt = post_stmt.where(FeedPost.post_type == type)
+    if type == "uk":
+        post_stmt = post_stmt.where(
+            (FeedPost.post_type.in_(["uk", "report", "info", "emergency"]))
+            | (FeedPost.author.has(User.role == UserRole.UK_STAFF))
+            | (FeedPost.author_badge.ilike("%УК%"))
+            | (FeedPost.author_badge.ilike("%Управляющ%"))
+        )
+    elif type == "chairman":
+        post_stmt = post_stmt.where(
+            (FeedPost.post_type.in_(["chairman", "announcement"]))
+            | (FeedPost.author.has(User.role == UserRole.CHAIRMAN))
+            | (FeedPost.author_badge == "Председатель")
+        )
 
     posts = (await db.execute(post_stmt)).scalars().all()
 
@@ -68,6 +79,14 @@ async def get_feed(
         likes = sum(1 for r in p.reactions if r.reaction_type == "like")
         dislikes = sum(1 for r in p.reactions if r.reaction_type == "dislike")
         my_r = next((ReactionType(r.reaction_type) for r in p.reactions if r.user_id == current_user.id), None)
+
+        images = []
+        if p.schedule_data and isinstance(p.schedule_data, dict) and "images" in p.schedule_data:
+            images = [img for img in p.schedule_data["images"] if img]
+        elif p.image_url:
+            images = [p.image_url]
+        if not images and p.image_url:
+            images = [p.image_url]
 
         results.append(
             FeedPostResponse(
@@ -81,6 +100,7 @@ async def get_feed(
                 content=p.content,
                 image_url=p.image_url,
                 image_label=p.image_label,
+                images=images,
                 likes=likes,
                 dislikes=dislikes,
                 comments_count=len(p.comments),
@@ -116,6 +136,14 @@ async def get_post(
     dislikes = sum(1 for r in p.reactions if r.reaction_type == "dislike")
     my_r = next((ReactionType(r.reaction_type) for r in p.reactions if r.user_id == current_user.id), None)
 
+    images = []
+    if p.schedule_data and isinstance(p.schedule_data, dict) and "images" in p.schedule_data:
+        images = [img for img in p.schedule_data["images"] if img]
+    elif p.image_url:
+        images = [p.image_url]
+    if not images and p.image_url:
+        images = [p.image_url]
+
     return FeedPostResponse(
         id=p.id,
         author=PostAuthor(
@@ -127,6 +155,7 @@ async def get_post(
         content=p.content,
         image_url=p.image_url,
         image_label=p.image_label,
+        images=images,
         likes=likes,
         dislikes=dislikes,
         comments_count=len(p.comments),
@@ -150,11 +179,18 @@ async def create_feed_post(
     )
     house_id = (await db.execute(stmt)).scalar() or 1
 
-    img_url = None
-    if payload.image_id:
+    post_images: list[str] = list(payload.images) if payload.images else []
+    if payload.image_ids:
+        for fid in payload.image_ids:
+            f = await db.get(FileModel, fid)
+            if f:
+                post_images.append(f"/api/v1/files/{f.id}")
+    elif payload.image_id:
         f = await db.get(FileModel, payload.image_id)
         if f:
-            img_url = f"/api/v1/files/{f.id}"
+            post_images.append(f"/api/v1/files/{f.id}")
+
+    first_img_url = post_images[0] if post_images else None
 
     post = FeedPost(
         house_id=house_id,
@@ -164,8 +200,9 @@ async def create_feed_post(
         author_badge="Председатель" if current_user.role == UserRole.CHAIRMAN else "УК",
         title=payload.title,
         content=payload.content,
-        image_url=img_url,
-        image_label=payload.image_label,
+        image_url=first_img_url,
+        image_label=payload.image_label or (f"{len(post_images)} фото" if len(post_images) > 1 else None),
+        schedule_data={"images": post_images} if post_images else None,
         views_count=1,
     )
     db.add(post)
@@ -218,8 +255,9 @@ async def toggle_post_reaction(
 async def get_post_comments(
     post_id: int,
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=20, ge=1, le=100),
+    page_size: int = Query(default=50, ge=1, le=100),
     parent_id: int | None = Query(default=None),
+    sort: str = Query(default="oldest"),
     db: AsyncSession = Depends(get_db),
 ):
     base_query = select(FeedPostComment).where(
@@ -230,9 +268,16 @@ async def get_post_comments(
     count_subq = base_query.subquery()
     total = (await db.execute(select(func.count()).select_from(count_subq))).scalar() or 0
 
+    if sort == "newest":
+        order_clause = FeedPostComment.created_at.desc()
+    elif sort == "popular":
+        order_clause = FeedPostComment.id.desc()
+    else:
+        order_clause = FeedPostComment.created_at.asc()
+
     stmt = (
         base_query.options(selectinload(FeedPostComment.replies), selectinload(FeedPostComment.author))
-        .order_by(FeedPostComment.id.asc())
+        .order_by(order_clause)
         .offset((page - 1) * page_size)
         .limit(page_size)
     )

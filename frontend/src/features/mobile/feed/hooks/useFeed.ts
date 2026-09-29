@@ -40,13 +40,14 @@ export const useFeed = (type?: 'all' | 'uk' | 'chairman') => {
   };
 };
 
-export const usePostDetails = (postId: string | number) => {
+export const usePostDetails = (postId: string | number, sort: string = 'oldest') => {
   const queryClient = useQueryClient();
 
   const {
     data: post,
     isLoading: isPostLoading,
     isError: isPostError,
+    refetch: refetchPost,
   } = useQuery({
     queryKey: ['post', postId],
     queryFn: () => feedApi.getPostById(postId),
@@ -58,8 +59,8 @@ export const usePostDetails = (postId: string | number) => {
     isLoading: isCommentsLoading,
     refetch: refetchComments,
   } = useQuery({
-    queryKey: ['post_comments', postId],
-    queryFn: () => feedApi.getComments(postId),
+    queryKey: ['post_comments', postId, sort],
+    queryFn: () => feedApi.getComments(postId, sort),
     enabled: Boolean(postId),
   });
 
@@ -76,8 +77,10 @@ export const usePostDetails = (postId: string | number) => {
     post,
     isPostLoading,
     isPostError,
+    refetchPost,
     comments,
     isCommentsLoading,
+    refetchComments,
     addComment: addCommentMutation.mutateAsync,
     isAddingComment: addCommentMutation.isPending,
   };

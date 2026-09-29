@@ -16,7 +16,7 @@ export const MobileLayout: React.FC = () => {
           <Outlet />
         </main>
         
-        <nav className="fixed bottom-0 max-w-[430px] w-full bg-white/90 backdrop-blur-lg border-t border-slate-200/80 px-4 py-2 z-40 pb-safe">
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[430px] w-full bg-white/90 backdrop-blur-lg border-t border-slate-200/80 px-4 py-2 z-40 pb-safe">
           <div className="flex justify-around items-center">
             {navItems.map((item) => (
               <NavLink
