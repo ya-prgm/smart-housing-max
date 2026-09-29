@@ -14,6 +14,11 @@ class TicketCreate(BaseModel):
     attachment_ids: list[int] = []
 
 
+class TicketUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+
+
 class TicketSupportResponse(BaseSchema):
     ticket_id: int
     votes_count: int

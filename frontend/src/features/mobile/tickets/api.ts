@@ -45,6 +45,20 @@ export interface TopicItem {
   full_title: string;
 }
 
+export interface RecipientItem {
+  id: number;
+  code: string;
+  short_name: string;
+  full_name: string;
+  category: string;
+  icon: string | null;
+}
+
+export interface TopicDetailItem extends TopicItem {
+  description: string | null;
+  recipients: RecipientItem[];
+}
+
 export interface TicketCreatePayload {
   topic_code: string;
   title: string;
@@ -91,6 +105,42 @@ export const ticketsApi = {
     const url = search ? ENDPOINTS.TOPICS.SEARCH : ENDPOINTS.TOPICS.LIST;
     const res = await apiClient.get<TopicItem[]>(url, {
       params: search ? { q: search } : undefined,
+    });
+    return res.data;
+  },
+
+  async getTopicByCode(code: string): Promise<TopicDetailItem> {
+    const res = await apiClient.get<TopicDetailItem>(ENDPOINTS.TOPICS.BY_CODE(code));
+    return res.data;
+  },
+
+  async getTopicRecipients(code: string): Promise<RecipientItem[]> {
+    const res = await apiClient.get<RecipientItem[]>(`/topics/${code}/recipients`);
+    return res.data;
+  },
+
+  async getAllRecipients(): Promise<RecipientItem[]> {
+    const res = await apiClient.get<RecipientItem[]>('/topics/all-recipients');
+    return res.data;
+  },
+
+  async updateTicket(id: string | number, payload: { title?: string; description?: string }): Promise<TicketResponseItem> {
+    const res = await apiClient.put<TicketResponseItem>(ENDPOINTS.TICKETS.BY_ID(id), payload);
+    return res.data;
+  },
+
+  async deleteTicket(id: string | number): Promise<void> {
+    await apiClient.delete(ENDPOINTS.TICKETS.BY_ID(id));
+  },
+
+  async uploadFile(file: File): Promise<{ id: number; url: string; filename: string; mime_type: string; size: number }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('context', 'ticket');
+    const res = await apiClient.post('/files/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return res.data;
   },

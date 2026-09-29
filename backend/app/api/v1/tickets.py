@@ -8,7 +8,7 @@ from app.models.user import User, UserApartment
 from app.models.house import Apartment
 from app.core.constants import TicketStatus
 from app.services.ticket_service import TicketService
-from app.schemas.ticket import TicketCreate, TicketResponse, TicketSupportResponse
+from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse
 
 router = APIRouter()
 
@@ -69,3 +69,25 @@ async def toggle_ticket_support(
 ):
     service = TicketService(db)
     return await service.toggle_support(ticket_id, current_user.id)
+
+
+@router.put("/{ticket_id}", response_model=TicketResponse)
+async def update_ticket(
+    ticket_id: int,
+    payload: TicketUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    service = TicketService(db)
+    return await service.update_ticket(ticket_id, payload, current_user)
+
+
+@router.delete("/{ticket_id}", status_code=204)
+async def delete_ticket(
+    ticket_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    service = TicketService(db)
+    await service.delete_ticket(ticket_id, current_user)
+    return None

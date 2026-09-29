@@ -5,14 +5,16 @@ interface ConfirmSliderProps {
   onSuccess: () => void;
   disabled?: boolean;
   label?: string;
-  successLabel?: string;
+  isDestructive?: boolean;
+  lockLabel?: string;
 }
 
 export const ConfirmSlider: React.FC<ConfirmSliderProps> = ({
   onSuccess,
   disabled = false,
-  label = 'Проведите для отправки обращения',
-  successLabel = 'Обращение отправлено!',
+  label = 'Доведите жильца до дома',
+  isDestructive = false,
+  lockLabel = 'Защита от случайной отправки',
 }) => {
   const { impact, notification } = useHaptic();
   const [sliderPos, setSliderPos] = useState(0);
@@ -25,7 +27,7 @@ export const ConfirmSlider: React.FC<ConfirmSliderProps> = ({
   const handleStart = (clientX: number) => {
     if (disabled || isSuccess) return;
     setIsDragging(true);
-    startXRef.current = clientX;
+    startXRef.current = clientX - sliderPos;
     impact('light');
   };
 
@@ -52,46 +54,81 @@ export const ConfirmSlider: React.FC<ConfirmSliderProps> = ({
     setSliderPos(0);
   };
 
+  const maxDist = containerRef.current ? containerRef.current.clientWidth - 56 : 280;
+  const ratio = maxDist > 0 ? sliderPos / maxDist : 0;
+  const hintOpacity = Math.max(0, 1 - ratio * 1.8);
+
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={(e) => handleMove(e.clientX)}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
-      onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-      onTouchEnd={handleEnd}
-      className={`relative w-full h-14 rounded-full p-1.5 flex items-center select-none overflow-hidden transition-colors ${
-        isSuccess
-          ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
-          : 'bg-slate-100 border border-slate-200'
-      }`}
-    >
+    <div className="flex flex-col gap-2 pt-1 w-full">
       <div
-        className="absolute inset-y-0 left-0 bg-primary/10 rounded-full pointer-events-none transition-all"
-        style={{ width: `${sliderPos + 48}px` }}
-      />
-
-      <span
-        className={`w-full text-center text-[13px] font-semibold tracking-wide transition-opacity ${
-          isDragging ? 'opacity-30' : 'opacity-100'
-        } ${isSuccess ? 'text-white' : 'text-slate-500'}`}
+        ref={containerRef}
+        onMouseMove={(e) => handleMove(e.clientX)}
+        onMouseUp={handleEnd}
+        onMouseLeave={handleEnd}
+        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+        onTouchEnd={handleEnd}
+        className="relative w-full h-14 bg-surface-container-high rounded-full p-1 flex items-center select-none shadow-inner overflow-hidden cursor-pointer"
       >
-        {isSuccess ? successLabel : label}
-      </span>
+        <div
+          className={`absolute left-0 top-0 bottom-0 rounded-full transition-all pointer-events-none ${
+            isDestructive ? 'bg-error/20' : 'bg-primary/20'
+          }`}
+          style={{ width: `${sliderPos + 52}px` }}
+        />
 
-      <div
-        onMouseDown={(e) => handleStart(e.clientX)}
-        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
-        style={{ transform: `translateX(${sliderPos}px)` }}
-        className={`absolute left-1.5 top-1.5 w-11 h-11 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing shadow-md transition-transform duration-75 ${
-          isSuccess
-            ? 'bg-white text-emerald-600'
-            : 'bg-primary text-white active:scale-95'
-        }`}
-      >
-        <span className="material-symbols-outlined text-[20px]">
-          {isSuccess ? 'check' : 'arrow_forward'}
-        </span>
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none px-12 gap-1.5 transition-opacity"
+          style={{ opacity: hintOpacity }}
+        >
+          <span className="font-label-md text-label-md text-on-surface-variant font-semibold tracking-wide">
+            {label}
+          </span>
+          <div className={`flex items-center select-none ml-0.5 ${isDestructive ? 'text-error/80' : 'text-primary/80'}`}>
+            <span className="material-symbols-outlined text-[16px] animate-pulse">chevron_right</span>
+            <span className="material-symbols-outlined text-[16px] -ml-2 animate-pulse">chevron_right</span>
+            <span className="material-symbols-outlined text-[16px] -ml-2 animate-pulse">chevron_right</span>
+            <span className="material-symbols-outlined text-[16px] -ml-2 animate-pulse">chevron_right</span>
+          </div>
+        </div>
+
+        <div
+          className={`absolute right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+            isDestructive
+              ? ratio > 0.85
+                ? 'bg-error text-on-error scale-110'
+                : 'bg-error-container/40 text-error'
+              : ratio > 0.85
+              ? 'bg-primary text-on-primary scale-110'
+              : 'bg-primary/10 text-primary'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {isSuccess ? 'check' : 'home'}
+          </span>
+        </div>
+
+        <div
+          onMouseDown={(e) => handleStart(e.clientX)}
+          onTouchStart={(e) => handleStart(e.touches[0].clientX)}
+          style={{
+            transform: `translateX(${sliderPos}px)`,
+            transition: isDragging ? 'none' : 'transform 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28)',
+          }}
+          className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center shadow-md transform active:scale-95 cursor-grab ${
+            isDestructive
+              ? 'bg-error text-on-error'
+              : 'bg-primary text-on-primary'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[24px]">
+            {isSuccess ? 'check' : 'directions_walk'}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-1.5 text-center font-label-sm text-label-sm text-outline">
+        <span className="material-symbols-outlined text-[14px]">lock</span>
+        <span>{lockLabel}</span>
       </div>
     </div>
   );

@@ -10,22 +10,22 @@ export interface UserUpdatePayload {
 
 export const profileApi = {
   getProfile: async (): Promise<UserProfile> => {
-    const { data } = await apiClient.get<UserProfile>('/api/v1/users/me');
+    const { data } = await apiClient.get<UserProfile>('/users/me');
     return data;
   },
 
   updateProfile: async (payload: UserUpdatePayload): Promise<UserProfile> => {
-    const { data } = await apiClient.patch<UserProfile>('/api/v1/users/me', payload);
+    const { data } = await apiClient.patch<UserProfile>('/users/me', payload);
     return data;
   },
 
   getMyHouse: async (): Promise<HouseDetailResponse> => {
-    const { data } = await apiClient.get<HouseDetailResponse>('/api/v1/houses/my');
+    const { data } = await apiClient.get<HouseDetailResponse>('/houses/my');
     return data;
   },
 
   getHouseById: async (houseId: number | string): Promise<HouseDetailResponse> => {
-    const { data } = await apiClient.get<HouseDetailResponse>(`/api/v1/houses/${houseId}`);
+    const { data } = await apiClient.get<HouseDetailResponse>(`/houses/${houseId}`);
     return data;
   },
 };

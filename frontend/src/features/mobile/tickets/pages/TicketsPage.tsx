@@ -5,6 +5,8 @@ import { SupportModal } from '../components/SupportModal';
 import { useTickets } from '../hooks/useTickets';
 import { useHaptic } from '../../../../shared/hooks/useHaptic';
 
+const LOGO_SRC = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAOfpCod_eXFwDjBP_k9vw2B-bXLAnDicRB7ZDBcwuFUcEEo3CE-jHMRNt7tnBbv_-9s3UCEcOhE7RFLkeLDFLlqysfCl1NnJOx5Ng6Tau4xpr9ezO8qDgSk_WF_Dnf2bMppBpYQvJ306OzjKWwMBycjbjGWNwV0UgezW0MHEKsI1mq6AYMKQAIymnp3476gLmGsT9Yv-XJYLz19OTQGZxtFM3nZA9VsZX46Hn0DDFXAG9_G_pTbD80HqvpX08a2dpB';
+
 export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
   const { impact } = useHaptic();
@@ -20,6 +22,7 @@ export const TicketsPage: React.FC = () => {
 
   const handleVoteClick = async (ticket: Ticket, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (ticket.isMy) return;
     impact('light');
     if (ticket.isVoted) {
       try {
@@ -31,7 +34,7 @@ export const TicketsPage: React.FC = () => {
   };
 
   const handleConfirmVote = async () => {
-    if (!selectedTicket) return;
+    if (!selectedTicket || selectedTicket.isMy) return;
     impact('medium');
     try {
       await toggleSupport(selectedTicket.id);
@@ -39,19 +42,26 @@ export const TicketsPage: React.FC = () => {
     setSelectedTicket(null);
   };
 
-  const filteredTickets = tickets;
-
-
   return (
-    <div className="flex flex-col w-full relative min-h-screen">
-      <header className="sticky top-0 w-full z-30 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
+    <div className="flex flex-col w-full relative min-h-screen bg-[#f8fafc]">
+      <header className="sticky top-0 w-full z-30 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 transition-all">
         <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOfpCod_eXFwDjBP_k9vw2B-bXLAnDicRB7ZDBcwuFUcEEo3CE-jHMRNt7tnBbv_-9s3UCEcOhE7RFLkeLDFLlqysfCl1NnJOx5Ng6Tau4xpr9ezO8qDgSk_WF_Dnf2bMppBpYQvJ306OzjKWwMBycjbjGWNwV0UgezW0MHEKsI1mq6AYMKQAIymnp3476gLmGsT9Yv-XJYLz19OTQGZxtFM3nZA9VsZX46Hn0DDFXAG9_G_pTbD80HqvpX08a2dpB"
-              alt="Мой Дом"
+              src={LOGO_SRC}
+              alt="Логотип Мой Дом"
+              onError={(e) => {
+                const target = e.currentTarget;
+                target.style.display = 'none';
+                if (target.nextElementSibling) {
+                  (target.nextElementSibling as HTMLElement).style.display = 'flex';
+                }
+              }}
               className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-200/80 shrink-0"
             />
+            <div className="w-8 h-8 rounded-full bg-[#006591] hidden items-center justify-center text-white shrink-0 shadow-xs font-bold text-xs tracking-wider">
+              МД
+            </div>
             <span className="text-[17px] font-bold text-slate-900 tracking-tight">МОЙ ДОМ</span>
           </div>
           <div className="relative">
@@ -70,8 +80,8 @@ export const TicketsPage: React.FC = () => {
 
       <div className="px-4 pt-3 flex flex-col gap-3">
         <div className="relative w-full">
-          <div className="flex items-center w-full bg-white rounded-2xl border border-slate-200/80 shadow-xs px-3.5 py-2.5 focus-within:border-sky-500">
-            <span className="material-symbols-outlined text-slate-400 text-[20px] mr-2 shrink-0">
+          <div className="flex items-center w-full bg-white rounded-2xl border border-slate-200/80 shadow-xs px-3.5 py-2.5 transition-all focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100">
+            <span className="material-symbols-outlined text-slate-400 text-[20px] mr-2.5 shrink-0 select-none">
               search
             </span>
             <input
@@ -81,11 +91,17 @@ export const TicketsPage: React.FC = () => {
               placeholder="Поиск по обращениям..."
               className="w-full bg-transparent text-[14px] text-slate-900 placeholder:text-slate-400 focus:outline-none"
             />
-            <span className="material-symbols-outlined text-slate-400 text-[19px]">tune</span>
+            <button
+              type="button"
+              aria-label="Параметры фильтрации"
+              className="text-slate-400 hover:text-slate-700 flex items-center shrink-0 ml-1"
+            >
+              <span className="material-symbols-outlined text-[19px]">tune</span>
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 py-0.5">
           {[
             { id: 'all', label: 'Все' },
             { id: 'my', label: 'Мои' },
@@ -97,10 +113,10 @@ export const TicketsPage: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setFilter(tab.id as typeof filter)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium transition-all active:scale-95 ${
+              className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-semibold tracking-wide transition-all active:scale-95 ${
                 filter === tab.id
-                  ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                  : 'bg-white text-slate-600 border border-slate-200/80 hover:text-slate-900'
+                  ? 'bg-slate-900 text-white shadow-sm shadow-slate-900/10'
+                  : 'border border-slate-200/80 bg-white text-slate-600 hover:text-slate-900 font-medium'
               }`}
             >
               {tab.label}
@@ -109,17 +125,20 @@ export const TicketsPage: React.FC = () => {
         </div>
       </div>
 
-      <main className="px-4 pt-3 pb-28">
+      <main className="px-4 pt-3.5 pb-28 flex-1">
         {isLoading ? (
           <div className="py-12 text-center text-slate-400 text-sm">Загрузка обращений...</div>
-        ) : filteredTickets.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 items-start">
-            {filteredTickets.map((ticket) => (
+        ) : tickets.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 items-start" id="tickets-grid">
+            {tickets.map((ticket) => (
               <article
                 key={ticket.id}
-                onClick={() => setSelectedTicket(ticket)}
-                className={`flex flex-col justify-between rounded-2xl p-3.5 border shadow-card transition-all active:scale-[0.98] cursor-pointer ${
-                  ticket.isMy
+                onClick={() => {
+                  impact('light');
+                  navigate(`/tickets/${ticket.id}`);
+                }}
+                className={`ticket-card flex flex-col justify-between rounded-2xl p-3.5 border shadow-card transition-all active:scale-[0.98] cursor-pointer ${
+                  ticket.isMy && ticket.status !== 'completed'
                     ? 'bg-sky-50/40 border-sky-200/90'
                     : 'bg-white border-slate-200/85'
                 }`}
@@ -172,23 +191,28 @@ export const TicketsPage: React.FC = () => {
                   </div>
 
                   {ticket.status === 'completed' ? (
-                    <div className="w-full py-1.5 px-2 rounded-full bg-slate-50 text-slate-500 text-[11px] font-medium text-center border border-slate-100 truncate">
-                      {ticket.resolvedLabel || 'Решено УК'}
+                    <div className="w-full py-1.5 px-2.5 rounded-full bg-slate-50 text-slate-500 text-[11px] font-medium text-center border border-slate-100 truncate">
+                      {ticket.resolvedLabel || `Решено УК • ${ticket.votesCount} чел`}
+                    </div>
+                  ) : ticket.isMy ? (
+                    <div className="w-full py-1.5 px-2 rounded-full bg-sky-50/80 border border-sky-200/80 text-sky-700 text-[11px] font-semibold text-center flex items-center justify-center gap-1 truncate">
+                      <span className="material-symbols-outlined text-[14px]">person</span>
+                      <span className="truncate">Ваше • {ticket.votesCount}</span>
                     </div>
                   ) : (
                     <button
                       type="button"
                       onClick={(e) => handleVoteClick(ticket, e)}
-                      className={`w-full py-1.5 px-2 rounded-full text-[11px] flex items-center justify-center gap-1 active:scale-95 transition-all ${
+                      className={`vote-action w-full py-1.5 px-2 rounded-full text-[11px] flex items-center justify-center gap-1 active:scale-95 transition-all cursor-pointer ${
                         ticket.isVoted
-                          ? 'bg-sky-100 border border-sky-200 text-sky-800 font-bold'
+                          ? 'bg-sky-100 border border-sky-200 text-sky-800 font-semibold'
                           : 'bg-slate-50 hover:bg-slate-100 border border-slate-100 text-slate-700 font-medium'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-[14px]">
+                      <span className="material-symbols-outlined text-[14px] text-primary">
                         {ticket.isVoted ? 'check' : 'group_add'}
                       </span>
-                      <span className="truncate">
+                      <span className="vote-num font-semibold truncate">
                         {ticket.isVoted
                           ? `Вы поддержали (${ticket.votesCount})`
                           : `У меня тоже (${ticket.votesCount})`}
@@ -200,21 +224,27 @@ export const TicketsPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <span className="material-symbols-outlined text-[36px] text-slate-300 mb-2">
-              search_off
-            </span>
-            <h3 className="text-[16px] font-bold text-slate-800">Ничего не найдено</h3>
-            <p className="text-[13px] text-slate-400">Попробуйте изменить поисковый запрос</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center" id="empty-state">
+            <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+              <span className="material-symbols-outlined text-[28px]">search_off</span>
+            </div>
+            <h3 className="text-[16px] font-bold text-slate-900 mb-1">Ничего не найдено</h3>
+            <p className="text-[13px] text-slate-500 max-w-[240px]">
+              Попробуйте скорректировать поисковый запрос или фильтр
+            </p>
           </div>
         )}
       </main>
 
-      <div className="fixed right-4 bottom-20 z-40">
+      <div className="fixed bottom-20 max-w-[430px] w-full flex justify-end px-4 pointer-events-none z-40">
         <button
           type="button"
-          onClick={() => navigate('/tickets/new')}
-          className="flex items-center gap-2 bg-[#0284c7] hover:bg-[#0369a1] text-white pl-4 pr-5 h-12 rounded-full shadow-float active:scale-95 transition-all"
+          id="new-ticket-fab"
+          onClick={() => {
+            impact('medium');
+            navigate('/tickets/new');
+          }}
+          className="pointer-events-auto flex items-center gap-2 bg-[#006591] hover:bg-[#005073] text-white pl-4 pr-5 h-12 rounded-full shadow-float active:scale-95 transition-all cursor-pointer"
         >
           <span className="material-symbols-outlined text-[22px]">add</span>
           <span className="text-[14px] font-semibold tracking-wide">Новое обращение</span>
@@ -225,6 +255,7 @@ export const TicketsPage: React.FC = () => {
         isOpen={!!selectedTicket}
         ticketTitle={selectedTicket?.title || ''}
         ticketCode={selectedTicket?.code || ''}
+        category={selectedTicket?.category}
         currentVotes={selectedTicket?.votesCount || 0}
         onClose={() => setSelectedTicket(null)}
         onConfirm={handleConfirmVote}

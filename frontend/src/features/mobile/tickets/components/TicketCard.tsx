@@ -66,20 +66,27 @@ export const TicketCard: React.FC<TicketCardProps> = ({ ticket, onClick, onVoteC
       <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
         <span className="text-slate-400">{ticket.date}</span>
 
-        <button
-          type="button"
-          onClick={onVoteClick}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition active:scale-95 cursor-pointer ${
-            ticket.isVoted
-              ? 'bg-[#0088cc] text-white shadow-xs'
-              : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
-          }`}
-        >
-          <span className="material-symbols-outlined text-[15px]">
-            {ticket.isVoted ? 'check' : 'thumb_up'}
-          </span>
-          <span>{ticket.votesCount}</span>
-        </button>
+        {ticket.isMy ? (
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold bg-sky-50 text-[#0088cc] border border-sky-200/80">
+            <span className="material-symbols-outlined text-[15px]">person</span>
+            <span>{ticket.votesCount}</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onVoteClick}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-semibold transition active:scale-95 cursor-pointer ${
+              ticket.isVoted
+                ? 'bg-[#0088cc] text-white shadow-xs'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200/80'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[15px]">
+              {ticket.isVoted ? 'check' : 'thumb_up'}
+            </span>
+            <span>{ticket.votesCount}</span>
+          </button>
+        )}
       </div>
     </article>
   );

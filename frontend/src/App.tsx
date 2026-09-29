@@ -9,7 +9,9 @@ import { MobileLayout } from './features/mobile/layouts/MobileLayout';
 import { FeedPage } from './features/mobile/feed/pages/FeedPage';
 import { PostDetailsPage } from './features/mobile/feed/pages/PostDetailsPage';
 import { TicketsPage } from './features/mobile/tickets/pages/TicketsPage';
+import { TicketDetailsPage } from './features/mobile/tickets/pages/TicketDetailsPage';
 import { NewTicketPage } from './features/mobile/tickets/pages/NewTicketPage';
+import { EditTicketPage } from './features/mobile/tickets/pages/EditTicketPage';
 import { VotesPage } from './features/mobile/votes/pages/VotesPage';
 import { VoteDetailsPage } from './features/mobile/votes/pages/VoteDetailsPage';
 import { VoteStepPage } from './features/mobile/votes/pages/VoteStepPage';
@@ -109,6 +111,8 @@ export const App: React.FC = () => {
 
         <Route path="/feed/:id" element={<PostDetailsPage />} />
         <Route path="/tickets/new" element={<NewTicketPage />} />
+        <Route path="/tickets/:id" element={<TicketDetailsPage />} />
+        <Route path="/tickets/:id/edit" element={<EditTicketPage />} />
         <Route path="/votes/:id" element={<VoteDetailsPage />} />
         <Route path="/votes/:id/step" element={<VoteStepPage />} />
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />

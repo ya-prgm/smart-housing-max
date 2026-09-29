@@ -7,12 +7,12 @@ import {
 
 export const votesApi = {
   getPolls: async (): Promise<PollCardResponse[]> => {
-    const { data } = await apiClient.get<PollCardResponse[]>('/api/v1/votes');
+    const { data } = await apiClient.get<PollCardResponse[]>('/votes');
     return data;
   },
 
   getPoll: async (id: number | string): Promise<PollDetailResponse> => {
-    const { data } = await apiClient.get<PollDetailResponse>(`/api/v1/votes/${id}`);
+    const { data } = await apiClient.get<PollDetailResponse>(`/votes/${id}`);
     return data;
   },
 
@@ -21,7 +21,7 @@ export const votesApi = {
     payload: PollSubmitRequest
   ): Promise<{ status: string; message: string }> => {
     const { data } = await apiClient.post<{ status: string; message: string }>(
-      `/api/v1/votes/${pollId}/submit`,
+      `/votes/${pollId}/submit`,
       payload
     );
     return data;

@@ -11,7 +11,7 @@ from app.models.user import User, UserApartment, UserRole
 from app.models.file import File as FileModel
 from app.core.constants import TicketStatus
 from app.repositories.ticket_repo import TicketRepository
-from app.schemas.ticket import TicketCreate, TicketResponse, TicketSupportResponse, TicketAttachmentResponse
+from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse, TicketAttachmentResponse
 from app.schemas.topic import RecipientItem
 
 
@@ -152,6 +152,12 @@ class TicketService:
                 detail="Тема обращения не найдена",
             )
 
+        if payload.recipient_codes is not None and len(payload.recipient_codes) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Необходимо выбрать хотя бы одного адресата обращения",
+            )
+
         valid_codes = {r.code for r in topic.recipients}
         selected_recipients = []
         if payload.recipient_codes:
@@ -203,6 +209,11 @@ class TicketService:
         return await self.get_ticket_details(ticket.id, author)
 
     async def toggle_support(self, ticket_id: int, user_id: int) -> TicketSupportResponse:
+        t = await self.db.get(Ticket, ticket_id)
+        if not t:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
+        if t.author_id == user_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Нельзя поддержать собственное обращение")
         votes, is_supported = await self.repo.toggle_support(ticket_id, user_id)
         await self.db.commit()
         return TicketSupportResponse(
@@ -210,3 +221,29 @@ class TicketService:
             votes_count=votes,
             is_supported_by_me=is_supported,
         )
+
+    async def update_ticket(self, ticket_id: int, payload: TicketUpdate, current_user: User) -> TicketResponse:
+        t = await self.db.get(Ticket, ticket_id)
+        if not t or t.is_deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
+        if t.author_id != current_user.id and current_user.role not in (UserRole.CHAIRMAN, UserRole.UK_STAFF):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет прав на редактирование обращения")
+        if payload.title is not None and payload.title.strip():
+            t.title = payload.title.strip()
+        if payload.description is not None and payload.description.strip():
+            t.description = payload.description.strip()
+        await self.db.commit()
+        updated = await self.get_ticket_details(ticket_id, current_user)
+        if not updated:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
+        return updated
+
+    async def delete_ticket(self, ticket_id: int, current_user: User) -> bool:
+        t = await self.db.get(Ticket, ticket_id)
+        if not t or t.is_deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
+        if t.author_id != current_user.id and current_user.role not in (UserRole.CHAIRMAN, UserRole.UK_STAFF):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Нет прав на отзыв обращения")
+        t.is_deleted = True
+        await self.db.commit()
+        return True

@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
@@ -30,15 +29,24 @@ export default {
         'tertiary': '#1a52d9',
         'tertiary-container': '#809dff',
 
+        'primary-fixed': '#c9e6ff',
+        'secondary-fixed': '#d9e2ff',
+        'tertiary-fixed': '#dce1ff',
         'outline': '#6e7881',
         'outline-variant': '#bec8d2',
         'error': '#ba1a1a',
+        'error-container': '#ffdad6',
+        'on-error-container': '#93000a',
 
         'brand': {
           blue: '#0D4CD3',
           hover: '#0A3DB0',
           link: '#3358D4',
         },
+      },
+      boxShadow: {
+        'card': '0 4px 18px -2px rgba(15, 23, 42, 0.05), 0 1px 3px -1px rgba(15, 23, 42, 0.03)',
+        'float': '0 8px 24px -4px rgba(0, 101, 145, 0.25)',
       },
       fontFamily: {
         sans: [
@@ -50,6 +58,39 @@ export default {
           'Roboto',
           'sans-serif',
         ],
+        'label-md': ['Inter', 'sans-serif'],
+        'body-lg': ['Inter', 'sans-serif'],
+        'numeric-display': ['Inter', 'sans-serif'],
+        'body-md': ['Inter', 'sans-serif'],
+        'headline-xl-mobile': ['Inter', 'sans-serif'],
+        'body-sm': ['Inter', 'sans-serif'],
+        'headline-xl': ['Inter', 'sans-serif'],
+        'label-lg': ['Inter', 'sans-serif'],
+        'headline-lg': ['Inter', 'sans-serif'],
+        'headline-md': ['Inter', 'sans-serif'],
+        'label-sm': ['Inter', 'sans-serif'],
+      },
+      spacing: {
+        'space-lg': '1rem',
+        'space-xl': '1.5rem',
+        'space-xs': '0.25rem',
+        'space-sm': '0.5rem',
+        'gutter': '0.75rem',
+        'space-md': '0.75rem',
+        'margin': '1rem',
+      },
+      fontSize: {
+        'label-md': ['13px', { lineHeight: '16px', fontWeight: '500' }],
+        'body-lg': ['16px', { lineHeight: '22px', fontWeight: '400' }],
+        'numeric-display': ['28px', { lineHeight: '32px', fontWeight: '700' }],
+        'body-md': ['14px', { lineHeight: '20px', fontWeight: '400' }],
+        'headline-xl-mobile': ['26px', { lineHeight: '32px', fontWeight: '700' }],
+        'body-sm': ['13px', { lineHeight: '18px', fontWeight: '400' }],
+        'headline-xl': ['32px', { lineHeight: '38px', fontWeight: '700' }],
+        'label-lg': ['15px', { lineHeight: '20px', fontWeight: '600' }],
+        'headline-lg': ['22px', { lineHeight: '28px', fontWeight: '600' }],
+        'headline-md': ['18px', { lineHeight: '24px', fontWeight: '600' }],
+        'label-sm': ['11px', { lineHeight: '14px', fontWeight: '600' }],
       },
       keyframes: {
         shake: {

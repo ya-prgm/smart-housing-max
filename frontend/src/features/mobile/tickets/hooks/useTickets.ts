@@ -65,10 +65,31 @@ export const useTicketDetails = (ticketId: string | number) => {
     },
   });
 
+  const deleteTicketMutation = useMutation({
+    mutationFn: () => ticketsApi.deleteTicket(ticketId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+    },
+  });
+
+  const updateTicketMutation = useMutation({
+    mutationFn: (payload: { title?: string; description?: string }) =>
+      ticketsApi.updateTicket(ticketId, payload),
+    onSuccess: () => {
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    },
+  });
+
   return {
     ticket,
     isLoading,
     isError,
     toggleSupport: toggleSupportMutation.mutateAsync,
+    deleteTicket: deleteTicketMutation.mutateAsync,
+    updateTicket: updateTicketMutation.mutateAsync,
+    isDeleting: deleteTicketMutation.isPending,
+    isUpdating: updateTicketMutation.isPending,
   };
 };

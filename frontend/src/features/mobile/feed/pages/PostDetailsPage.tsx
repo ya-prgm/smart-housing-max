@@ -52,8 +52,9 @@ export const PostDetailsPage: React.FC = () => {
 
 
   return (
-    <div className="bg-[#f7f9ff] text-[#141c24] min-h-screen flex flex-col relative select-none">
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] px-4 py-3 flex items-center justify-between shadow-xs">
+    <div className="min-h-screen bg-slate-900 flex justify-center selection:bg-primary/20">
+      <div className="w-full max-w-[430px] min-h-screen bg-[#f7f9ff] text-[#141c24] flex flex-col relative select-none shadow-2xl overflow-x-hidden">
+        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] px-4 py-3 flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-3 min-w-0">
           <button
             type="button"
@@ -359,6 +360,7 @@ export const PostDetailsPage: React.FC = () => {
           </button>
         </div>
       </footer>
+      </div>
     </div>
   );
 };

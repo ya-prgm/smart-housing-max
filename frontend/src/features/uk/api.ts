@@ -110,17 +110,17 @@ export interface UkDocumentCreate {
 
 export const ukApi = {
   getDashboard: async (): Promise<UkDashboardResponse> => {
-    const { data } = await apiClient.get<UkDashboardResponse>('/api/v1/uk/dashboard');
+    const { data } = await apiClient.get<UkDashboardResponse>('/uk/dashboard');
     return data;
   },
 
   getHouses: async (): Promise<HouseCardResponse[]> => {
-    const { data } = await apiClient.get<HouseCardResponse[]>('/api/v1/uk/houses');
+    const { data } = await apiClient.get<HouseCardResponse[]>('/uk/houses');
     return data;
   },
 
   getHouseDetails: async (houseId: number | string): Promise<HouseDetailResponse> => {
-    const { data } = await apiClient.get<HouseDetailResponse>(`/api/v1/uk/houses/${houseId}`);
+    const { data } = await apiClient.get<HouseDetailResponse>(`/uk/houses/${houseId}`);
     return data;
   },
 
@@ -131,7 +131,7 @@ export const ukApi = {
     page?: number;
     page_size?: number;
   }): Promise<PaginatedResponse<ResidentResponse>> => {
-    const { data } = await apiClient.get<PaginatedResponse<ResidentResponse>>('/api/v1/uk/residents', {
+    const { data } = await apiClient.get<PaginatedResponse<ResidentResponse>>('/uk/residents', {
       params,
     });
     return data;
@@ -141,7 +141,7 @@ export const ukApi = {
     userId: number | string,
     payload: ResidentUpdateRequest
   ): Promise<ResidentResponse> => {
-    const { data } = await apiClient.patch<ResidentResponse>(`/api/v1/uk/residents/${userId}`, payload);
+    const { data } = await apiClient.patch<ResidentResponse>(`/uk/residents/${userId}`, payload);
     return data;
   },
 
@@ -153,14 +153,14 @@ export const ukApi = {
     page?: number;
     page_size?: number;
   }): Promise<PaginatedResponse<TicketResponseItem>> => {
-    const { data } = await apiClient.get<PaginatedResponse<TicketResponseItem>>('/api/v1/uk/tickets', {
+    const { data } = await apiClient.get<PaginatedResponse<TicketResponseItem>>('/uk/tickets', {
       params,
     });
     return data;
   },
 
   getTicketDetails: async (ticketId: number | string): Promise<TicketResponseItem> => {
-    const { data } = await apiClient.get<TicketResponseItem>(`/api/v1/uk/tickets/${ticketId}`);
+    const { data } = await apiClient.get<TicketResponseItem>(`/uk/tickets/${ticketId}`);
     return data;
   },
 
@@ -169,31 +169,31 @@ export const ukApi = {
     payload: TicketStatusUpdateRequest
   ): Promise<{ status: string }> => {
     const { data } = await apiClient.patch<{ status: string }>(
-      `/api/v1/uk/tickets/${ticketId}/status`,
+      `/uk/tickets/${ticketId}/status`,
       payload
     );
     return data;
   },
 
   createFeedPost: async (payload: UkFeedPostCreate): Promise<{ status: string; id?: number }> => {
-    const { data } = await apiClient.post<{ status: string; id?: number }>('/api/v1/uk/feed', payload);
+    const { data } = await apiClient.post<{ status: string; id?: number }>('/uk/feed', payload);
     return data;
   },
 
   createPoll: async (payload: UkPollCreate): Promise<{ status: string; message: string }> => {
-    const { data } = await apiClient.post<{ status: string; message: string }>('/api/v1/uk/votes', payload);
+    const { data } = await apiClient.post<{ status: string; message: string }>('/uk/votes', payload);
     return data;
   },
 
   getDocuments: async (houseId?: number): Promise<UkDocumentResponse[]> => {
-    const { data } = await apiClient.get<UkDocumentResponse[]>('/api/v1/uk/documents', {
+    const { data } = await apiClient.get<UkDocumentResponse[]>('/uk/documents', {
       params: houseId ? { house_id: houseId } : undefined,
     });
     return data;
   },
 
   attachDocument: async (payload: UkDocumentCreate): Promise<{ status: string; message: string }> => {
-    const { data } = await apiClient.post<{ status: string; message: string }>('/api/v1/uk/documents', payload);
+    const { data } = await apiClient.post<{ status: string; message: string }>('/uk/documents', payload);
     return data;
   },
 
@@ -201,7 +201,7 @@ export const ukApi = {
     page?: number;
     page_size?: number;
   }): Promise<PaginatedResponse<JournalEventResponse>> => {
-    const { data } = await apiClient.get<PaginatedResponse<JournalEventResponse>>('/api/v1/uk/journal', {
+    const { data } = await apiClient.get<PaginatedResponse<JournalEventResponse>>('/uk/journal', {
       params,
     });
     return data;
