@@ -3,7 +3,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.ticket import Ticket, TicketSupport, TicketStatus
+from app.models.ticket import Ticket, TicketSupport, TicketStatus, TicketReply
 from app.models.topic import TicketTopic, TicketRecipient
 from app.repositories.base import BaseRepository
 
@@ -23,6 +23,7 @@ class TicketRepository(BaseRepository[Ticket]):
                 selectinload(Ticket.author),
                 selectinload(Ticket.topic),
                 selectinload(Ticket.recipients),
+                selectinload(Ticket.replies).selectinload(TicketReply.author),
             )
         )
         res = await self.db.execute(stmt)
@@ -45,6 +46,7 @@ class TicketRepository(BaseRepository[Ticket]):
                 selectinload(Ticket.author),
                 selectinload(Ticket.topic),
                 selectinload(Ticket.recipients),
+                selectinload(Ticket.replies).selectinload(TicketReply.author),
             )
             .order_by(desc(Ticket.id))
         )

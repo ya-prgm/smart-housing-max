@@ -17,6 +17,28 @@ export const useProfile = () => {
     },
   });
 
+  const payUtilityMutation = useMutation({
+    mutationFn: () => profileApi.payUtility(),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['profile', 'me'], updated);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+
+  const syncEsiaMutation = useMutation({
+    mutationFn: () => profileApi.syncEsia(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+
+  const unlinkEsiaMutation = useMutation({
+    mutationFn: () => profileApi.unlinkEsia(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+
   return {
     profile: profileQuery.data,
     isLoading: profileQuery.isLoading,
@@ -25,6 +47,12 @@ export const useProfile = () => {
     refetch: profileQuery.refetch,
     updateProfile: updateProfileMutation.mutateAsync,
     isUpdating: updateProfileMutation.isPending,
+    payUtility: payUtilityMutation.mutateAsync,
+    isPayingUtility: payUtilityMutation.isPending,
+    syncEsia: syncEsiaMutation.mutateAsync,
+    isSyncingEsia: syncEsiaMutation.isPending,
+    unlinkEsia: unlinkEsiaMutation.mutateAsync,
+    isUnlinkingEsia: unlinkEsiaMutation.isPending,
   };
 };
 

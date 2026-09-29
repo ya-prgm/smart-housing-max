@@ -3,14 +3,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.deps import get_current_user
-from app.models.user import User, UserApartment
+from app.api.deps import get_current_user, require_roles
+from app.models.user import User, UserApartment, UserRole
 from app.models.house import Apartment
 from app.core.constants import TicketStatus
 from app.services.ticket_service import TicketService
-from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse
+from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse, TicketReplyCreate, TicketReplyResponse
 
 router = APIRouter()
+
 
 
 @router.get("", response_model=list[TicketResponse])
@@ -91,3 +92,15 @@ async def delete_ticket(
     service = TicketService(db)
     await service.delete_ticket(ticket_id, current_user)
     return None
+
+
+@router.post("/{ticket_id}/reply", response_model=TicketReplyResponse, status_code=201)
+async def reply_to_ticket(
+    ticket_id: int,
+    payload: TicketReplyCreate,
+    current_user: User = Depends(require_roles(UserRole.CHAIRMAN, UserRole.UK_STAFF)),
+    db: AsyncSession = Depends(get_db),
+):
+    """Председатель или УК отвечает на обращение жильца."""
+    service = TicketService(db)
+    return await service.add_reply(ticket_id, payload, current_user)

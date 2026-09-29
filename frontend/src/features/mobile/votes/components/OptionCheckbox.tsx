@@ -18,37 +18,35 @@ export const OptionCheckbox: React.FC<OptionCheckboxProps> = ({
   return (
     <div
       onClick={() => onToggle(id)}
-      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
+      className={`rounded-xl p-3.5 transition-all duration-200 flex items-start gap-3 cursor-pointer select-none border active:scale-[0.99] ${
         isSelected
-          ? 'bg-sky-50/70 border-primary shadow-xs'
-          : 'bg-white border-slate-200 hover:border-slate-300'
+          ? 'bg-[#ecf4ff] border-primary shadow-xs'
+          : 'bg-white border-slate-200/90 hover:border-slate-300 shadow-xs'
       }`}
     >
       <div
-        className={`w-5 h-5 rounded-lg border-2 mt-0.5 shrink-0 flex items-center justify-center transition-all ${
+        className={`mt-0.5 w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-all ${
           isSelected
-            ? 'bg-primary border-primary text-white'
-            : 'border-slate-300 bg-white'
+            ? 'bg-primary text-white shadow-xs'
+            : 'bg-slate-100 border border-slate-300/70 text-transparent'
         }`}
       >
-        {isSelected && (
-          <span className="material-symbols-outlined text-[16px] leading-none">
-            check
-          </span>
-        )}
-      </div>
-      <div className="flex flex-col">
         <span
-          className={`text-[14px] leading-tight font-medium ${
-            isSelected ? 'text-slate-900 font-semibold' : 'text-slate-700'
+          className={`material-symbols-outlined text-[18px] font-bold transition-opacity ${
+            isSelected ? 'opacity-100' : 'opacity-0'
           }`}
         >
+          check
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className="text-[14px] sm:text-[15px] font-semibold text-slate-900 leading-snug block">
           {label}
         </span>
         {subtext && (
-          <span className="text-[12px] text-slate-500 mt-0.5 leading-snug">
+          <p className="text-[12px] sm:text-[13px] text-slate-500 mt-0.5 leading-relaxed">
             {subtext}
-          </span>
+          </p>
         )}
       </div>
     </div>

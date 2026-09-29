@@ -49,6 +49,7 @@ class Ticket(Base, TimestampMixin, SoftDeleteMixin):
     supports: Mapped[list[TicketSupport]] = relationship("TicketSupport", back_populates="ticket", cascade="all, delete-orphan")
     attachments: Mapped[list[TicketAttachment]] = relationship("TicketAttachment", back_populates="ticket", cascade="all, delete-orphan")
     history: Mapped[list[TicketStatusHistory]] = relationship("TicketStatusHistory", back_populates="ticket", cascade="all, delete-orphan")
+    replies: Mapped[list[TicketReply]] = relationship("TicketReply", back_populates="ticket", cascade="all, delete-orphan")
 
 
 class TicketSupport(Base, TimestampMixin):
@@ -85,3 +86,20 @@ class TicketStatusHistory(Base, TimestampMixin):
 
     ticket: Mapped[Ticket] = relationship("Ticket", back_populates="history")
     changed_by: Mapped[User] = relationship("User")
+
+
+class TicketReply(Base, TimestampMixin):
+    """Ответ председателя или УК на обращение жильца."""
+    __tablename__ = "ticket_replies"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    ticket_id: Mapped[int] = mapped_column(ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    new_status: Mapped[TicketStatus | None] = mapped_column(
+        Enum(TicketStatus, name="ticket_status_enum"),
+        nullable=True,
+    )
+
+    ticket: Mapped[Ticket] = relationship("Ticket", back_populates="replies")
+    author: Mapped[User] = relationship("User")

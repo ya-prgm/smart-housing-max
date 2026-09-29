@@ -29,6 +29,8 @@ export interface PollDetailResponse {
   status: PollStatus;
   created_at: string;
   deadline?: string | null;
+  deadline_text?: string | null;
+  estimated_time?: string | null;
   protocol_number?: string | null;
   total_questions: number;
   is_completed_by_me: boolean;
@@ -43,6 +45,8 @@ export interface PollCardResponse {
   description: string;
   created_at: string;
   deadline?: string | null;
+  deadline_text?: string | null;
+  estimated_time?: string | null;
   questions_count: number;
   participants_count: number;
   is_completed: boolean;
@@ -51,6 +55,7 @@ export interface PollCardResponse {
 export interface PollAnswerSubmission {
   question_id: number;
   selected_option_id?: number | null;
+  selected_option_ids?: number[] | null;
   text_answer?: string | null;
 }
 

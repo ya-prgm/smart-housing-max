@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PinDots } from '../components/PinDots';
 import { PinKeypad } from '../components/PinKeypad';
 import { usePinAuth } from '../hooks/usePinAuth';
@@ -9,6 +9,7 @@ import { authApi } from '../api';
 
 export const PinEnterPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     pin,
     maxDigits,
@@ -24,15 +25,20 @@ export const PinEnterPage: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const getDestinationRoute = () => {
+    // Если нас сюда прислали с конкретным returnTo — используем его
+    const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+    if (returnTo) return returnTo;
     try {
       const raw = localStorage.getItem('current_user');
       if (raw) {
         const u = JSON.parse(raw);
         if (u.role === 'uk_staff') return '/uk/houses';
+        if (u.role === 'chairman') return '/chairman/tickets';
       }
     } catch {}
     return '/feed';
   };
+
 
   useEffect(() => {
     if (isComplete) {

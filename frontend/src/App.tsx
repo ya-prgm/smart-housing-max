@@ -18,9 +18,18 @@ import { VoteStepPage } from './features/mobile/votes/pages/VoteStepPage';
 import { VoteFinishPage } from './features/mobile/votes/pages/VoteFinishPage';
 import { ProfilePage } from './features/mobile/profile/pages/ProfilePage';
 import { HouseInfoPage } from './features/mobile/profile/pages/HouseInfoPage';
+import { SettingsPage } from './features/mobile/profile/pages/SettingsPage';
 import { NotificationsPage } from './features/mobile/notifications/pages/NotificationsPage';
 import { HousesListPage } from './features/uk/houses/pages/HousesListPage';
 import { DashboardPage } from './features/uk/dashboard/DashboardPage';
+import { ChairmanLayout } from './features/chairman/ChairmanLayout';
+import { ChairmanTicketsPage } from './features/chairman/pages/ChairmanTicketsPage';
+import { ChairmanFeedPage } from './features/chairman/pages/ChairmanFeedPage';
+import { ChairmanPollsPage } from './features/chairman/pages/ChairmanPollsPage';
+import { ChairmanProfilePage } from './features/chairman/pages/ChairmanProfilePage';
+import { ChairmanCreatePostPage } from './features/chairman/pages/ChairmanCreatePostPage';
+import { ChairmanCreatePollPage } from './features/chairman/pages/ChairmanCreatePollPage';
+import { ChairmanPollResultsPage } from './features/chairman/pages/ChairmanPollResultsPage';
 import { authApi } from './features/auth/api';
 import { getAccessToken } from './shared/api/client';
 
@@ -66,6 +75,8 @@ const AppInitializer: React.FC = () => {
             const u = JSON.parse(raw);
             if (u.role === 'uk_staff') {
               navigate('/uk/houses');
+            } else if (u.role === 'chairman') {
+              navigate('/chairman/tickets');
             } else {
               navigate('/auth/pin-enter');
             }
@@ -117,11 +128,26 @@ export const App: React.FC = () => {
         <Route path="/votes/:id/step" element={<VoteStepPage />} />
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
         <Route path="/profile/house" element={<HouseInfoPage />} />
+        <Route path="/profile/house-info" element={<HouseInfoPage />} />
+        <Route path="/profile/settings" element={<SettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
 
         <Route path="/uk" element={<HousesListPage />} />
         <Route path="/uk/houses" element={<HousesListPage />} />
         <Route path="/uk/dashboard" element={<DashboardPage />} />
+
+        {/* Chairman routes */}
+        <Route path="/chairman/create-post" element={<ChairmanCreatePostPage />} />
+        <Route path="/chairman/create-poll" element={<ChairmanCreatePollPage />} />
+        <Route path="/chairman/polls/:id/results" element={<ChairmanPollResultsPage />} />
+
+        <Route path="/chairman" element={<ChairmanLayout />}>
+          <Route index element={<Navigate to="/chairman/tickets" replace />} />
+          <Route path="tickets" element={<ChairmanTicketsPage />} />
+          <Route path="feed" element={<ChairmanFeedPage />} />
+          <Route path="polls" element={<ChairmanPollsPage />} />
+          <Route path="profile" element={<ChairmanProfilePage />} />
+        </Route>
 
         <Route element={<MobileLayout />}>
           <Route path="/feed" element={<FeedPage />} />
@@ -136,4 +162,4 @@ export const App: React.FC = () => {
   );
 };
 
-export default App;
+export default App;

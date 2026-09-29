@@ -27,7 +27,7 @@ from app.models.house import House, Apartment, HouseServiceProvider
 from app.models.topic import TicketTopic, TicketRecipient
 from app.models.ticket import Ticket, TicketSupport
 from app.models.feed import FeedPost, FeedPostComment, FeedPostReaction
-from app.models.vote import Poll, PollQuestion, PollOption
+from app.models.vote import Poll, PollQuestion, PollOption, PollResponse, PollResponseAnswer
 from app.models.notification import Notification
 from app.scripts.seed_topics import seed_topics_and_recipients
 
@@ -205,7 +205,7 @@ async def seed_data():
             personal_account="8492-3019-44",
             debt_amount=4820.00,
             payment_deadline="до 10 мая",
-            is_debt_free=True,
+            is_debt_free=False,
         )
         session.add(apt_48)
         await session.flush()
@@ -511,8 +511,8 @@ async def seed_data():
             title="Установка шлагбаума и системы видеонаблюдения во дворе",
             description="Уважаемые собственники и жильцы! Для повышения безопасности нашего двора, ограничения несанкционированного въезда постороннего транспорта и сохранности детской площадки предлагается утвердить установку автоматического шлагбаума с GSM-модулем и распознаванием номеров, а также монтаж 6 камер видеонаблюдения.",
             status=PollStatus.ACTIVE,
-            estimated_time="~3 минуты",
-            deadline_text="До 25 мая",
+            estimated_time="~3 мин",
+            deadline_text="2 дня",
             protocol_number="№ 48-ОСС",
             image_url="/uploads/polls/barrier.jpg",
         )
@@ -541,7 +541,14 @@ async def seed_data():
             subtext="Выберите один или несколько вариантов, которые наиболее удобны для вашей семьи.",
             question_type=PollQuestionType.MULTIPLE_CHOICE,
         )
-        session.add_all([q1, q2, q3])
+        q4 = PollQuestion(
+            poll_id=poll.id,
+            order_num=4,
+            question_text="Готовы ли вы участвовать в софинансировании установки (разовый платёж до 1 200 ₽ с квартиры)?",
+            subtext="Итоговая смета после утверждения будет включена в квитанцию ЕПД отдельной строкой.",
+            question_type=PollQuestionType.SINGLE_CHOICE,
+        )
+        session.add_all([q1, q2, q3, q4])
         await session.flush()
 
         session.add_all([
@@ -554,6 +561,145 @@ async def seed_data():
             PollOption(question_id=q3.id, order_num=2, option_text="Автоматическое считывание госномера камерой", subtext="Камера распознает номер автомобиля из базы жильцов при подъезде"),
             PollOption(question_id=q3.id, order_num=3, option_text="Классический радиобрелок / пульт", subtext="Физический пульт дистанционного управления (до 2 шт. на квартиру)"),
             PollOption(question_id=q3.id, order_num=4, option_text="Открытие по звонку с телефона на номер шлагбаума", subtext="Звонок с зарегистрированного номера собственника"),
+
+            PollOption(question_id=q4.id, order_num=1, option_text="Да, готов(а) оплатить единоразово в ЕПД", subtext="Сумма 1 200 ₽ в следующем расчетном периоде"),
+            PollOption(question_id=q4.id, order_num=2, option_text="Готов(а) при условии рассрочки на 3 месяца", subtext="По 400 ₽ в месяц"),
+            PollOption(question_id=q4.id, order_num=3, option_text="Финансирование должно быть за счёт текущего ремонта", subtext="Без дополнительных взносов жителей"),
+            PollOption(question_id=q4.id, order_num=4, option_text="Не поддерживаю дополнительные расходы", subtext="Голосую против сбора средств"),
+        ])
+
+        poll2 = Poll(
+            house_id=main_house.id,
+            author_id=users_data[2].id,
+            author_role_badge="УК «ЖилКомФорт»",
+            title="Выбор цветовой гаммы для ремонта входных групп (подъездов)",
+            description="Дизайнеры подготовили 3 варианта отделки первого этажа и лифтовых холлов. Выберите лучший.",
+            status=PollStatus.ACTIVE,
+            estimated_time="~2 мин",
+            deadline_text="До 28 апр",
+            protocol_number="№ 49-УК",
+            image_url="/uploads/polls/lobby.jpg",
+        )
+        session.add(poll2)
+        await session.flush()
+
+        p2_q1 = PollQuestion(
+            poll_id=poll2.id,
+            order_num=1,
+            question_text="Какой вариант дизайн-проекта отделки входных групп вы предпочитаете?",
+            subtext="Ознакомьтесь с визуализацией холлов первого этажа.",
+            question_type=PollQuestionType.SINGLE_CHOICE,
+            image_url="/uploads/polls/lobby.jpg",
+        )
+        p2_q2 = PollQuestion(
+            poll_id=poll2.id,
+            order_num=2,
+            question_text="Какие дополнительные элементы благоустройства подъезда необходимы?",
+            subtext="Можно выбрать несколько вариантов.",
+            question_type=PollQuestionType.MULTIPLE_CHOICE,
+        )
+        p2_q3 = PollQuestion(
+            poll_id=poll2.id,
+            order_num=3,
+            question_text="Ваши пожелания по материалам и освещению в подъезде",
+            subtext="Напишите любые уточнения по проекту.",
+            question_type=PollQuestionType.TEXT,
+        )
+        session.add_all([p2_q1, p2_q2, p2_q3])
+        await session.flush()
+
+        session.add_all([
+            PollOption(question_id=p2_q1.id, order_num=1, option_text="Скандинавский минимализм (светлое дерево и серый керамогранит)", subtext="Уютный лаконичный дизайн с теплым светом"),
+            PollOption(question_id=p2_q1.id, order_num=2, option_text="Современный лофт (акцентный кирпич и графитовые панели)", subtext="Стильный урбанистический интерьер"),
+            PollOption(question_id=p2_q1.id, order_num=3, option_text="Классический светлый (бежевые тона и зеркала)", subtext="Традиционная отделка в светлой гамме"),
+
+            PollOption(question_id=p2_q2.id, order_num=1, option_text="Зеркало в полный рост в лифтовом холле", subtext="С защитной антивандальной пленкой"),
+            PollOption(question_id=p2_q2.id, order_num=2, option_text="Полка для буккроссинга и зона ожидания", subtext="Компактный пуф и книжная полка"),
+            PollOption(question_id=p2_q2.id, order_num=3, option_text="Грязезащитные решётки повышенной очистки", subtext="Трехуровневая система очистки обуви на входе"),
+            PollOption(question_id=p2_q2.id, order_num=4, option_text="Экобокс для сбора отработанных батареек", subtext="Безопасная утилизация элементов питания"),
+        ])
+
+        poll3 = Poll(
+            house_id=main_house.id,
+            author_id=users_data[2].id,
+            author_role_badge="УК «ЖилКомФорт»",
+            title="Оценка качества весенней уборки придомовой территории",
+            description="Спасибо за участие! Ваш голос учтен и отправлен в отдел контроля качества управляющей компании.",
+            status=PollStatus.ACTIVE,
+            estimated_time="1 мин",
+            deadline_text="Завершен",
+            protocol_number="№ 47-УК",
+            image_url=None,
+        )
+        session.add(poll3)
+        await session.flush()
+
+        p3_q1 = PollQuestion(
+            poll_id=poll3.id,
+            order_num=1,
+            question_text="Как вы оцениваете уборку двора после зимы?",
+            subtext="Оцените работу дворников и механизированной уборки.",
+            question_type=PollQuestionType.SINGLE_CHOICE,
+        )
+        p3_q2 = PollQuestion(
+            poll_id=poll3.id,
+            order_num=2,
+            question_text="Замечания или предложения по содержанию двора",
+            subtext="Укажите конкретные участки, требующие внимания.",
+            question_type=PollQuestionType.TEXT,
+        )
+        session.add_all([p3_q1, p3_q2])
+        await session.flush()
+
+        p3_opt1 = PollOption(question_id=p3_q1.id, order_num=1, option_text="Отлично (мусор убран, газоны очищены)", subtext="Претензий нет")
+        p3_opt2 = PollOption(question_id=p3_q1.id, order_num=2, option_text="Хорошо (есть небольшие замечания)", subtext="В целом чисто")
+        p3_opt3 = PollOption(question_id=p3_q1.id, order_num=3, option_text="Удовлетворительно", subtext="Требуется дополнительная уборка")
+        p3_opt4 = PollOption(question_id=p3_q1.id, order_num=4, option_text="Неудовлетворительно", subtext="Двор не убран")
+        session.add_all([p3_opt1, p3_opt2, p3_opt3, p3_opt4])
+        await session.flush()
+
+        p3_resp = PollResponse(
+            poll_id=poll3.id,
+            user_id=resident_user.id,
+            apartment_id=apt_48.id,
+            signature_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        )
+        session.add(p3_resp)
+        await session.flush()
+
+        session.add_all([
+            PollResponseAnswer(response_id=p3_resp.id, question_id=p3_q1.id, selected_option_id=p3_opt1.id),
+            PollResponseAnswer(response_id=p3_resp.id, question_id=p3_q2.id, text_answer="Убрали хорошо, спасибо!"),
+        ])
+
+        poll4 = Poll(
+            house_id=main_house.id,
+            author_id=chairman_user.id,
+            author_role_badge="Председатель ТСЖ",
+            title="Благоустройство зоны для выгула собак",
+            description="Итоги голосования подведены. Проект передан на согласование в администрацию района.",
+            status=PollStatus.COMPLETED,
+            estimated_time="2 мин",
+            deadline_text="Завершён",
+            protocol_number="№ 45-ОСС",
+            image_url=None,
+        )
+        session.add(poll4)
+        await session.flush()
+
+        p4_q1 = PollQuestion(
+            poll_id=poll4.id,
+            order_num=1,
+            question_text="Поддерживаете ли вы выделение огороженной площадки для выгула собак в торце дома?",
+            subtext="Площадка будет оборудована диспенсерами с дог-пакетами и урнами.",
+            question_type=PollQuestionType.SINGLE_CHOICE,
+        )
+        session.add(p4_q1)
+        await session.flush()
+
+        session.add_all([
+            PollOption(question_id=p4_q1.id, order_num=1, option_text="Да, это сохранит чистоту основных газонов", subtext="Поддерживаю проект"),
+            PollOption(question_id=p4_q1.id, order_num=2, option_text="Против размещения рядом с домом", subtext="Считаю место неподходящим"),
         ])
 
         notifications_data = [

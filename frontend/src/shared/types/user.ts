@@ -6,6 +6,7 @@ export interface UserProfile {
   full_name: string;
   phone?: string | null;
   email?: string | null;
+  snils?: string | null;
   role: UserRole;
   house_id?: number | null;
   house_address?: string | null;

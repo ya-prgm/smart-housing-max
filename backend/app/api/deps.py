@@ -44,7 +44,7 @@ async def get_current_user(
     stmt = (
         select(User)
         .where(User.max_user_id == int(sub))
-        .options(selectinload(User.apartments))
+        .options(selectinload(User.apartments), selectinload(User.pin))
     )
     result = await db.execute(stmt)
     user = result.scalars().first()

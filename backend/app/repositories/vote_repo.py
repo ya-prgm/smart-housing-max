@@ -65,13 +65,23 @@ class VoteRepository(BaseRepository[Poll]):
         await self.db.flush()
 
         for a in answers:
-            ans = PollResponseAnswer(
-                response_id=response.id,
-                question_id=a["question_id"],
-                selected_option_id=a.get("selected_option_id"),
-                text_answer=a.get("text_answer"),
-            )
-            self.db.add(ans)
+            if a.get("selected_option_ids"):
+                for opt_id in a["selected_option_ids"]:
+                    ans = PollResponseAnswer(
+                        response_id=response.id,
+                        question_id=a["question_id"],
+                        selected_option_id=opt_id,
+                        text_answer=None,
+                    )
+                    self.db.add(ans)
+            elif a.get("selected_option_id") is not None or a.get("text_answer") is not None:
+                ans = PollResponseAnswer(
+                    response_id=response.id,
+                    question_id=a["question_id"],
+                    selected_option_id=a.get("selected_option_id"),
+                    text_answer=a.get("text_answer"),
+                )
+                self.db.add(ans)
 
         await self.db.flush()
         return response

@@ -8,6 +8,7 @@ from app.core.constants import PollStatus, PollQuestionType
 class PollAnswerSubmission(BaseModel):
     question_id: int
     selected_option_id: int | None = None
+    selected_option_ids: list[int] | None = None
     text_answer: str | None = None
 
 
@@ -41,6 +42,8 @@ class PollDetailResponse(BaseSchema):
     status: PollStatus
     created_at: datetime
     deadline: datetime | None = None
+    deadline_text: str | None = None
+    estimated_time: str | None = None
     protocol_number: str | None = None
     total_questions: int
     is_completed_by_me: bool
@@ -55,6 +58,58 @@ class PollCardResponse(BaseSchema):
     description: str
     created_at: datetime
     deadline: datetime | None = None
+    deadline_text: str | None = None
+    estimated_time: str | None = None
     questions_count: int
     participants_count: int
     is_completed: bool
+
+
+# -------- Chairman: Create Poll --------
+
+class PollOptionCreate(BaseModel):
+    option_text: str
+    subtext: str | None = None
+
+
+class PollQuestionCreate(BaseModel):
+    question_text: str
+    subtext: str | None = None
+    question_type: PollQuestionType = PollQuestionType.SINGLE_CHOICE
+    options: list[PollOptionCreate] = []
+
+
+class PollCreate(BaseModel):
+    title: str
+    description: str
+    deadline_text: str = "До 31 октября"
+    estimated_time: str = "~3 мин"
+    protocol_number: str | None = None
+    questions: list[PollQuestionCreate]
+
+
+# -------- Chairman: Poll Results --------
+
+class PollOptionResult(BaseSchema):
+    id: int
+    option_text: str
+    votes: int
+    percent: float
+
+
+class PollQuestionResult(BaseSchema):
+    id: int
+    question_text: str
+    question_type: PollQuestionType
+    total_answers: int
+    options: list[PollOptionResult] = []
+    text_answers: list[str] = []
+
+
+class PollResultsResponse(BaseSchema):
+    id: int
+    title: str
+    description: str
+    status: PollStatus
+    total_participants: int
+    questions: list[PollQuestionResult] = []

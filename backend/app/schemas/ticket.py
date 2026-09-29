@@ -19,6 +19,22 @@ class TicketUpdate(BaseModel):
     description: str | None = None
 
 
+class TicketReplyCreate(BaseModel):
+    content: str
+    new_status: TicketStatus | None = None
+
+
+class TicketReplyResponse(BaseSchema):
+    id: int
+    ticket_id: int
+    author_id: int
+    author_name: str
+    author_role: str
+    content: str
+    new_status: TicketStatus | None = None
+    created_at: datetime
+
+
 class TicketSupportResponse(BaseSchema):
     ticket_id: int
     votes_count: int
@@ -52,3 +68,4 @@ class TicketResponse(BaseSchema):
     house_address: str
     author_full_name: str | None = None
     attachments: list[TicketAttachmentResponse] = []
+    replies: list[TicketReplyResponse] = []

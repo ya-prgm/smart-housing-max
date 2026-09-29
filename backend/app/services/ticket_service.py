@@ -4,14 +4,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.ticket import Ticket, TicketAttachment
+from app.models.ticket import Ticket, TicketAttachment, TicketReply
 from app.models.topic import TicketTopic, TicketRecipient
 from app.models.house import House, Apartment
 from app.models.user import User, UserApartment, UserRole
 from app.models.file import File as FileModel
 from app.core.constants import TicketStatus
 from app.repositories.ticket_repo import TicketRepository
-from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse, TicketAttachmentResponse
+from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse, TicketAttachmentResponse, TicketReplyCreate, TicketReplyResponse
 from app.schemas.topic import RecipientItem
 
 
@@ -64,6 +64,20 @@ class TicketService:
                 for r in t.recipients
             ]
 
+            replies = [
+                TicketReplyResponse(
+                    id=rep.id,
+                    ticket_id=rep.ticket_id,
+                    author_id=rep.author_id,
+                    author_name=rep.author.full_name if rep.author else "Председатель",
+                    author_role=rep.author.role.value if rep.author else "chairman",
+                    content=rep.content,
+                    new_status=rep.new_status,
+                    created_at=rep.created_at,
+                )
+                for rep in (t.replies or [])
+            ]
+
             result.append(
                 TicketResponse(
                     id=t.id,
@@ -83,6 +97,7 @@ class TicketService:
                     house_address=t.house.address if t.house else "",
                     author_full_name=author_name,
                     attachments=attachments,
+                    replies=replies,
                 )
             )
         return result
@@ -119,6 +134,20 @@ class TicketService:
             for r in t.recipients
         ]
 
+        replies = [
+            TicketReplyResponse(
+                id=rep.id,
+                ticket_id=rep.ticket_id,
+                author_id=rep.author_id,
+                author_name=rep.author.full_name if rep.author else "Председатель",
+                author_role=rep.author.role.value if rep.author else "chairman",
+                content=rep.content,
+                new_status=rep.new_status,
+                created_at=rep.created_at,
+            )
+            for rep in (t.replies or [])
+        ]
+
         return TicketResponse(
             id=t.id,
             code=t.code,
@@ -137,6 +166,7 @@ class TicketService:
             house_address=t.house.address if t.house else "",
             author_full_name=author_name,
             attachments=attachments,
+            replies=replies,
         )
 
     async def create_ticket(self, payload: TicketCreate, author: User) -> TicketResponse:
@@ -247,3 +277,38 @@ class TicketService:
         t.is_deleted = True
         await self.db.commit()
         return True
+
+    async def add_reply(
+        self, ticket_id: int, payload: TicketReplyCreate, current_user: User
+    ) -> TicketReplyResponse:
+        """Председатель или УК отвечает на обращение."""
+        t = await self.db.get(Ticket, ticket_id)
+        if not t or t.is_deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
+        if current_user.role not in (UserRole.CHAIRMAN, UserRole.UK_STAFF):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
+
+        reply = TicketReply(
+            ticket_id=ticket_id,
+            author_id=current_user.id,
+            content=payload.content,
+            new_status=payload.new_status,
+        )
+        self.db.add(reply)
+
+        if payload.new_status is not None:
+            t.status = payload.new_status
+
+        await self.db.commit()
+        await self.db.refresh(reply)
+
+        return TicketReplyResponse(
+            id=reply.id,
+            ticket_id=reply.ticket_id,
+            author_id=reply.author_id,
+            author_name=current_user.full_name,
+            author_role=current_user.role.value,
+            content=reply.content,
+            new_status=reply.new_status,
+            created_at=reply.created_at,
+        )

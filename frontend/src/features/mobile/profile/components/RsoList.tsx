@@ -29,6 +29,9 @@ export const RsoList: React.FC<RsoListProps> = ({
         return 'call';
       case 'elevator':
         return 'elevator';
+      case 'internet':
+      case 'telecom':
+        return 'wifi';
       default:
         return 'corporate_fare';
     }
@@ -36,54 +39,61 @@ export const RsoList: React.FC<RsoListProps> = ({
 
   return (
     <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-card flex flex-col gap-4 w-full">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center text-primary">
-          <span className="material-symbols-outlined text-[19px]">contact_phone</span>
+      <div className="flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-2xl bg-sky-100 flex items-center justify-center text-primary">
+          <span className="material-symbols-outlined text-[20px]">contact_phone</span>
         </div>
-        <h3 className="text-[15px] font-bold text-slate-900">
-          Службы и ресурсоснабжающие организации
-        </h3>
+        <div>
+          <h3 className="text-[16px] font-bold text-slate-900 leading-tight">
+            Службы и ресурсоснабжающие организации
+          </h3>
+          <p className="text-[11px] text-slate-400">
+            Прямые контакты поставщиков коммунальных услуг
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         {emergencyPhone && (
-          <div className="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-100 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-rose-50/80 border border-rose-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-                <span className="material-symbols-outlined text-[18px]">emergency</span>
+              <div className="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                <span className="material-symbols-outlined text-[20px]">emergency</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[13px] font-bold text-slate-900">
-                  Аварийно-диспетчерская служба
+                <span className="text-[14px] font-bold text-slate-900">
+                  Аварийная служба
                 </span>
-                <span className="text-[11px] text-slate-500">Круглосуточно</span>
+                <span className="text-[11px] text-rose-600 font-medium">Круглосуточно • 24/7</span>
               </div>
             </div>
             <a
               href={`tel:${emergencyPhone}`}
-              className="text-[13px] font-bold text-rose-600 hover:underline"
+              className="px-3.5 py-1.5 rounded-xl bg-rose-600 text-white text-[12px] font-bold flex items-center gap-1.5 shadow-xs hover:bg-rose-700 active:scale-95 transition-all"
             >
-              {formatPhone(emergencyPhone)}
+              <span className="material-symbols-outlined text-[15px]">call</span>
+              <span>{formatPhone(emergencyPhone)}</span>
             </a>
           </div>
         )}
 
         {dispatcherPhone && (
-          <div className="p-3.5 rounded-2xl bg-sky-50/70 border border-sky-100 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-sky-50/80 border border-sky-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-primary shrink-0">
-                <span className="material-symbols-outlined text-[18px]">support_agent</span>
+              <div className="w-9 h-9 rounded-xl bg-sky-100 flex items-center justify-center text-primary shrink-0">
+                <span className="material-symbols-outlined text-[20px]">support_agent</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-[13px] font-bold text-slate-900">Диспетчер УК</span>
-                <span className="text-[11px] text-slate-500">Приём заявок</span>
+                <span className="text-[14px] font-bold text-slate-900">Диспетчер УК</span>
+                <span className="text-[11px] text-primary font-medium">Приём заявок жителей</span>
               </div>
             </div>
             <a
               href={`tel:${dispatcherPhone}`}
-              className="text-[13px] font-bold text-primary hover:underline"
+              className="px-3.5 py-1.5 rounded-xl bg-primary text-white text-[12px] font-bold flex items-center gap-1.5 shadow-xs hover:bg-primary/90 active:scale-95 transition-all"
             >
-              {formatPhone(dispatcherPhone)}
+              <span className="material-symbols-outlined text-[15px]">call</span>
+              <span>{formatPhone(dispatcherPhone)}</span>
             </a>
           </div>
         )}
@@ -91,19 +101,26 @@ export const RsoList: React.FC<RsoListProps> = ({
         {providers.map((p) => (
           <div
             key={p.id}
-            className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between"
+            className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-3"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-slate-200/70 flex items-center justify-center text-slate-600 shrink-0">
                 <span className="material-symbols-outlined text-[18px]">
                   {getCategoryIcon(p.category)}
                 </span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[13px] font-semibold text-slate-800">
-                  {p.name}
-                </span>
-                <span className="text-[11px] text-slate-400">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[13px] font-bold text-slate-800 truncate">
+                    {p.name}
+                  </span>
+                  {p.brand_badge && (
+                    <span className="px-2 py-0.5 rounded-md bg-blue-100/70 text-primary text-[10px] font-bold">
+                      {p.brand_badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-500 truncate">
                   {p.service_description}
                 </span>
               </div>
@@ -112,9 +129,10 @@ export const RsoList: React.FC<RsoListProps> = ({
             {p.phone && (
               <a
                 href={`tel:${p.phone}`}
-                className="text-[12px] font-semibold text-primary hover:underline"
+                className="shrink-0 px-2.5 py-1.5 rounded-xl bg-white border border-slate-200 text-primary text-[12px] font-bold flex items-center gap-1 hover:bg-sky-50 active:scale-95 transition-all"
               >
-                {formatPhone(p.phone)}
+                <span className="material-symbols-outlined text-[15px]">call</span>
+                <span className="hidden sm:inline">{formatPhone(p.phone)}</span>
               </a>
             )}
           </div>

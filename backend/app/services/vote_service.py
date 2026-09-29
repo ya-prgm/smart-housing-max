@@ -38,6 +38,8 @@ class VoteService:
                     description=p.description,
                     created_at=p.created_at,
                     deadline=None,
+                    deadline_text=p.deadline_text,
+                    estimated_time=p.estimated_time,
                     questions_count=len(p.questions),
                     participants_count=participants,
                     is_completed=is_completed,
@@ -66,9 +68,9 @@ class VoteService:
             ]
 
             q_type = PollQuestionType.SINGLE_CHOICE
-            if q.question_type.value == "multiple":
+            if q.question_type == PollQuestionType.MULTIPLE_CHOICE or q.question_type.value in ("multiple", "multiple_choice"):
                 q_type = PollQuestionType.MULTIPLE_CHOICE
-            elif q.question_type.value == "text":
+            elif q.question_type == PollQuestionType.TEXT or q.question_type.value == "text":
                 q_type = PollQuestionType.TEXT
 
             q_list.append(
@@ -92,6 +94,8 @@ class VoteService:
             status=p.status,
             created_at=p.created_at,
             deadline=None,
+            deadline_text=p.deadline_text,
+            estimated_time=p.estimated_time,
             protocol_number=p.protocol_number,
             total_questions=len(p.questions),
             is_completed_by_me=is_completed,

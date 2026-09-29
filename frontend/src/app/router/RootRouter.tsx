@@ -55,6 +55,7 @@ export const RootRouter: React.FC = () => {
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
         <Route path="/profile/house" element={<HouseInfoPage />} />
         <Route path="/profile/utility" element={<UtilityPage />} />
+        <Route path="/utility" element={<UtilityPage />} />
         <Route path="/profile/settings" element={<SettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
 

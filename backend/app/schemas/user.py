@@ -5,8 +5,9 @@ from app.core.constants import UserRole, EsiaSyncStatus
 
 
 class UserUpdateRequest(BaseModel):
+    full_name: str | None = None
     email: EmailStr | None = None
-    phone: str | None = Field(default=None, pattern=r"^\+?7\d{10}$")
+    phone: str | None = None
     notifications_enabled: bool | None = None
 
 
@@ -18,6 +19,7 @@ class UserProfileResponse(BaseSchema):
     full_name: str
     phone: str | None = None
     email: str | None = None
+    snils: str | None = None
     role: UserRole
     house_id: int | None = None
     house_address: str | None = None

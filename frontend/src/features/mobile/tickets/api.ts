@@ -2,6 +2,17 @@ import { apiClient } from '../../../shared/api/client';
 import { ENDPOINTS } from '../../../shared/api/endpoints';
 import { Ticket } from '../../../shared/types/ticket';
 
+export interface TicketReplyItem {
+  id: number;
+  ticket_id: number;
+  author_id: number;
+  author_name: string;
+  author_role: string;
+  content: string;
+  new_status: string | null;
+  created_at: string;
+}
+
 export interface TicketResponseItem {
   id: number;
   code: string;
@@ -34,7 +45,9 @@ export interface TicketResponseItem {
     size: number;
     mime_type: string;
   }>;
+  replies: TicketReplyItem[];
 }
+
 
 export interface TopicItem {
   id: number;

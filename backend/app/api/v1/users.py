@@ -47,6 +47,7 @@ async def get_my_profile(
         full_name=current_user.full_name,
         phone=current_user.phone,
         email=current_user.email,
+        snils=current_user.snils,
         role=current_user.role,
         house_id=house_id,
         house_address=house_address,
@@ -69,6 +70,8 @@ async def update_my_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    if payload.full_name is not None and payload.full_name.strip():
+        current_user.full_name = payload.full_name.strip()
     if payload.email is not None:
         current_user.email = payload.email
     if payload.phone is not None:
@@ -78,5 +81,22 @@ async def update_my_profile(
 
     await db.commit()
     await db.refresh(current_user)
+
+    return await get_my_profile(current_user, db)
+
+
+@router.post("/me/pay-utility", response_model=UserProfileResponse)
+async def pay_my_utility(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if current_user.apartments:
+        ua = current_user.apartments[0]
+        apt_stmt = select(Apartment).where(Apartment.id == ua.apartment_id)
+        apt = (await db.execute(apt_stmt)).scalars().first()
+        if apt:
+            apt.debt_amount = 0.0
+            apt.is_debt_free = True
+            await db.commit()
 
     return await get_my_profile(current_user, db)
