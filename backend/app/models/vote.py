@@ -5,6 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, SoftDeleteMixin
 from app.core.constants import PollQuestionType, PollStatus
 
+QuestionType = PollQuestionType
+
 
 class Poll(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "polls"

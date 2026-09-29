@@ -1,3 +1,10 @@
+export interface PostAuthor {
+  name?: string;
+  full_name?: string;
+  role?: string;
+  avatar_url?: string | null;
+}
+
 export interface Attachment {
   type: 'image' | 'file' | 'camera';
   name?: string;

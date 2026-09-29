@@ -13,3 +13,4 @@ class NotificationResponse(BaseSchema):
     is_read: bool
     action_url: str | None = None
     created_at: datetime
+    time_formatted: str | None = None

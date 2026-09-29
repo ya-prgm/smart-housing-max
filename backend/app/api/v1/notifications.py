@@ -35,6 +35,7 @@ async def get_notifications(
             text=n.text,
             is_read=n.is_read,
             action_url=n.action_url,
+            created_at=n.created_at,
             time_formatted=n.created_at.strftime("%d %b, %H:%M"),
         )
         for n in notifications

@@ -2,132 +2,45 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Ticket } from '../../../../shared/types/ticket';
 import { SupportModal } from '../components/SupportModal';
-
-const INITIAL_TICKETS: Ticket[] = [
-  {
-    id: '1',
-    code: '#4812',
-    category: 'Сантехника',
-    title: 'Капает стояк ГВС на кухне',
-    description: 'В районе вентиля появилась влага и подкапывает в стыке трубы.',
-    status: 'in_progress',
-    date: 'Сегодня',
-    isMy: false,
-    votesCount: 14,
-    isVoted: false,
-  },
-  {
-    id: '2',
-    code: '#4809',
-    category: 'Электрика',
-    title: 'Не работает свет на 4 этаже',
-    description: 'Перегорела лампа в коридоре у кв. 48. Вечером темно выходить к лифту.',
-    status: 'active',
-    date: 'Вчера',
-    isMy: true,
-    votesCount: 7,
-    isVoted: true,
-  },
-  {
-    id: '3',
-    code: '#4806',
-    category: 'Водоснабжение',
-    title: 'Слабый напор горячей воды',
-    description: 'По вечерам после 20:00 падает давление по всему стояку.',
-    status: 'active',
-    date: '16 апр',
-    isMy: false,
-    votesCount: 12,
-    isVoted: false,
-  },
-  {
-    id: '4',
-    code: '#4804',
-    category: 'Лифты',
-    title: 'Скрип створок лифта',
-    description: 'Лифт во 2 подъезде издает скрежет при закрытии. Мастер вызван.',
-    status: 'in_progress',
-    date: '14 апр',
-    isMy: false,
-    votesCount: 9,
-    isVoted: false,
-  },
-  {
-    id: '5',
-    code: '#4795',
-    category: 'Двор',
-    title: 'Регулировка доводчика',
-    description: 'Дверь сильно хлопала, отрегулировали гидроцилиндр входа.',
-    status: 'completed',
-    date: '10 апр',
-    isMy: false,
-    votesCount: 19,
-    isVoted: false,
-    resolvedLabel: 'Решено УК • 19 чел',
-  },
-  {
-    id: '6',
-    code: '#4782',
-    category: 'Благоустройство',
-    title: 'Плитка на крыльце',
-    description: 'Заменили сколотые ступени у входа, швы загерметизированы.',
-    status: 'completed',
-    date: '05 апр',
-    isMy: true,
-    votesCount: 24,
-    isVoted: true,
-    resolvedLabel: 'Решено УК • 24 чел',
-  },
-];
+import { useTickets } from '../hooks/useTickets';
+import { useHaptic } from '../../../../shared/hooks/useHaptic';
 
 export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
+  const { impact } = useHaptic();
   const [filter, setFilter] = useState<'all' | 'my' | 'active' | 'in_progress' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const handleVoteClick = (ticket: Ticket, e: React.MouseEvent) => {
+
+  const { tickets, isLoading, toggleSupport } = useTickets(
+    filter === 'my' ? undefined : filter,
+    filter === 'my',
+    searchQuery
+  );
+
+  const handleVoteClick = async (ticket: Ticket, e: React.MouseEvent) => {
     e.stopPropagation();
+    impact('light');
     if (ticket.isVoted) {
-      setTickets((prev) =>
-        prev.map((t) =>
-          t.id === ticket.id
-            ? { ...t, isVoted: false, votesCount: Math.max(0, t.votesCount - 1) }
-            : t
-        )
-      );
+      try {
+        await toggleSupport(ticket.id);
+      } catch {}
     } else {
       setSelectedTicket(ticket);
     }
   };
 
-  const handleConfirmVote = () => {
+  const handleConfirmVote = async () => {
     if (!selectedTicket) return;
-    setTickets((prev) =>
-      prev.map((t) =>
-        t.id === selectedTicket.id
-          ? { ...t, isVoted: true, votesCount: t.votesCount + 1 }
-          : t
-      )
-    );
+    impact('medium');
+    try {
+      await toggleSupport(selectedTicket.id);
+    } catch {}
+    setSelectedTicket(null);
   };
 
-  const filteredTickets = tickets.filter((ticket) => {
-    if (filter === 'my' && !ticket.isMy) return false;
-    if (filter === 'active' && ticket.status !== 'active') return false;
-    if (filter === 'in_progress' && ticket.status !== 'in_progress') return false;
-    if (filter === 'completed' && ticket.status !== 'completed') return false;
+  const filteredTickets = tickets;
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return (
-        ticket.title.toLowerCase().includes(q) ||
-        ticket.description.toLowerCase().includes(q) ||
-        ticket.category.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
 
   return (
     <div className="flex flex-col w-full relative min-h-screen">
@@ -197,7 +110,9 @@ export const TicketsPage: React.FC = () => {
       </div>
 
       <main className="px-4 pt-3 pb-28">
-        {filteredTickets.length > 0 ? (
+        {isLoading ? (
+          <div className="py-12 text-center text-slate-400 text-sm">Загрузка обращений...</div>
+        ) : filteredTickets.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 items-start">
             {filteredTickets.map((ticket) => (
               <article

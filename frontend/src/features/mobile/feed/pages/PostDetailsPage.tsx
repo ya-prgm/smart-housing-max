@@ -1,88 +1,55 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Comment } from '../../../../shared/types/feed';
-
-const INITIAL_COMMENTS: Comment[] = [
-  {
-    id: 'c1',
-    authorName: 'Денис Ломакин',
-    avatarText: 'ДЛ',
-    avatarBg: 'bg-sky-50 text-sky-700 border-sky-200/60',
-    text: 'А когда именно начнут укладывать резиновое покрытие на детской площадке? До майских праздников успеют?',
-    time: 'Сегодня в 10:30',
-    replies: [
-      {
-        id: 'c1_1',
-        authorName: 'Елена Смирнова',
-        roleBadge: 'Председатель',
-        avatarText: 'ЕС',
-        avatarBg: 'bg-gradient-to-tr from-sky-600 to-sky-400 text-white shadow-sm',
-        text: 'Денис, подрядчик выходит на работы с 24 апреля, если не будет затяжных дождей, к 1 мая всё закончат. Смета и график уже в документах дома.',
-        time: 'Сегодня в 10:48',
-        attachment: {
-          type: 'file',
-          name: 'График_работ_апрель2025.pdf',
-          size: '420 КБ · ТСЖ «Северное»',
-        },
-      },
-      {
-        id: 'c1_2',
-        authorName: 'Дарья Терехова',
-        avatarText: 'ДТ',
-        avatarBg: 'bg-rose-50 text-rose-500 border-rose-100',
-        text: 'Елена, отлично, спасибо большое! Главное чтобы краской не пахло на праздники 👍',
-        time: 'Сегодня в 11:15',
-      },
-    ],
-  },
-  {
-    id: 'c2',
-    authorName: 'Сергей И.',
-    avatarText: 'СИ',
-    avatarBg: 'bg-slate-100 text-slate-600 border-slate-200',
-    text: 'А камеру наблюдения на этот угол тоже смонтируют? В прошлый раз на собрании голосовали за установку.',
-    time: 'Сегодня в 11:40',
-    attachment: {
-      type: 'camera',
-      name: 'Схема камеры #3',
-      authorLabel: 'Прикреплено жильцом',
-    },
-  },
-  {
-    id: 'c3',
-    authorName: 'УК «ЖилКомФорт»',
-    roleBadge: 'Официально',
-    avatarText: 'УК',
-    avatarBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    text: 'Михаил, добрый день! Все новые фонари будут со световой температурой 3000K (нейтральный теплый свет), согласовано с проектом.',
-    time: 'Сегодня в 11:45',
-  },
-];
+import { useNavigate, useParams } from 'react-router-dom';
+import { usePostDetails } from '../hooks/useFeed';
+import { feedApi } from '../api';
+import { useHaptic } from '../../../../shared/hooks/useHaptic';
 
 export const PostDetailsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [likes, setLikes] = useState(24);
-  const [dislikes, setDislikes] = useState(2);
-  const [comments, setComments] = useState<Comment[]>(INITIAL_COMMENTS);
+  const { id } = useParams<{ id: string }>();
+  const postId = id || '1';
+  const { post, comments, addComment } = usePostDetails(postId);
+  const { impact } = useHaptic();
+
+  const [likes, setLikes] = useState(0);
+  const [dislikes, setDislikes] = useState(0);
   const [commentInput, setCommentInput] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
 
-  const handleSendComment = () => {
-    if (!commentInput.trim()) return;
+  React.useEffect(() => {
+    if (post) {
+      setLikes(post.likes);
+      setDislikes(post.dislikes);
+    }
+  }, [post]);
 
-    const newComment: Comment = {
-      id: `c_${Date.now()}`,
-      authorName: 'Александр Смирнов',
-      avatarText: 'АС',
-      avatarBg: 'bg-sky-100 text-sky-800 border-sky-300',
-      text: replyTo ? `${replyTo}, ${commentInput}` : commentInput,
-      time: 'Только что',
-    };
-
-    setComments((prev) => [newComment, ...prev]);
-    setCommentInput('');
-    setReplyTo(null);
+  const handleLike = async () => {
+    impact('light');
+    setLikes((l) => l + 1);
+    try {
+      await feedApi.toggleReaction(postId, 'like');
+    } catch {}
   };
+
+  const handleDislike = async () => {
+    impact('light');
+    setDislikes((d) => d + 1);
+    try {
+      await feedApi.toggleReaction(postId, 'dislike');
+    } catch {}
+  };
+
+  const handleSendComment = async () => {
+    if (!commentInput.trim()) return;
+    impact('medium');
+    const textToSend = replyTo ? `${replyTo}, ${commentInput}` : commentInput;
+    try {
+      await addComment(textToSend);
+      setCommentInput('');
+      setReplyTo(null);
+    } catch {}
+  };
+
 
   return (
     <div className="bg-[#f7f9ff] text-[#141c24] min-h-screen flex flex-col relative select-none">
@@ -118,37 +85,35 @@ export const PostDetailsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-11 h-11 rounded-full ring-2 ring-[#2aabee] bg-gradient-to-tr from-[#006591] to-[#2aabee] flex items-center justify-center overflow-hidden text-white font-semibold text-sm shadow-sm">
-                ЕС
+                {post?.avatarText || 'ЕС'}
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-semibold text-[14px] text-[#0f172a]">Елена Смирнова</span>
-                  <span className="px-2 py-0.5 bg-[#ecf4ff] text-[#006591] text-[10px] font-semibold rounded-full border border-[#c9e6ff]">
-                    Председатель
-                  </span>
+                  <span className="font-semibold text-[14px] text-[#0f172a]">{post?.authorName || 'Елена Смирнова'}</span>
+                  {post?.roleBadge && (
+                    <span className="px-2 py-0.5 bg-[#ecf4ff] text-[#006591] text-[10px] font-semibold rounded-full border border-[#c9e6ff]">
+                      {post.roleBadge}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center space-x-1.5 text-[12px] text-[#64748b] mt-0.5">
-                  <span>Сегодня в 10:15</span>
+                  <span>{post?.time || 'Сегодня'}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="mt-3 space-y-2 text-[14px] text-[#334155] leading-relaxed">
-            <h2 className="font-bold text-[16px] text-[#0f172a] leading-snug">
-              План весеннего благоустройства дворовой территории и замена освещения
-            </h2>
-            <p>
-              Уважаемые соседи! Совместно с управляющей компанией «ЖилКомФорт» мы полностью
-              согласовали и утвердили план работ на весну 2025 года. На детской площадке заменим
-              старое резиновое покрытие, а вдоль аллеи установим новые светодиодные энергосберегающие
-              фонари 💡🌿
-            </p>
-            <p>
-              Просим ознакомиться с проектным планом и сметой ниже. Также приглашаем принять
-              участие в голосовании по выбору типа ограждения газонов!
+            {post?.title && (
+              <h2 className="font-bold text-[16px] text-[#0f172a] leading-snug">
+                {post.title}
+              </h2>
+            )}
+            <p className="whitespace-pre-line">
+              {post?.content || 'Загрузка содержимого...'}
             </p>
           </div>
+
 
           <div className="mt-3.5">
             <div className="relative w-full aspect-[4/3] bg-gradient-to-br from-[#e6effa] to-[#dae3ef] rounded-2xl overflow-hidden border border-[#dae3ef] flex flex-col justify-between p-3.5 shadow-sm">
@@ -181,7 +146,7 @@ export const PostDetailsPage: React.FC = () => {
             <div className="flex items-center space-x-2">
               <button
                 type="button"
-                onClick={() => setLikes((l) => l + 1)}
+                onClick={handleLike}
                 className="flex items-center space-x-1 px-3 py-1.5 bg-[#ecf4ff] hover:bg-[#c9e6ff] text-[#006591] rounded-full text-[13px] font-semibold transition active:scale-95 border border-[#c9e6ff]"
               >
                 <span className="material-symbols-outlined text-[17px]">thumb_up</span>
@@ -189,7 +154,7 @@ export const PostDetailsPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setDislikes((d) => d + 1)}
+                onClick={handleDislike}
                 className="flex items-center space-x-1 px-2.5 py-1.5 bg-[#f7f9ff] hover:bg-[#e6effa] text-[#6e7881] rounded-full text-[13px] font-medium transition active:scale-95 border border-[#dae3ef]"
               >
                 <span className="material-symbols-outlined text-[17px]">thumb_down</span>

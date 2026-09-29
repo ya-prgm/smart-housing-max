@@ -1,64 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Post } from '../../../../shared/types/feed';
 import { useHaptic } from '../../../../shared/hooks/useHaptic';
-
-const INITIAL_POSTS: Post[] = [
-  {
-    id: '1',
-    authorName: 'Елена Смирнова',
-    roleBadge: 'Председатель',
-    avatarText: 'ЕС',
-    time: '1 час назад',
-    content:
-      'Уважаемые соседи! Совместно с УК согласовали план весеннего благоустройства дворовой территории. Пожалуйста, примите участие в голосовании по установке шлагбаума и камер во дворе на вкладке «Опросы»!',
-    likes: 24,
-    dislikes: 2,
-    commentsCount: 12,
-    views: '1,4K',
-    type: 'chairman',
-  },
-  {
-    id: '2',
-    authorName: 'УК «ЖилКомФорт»',
-    isOrg: true,
-    time: 'Сегодня, 09:30',
-    subtitle: 'Управляющая организация',
-    title: 'Завершён плановый ремонт кровли над 3-м подъездом',
-    content:
-      'Приемка работ проведена комиссионно с участием членов Совета МКД. Подписан акт гарантийных обязательств подрядчика на 3 года.',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAHFVRJmxqdGE_lpT6cBAITROxeA-h_oZGR0Z9CoVBg8Trn--Dky7rBF6tr4XlkGrJxwy1AljMFkDT43gfN_pAceb-XT2dZBJj4Ipf6A0QaDz3Y5urpS8TYAJyK-76YwkUt_o4dNsruHJPsuV9b56RO0Z0hq9BrAyqn5bMfCVsN2K6nhsPYciWl-ze5_C0r-0d9FGxxNs6ECnFSW4pG-gTsLhJ7j40wuju9ejTvUo2ld5Gu5YJg8HI',
-    imageLabel: 'Фотоотчет приёмки',
-    likes: 19,
-    dislikes: 0,
-    commentsCount: 5,
-    views: '890',
-    type: 'uk',
-  },
-  {
-    id: '3',
-    authorName: 'УК «ЖилКомФорт»',
-    isOrg: true,
-    time: 'Вчера, 17:40',
-    subtitle: 'Управляющая организация',
-    title: 'Весенняя промывка стволов мусоропроводов',
-    content:
-      'Со вторника по четверг в подъездах 1–4 будет проводиться комплексная санитарная промывка стволов мусоропроводов и дезинфекция мусорокамер. Просим плотно закрывать клапаны на этажах во время проведения работ.',
-    likes: 8,
-    dislikes: 1,
-    commentsCount: 0,
-    views: '450',
-    type: 'uk',
-  },
-];
+import { useFeed } from '../hooks/useFeed';
 
 export const FeedPage: React.FC = () => {
   const navigate = useNavigate();
   const { impact } = useHaptic();
 
   const [filter, setFilter] = useState<'all' | 'uk' | 'chairman'>('all');
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const { posts, isLoading, createPost, toggleReaction } = useFeed(filter);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [newPostText, setNewPostText] = useState('');
 
@@ -75,54 +25,49 @@ export const FeedPage: React.FC = () => {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        setCurrentUser(parsed);
-      } catch (e) {}
+        setCurrentUser({
+          fullName: parsed.full_name || parsed.fullName || 'Житель',
+          role: parsed.role || 'resident',
+          roleLabel: parsed.role === 'chairman' ? 'Председатель' : parsed.role === 'uk_staff' ? 'УК' : 'Житель',
+          houseAddress: parsed.house_address || parsed.houseAddress || 'ул. Баумана, д. 12',
+          apartment: parsed.apartment_number || parsed.apartment || '48',
+        });
+      } catch {}
     }
   }, []);
 
-  const handleLike = (id: string, e: React.MouseEvent) => {
+  const handleLike = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     impact('light');
-    setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, likes: p.likes + 1 } : p))
-    );
+    try {
+      await toggleReaction({ postId: id, reactionType: 'like' });
+    } catch {}
   };
 
-  const handleDislike = (id: string, e: React.MouseEvent) => {
+  const handleDislike = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     impact('light');
-    setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, dislikes: p.dislikes + 1 } : p))
-    );
+    try {
+      await toggleReaction({ postId: id, reactionType: 'dislike' });
+    } catch {}
   };
 
-  const handleCreatePost = () => {
+  const handleCreatePost = async () => {
     if (!newPostText.trim()) return;
     impact('medium');
 
-    const created: Post = {
-      id: `p_${Date.now()}`,
-      authorName: currentUser.fullName,
-      roleBadge: currentUser.role === 'chairman' ? 'Председатель' : undefined,
-      avatarText: 'ЕС',
-      time: 'Только что',
-      content: newPostText,
-      likes: 1,
-      dislikes: 0,
-      commentsCount: 0,
-      views: '1',
-      type: 'chairman',
-    };
-
-    setPosts([created, ...posts]);
-    setNewPostText('');
-    setIsComposerOpen(false);
+    try {
+      await createPost({
+        content: newPostText,
+        post_type: currentUser.role === 'chairman' ? 'announcement' : 'report',
+      });
+      setNewPostText('');
+      setIsComposerOpen(false);
+    } catch {}
   };
 
-  const filteredPosts = posts.filter((post) => {
-    if (filter === 'all') return true;
-    return post.type === filter;
-  });
+  const filteredPosts = posts;
+
 
   return (
     <div className="flex flex-col w-full relative">
@@ -222,6 +167,16 @@ export const FeedPage: React.FC = () => {
           </section>
 
           <section className="px-4 flex flex-col gap-3.5">
+            {isLoading && (
+              <div className="flex flex-col gap-3 py-6 items-center justify-center">
+                <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {!isLoading && filteredPosts.length === 0 && (
+              <div className="p-8 text-center bg-white rounded-3xl border border-slate-100 shadow-sm text-slate-400 text-sm">
+                Нет публикаций в данном разделе
+              </div>
+            )}
             {filteredPosts.map((post) => (
               <article
                 key={post.id}

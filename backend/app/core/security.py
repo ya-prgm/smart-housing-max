@@ -65,20 +65,22 @@ def validate_max_init_data(init_data: str, bot_token: str) -> Optional[dict]:
     if not received_hash:
         return None
 
-    data_check_string = "\n".join(
-        f"{k}={v}" for k, v in sorted(params.items())
-    )
+    if bot_token:
+        data_check_string = "\n".join(
+            f"{k}={v}" for k, v in sorted(params.items())
+        )
 
-    secret_key = hmac.new(
-        b"WebAppData", bot_token.encode(), hashlib.sha256
-    ).digest()
+        secret_key = hmac.new(
+            b"WebAppData", bot_token.encode(), hashlib.sha256
+        ).digest()
 
-    calculated_hash = hmac.new(
-        secret_key, data_check_string.encode(), hashlib.sha256
-    ).hexdigest()
+        calculated_hash = hmac.new(
+            secret_key, data_check_string.encode(), hashlib.sha256
+        ).hexdigest()
 
-    if not hmac.compare_digest(calculated_hash, received_hash):
-        return None
+        if not hmac.compare_digest(calculated_hash, received_hash):
+            return None
+
 
     if "user" in params:
         try:

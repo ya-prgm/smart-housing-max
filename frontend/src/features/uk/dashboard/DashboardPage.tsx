@@ -1,11 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+interface DashboardPostItem {
+  id: string;
+  authorName: string;
+  authorBadge?: string;
+  avatarText: string;
+  time: string;
+  title: string;
+  paragraphs: string[];
+  likes: number;
+  dislikes: number;
+  comments: number;
+  views: number;
+  image?: string;
+  scheduleTitle?: string;
+  scheduleRows?: string[];
+}
+
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeHouse, setActiveHouse] = useState('ул. Баумана, 12');
   const [newPostText, setNewPostText] = useState('');
-  const [posts, setPosts] = useState([
+  const [posts, setPosts] = useState<DashboardPostItem[]>([
+
     {
       id: '1',
       authorName: 'Елена Смирнова',
