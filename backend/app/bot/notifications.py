@@ -164,6 +164,12 @@ async def notify_new_feed_post(
                         author_badge=badge,
                         excerpt=excerpt,
                     )
+            if author.max_user_id:
+                await bot_client.send_message(
+                    user_id=author.max_user_id,
+                    text=f"✅ Ваша публикация «{post_title}» успешно размещена в ленте дома и разослана жителям.",
+                    attachments=[bot_client._build_app_button("📰 Открыть ленту")],
+                )
     except Exception as exc:
         logger.exception("Error in notify_new_feed_post: %s", exc)
 
@@ -210,5 +216,11 @@ async def notify_new_poll_published(
                         deadline_text=deadline_text,
                         author_badge=badge,
                     )
+            if author.max_user_id:
+                await bot_client.send_message(
+                    user_id=author.max_user_id,
+                    text=f"✅ Опрос «{poll_title}» успешно опубликован и направлен жителям дома.",
+                    attachments=[bot_client._build_app_button("🗳 Открыть опрос")],
+                )
     except Exception as exc:
         logger.exception("Error in notify_new_poll_published: %s", exc)

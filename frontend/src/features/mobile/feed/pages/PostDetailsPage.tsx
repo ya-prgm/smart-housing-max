@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { usePostDetails } from '../hooks/useFeed';
 import { feedApi } from '../api';
 import { useHaptic } from '../../../../shared/hooks/useHaptic';
+import { PostActionMenu } from '../components/PostActionMenu';
 
 export const PostDetailsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,11 +21,19 @@ export const PostDetailsPage: React.FC = () => {
   const [commentInput, setCommentInput] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
 
-  // Photo Carousel State
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const rawUser = localStorage.getItem('current_user');
+  let isStaff = false;
+  if (rawUser) {
+    try {
+      const u = JSON.parse(rawUser);
+      isStaff = u.role === 'chairman' || u.role === 'uk_staff';
+    } catch {}
+  }
 
   const postImages = post?.images && post.images.length > 0 ? post.images : post?.image ? [post.image] : [];
 
@@ -133,13 +142,15 @@ export const PostDetailsPage: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center space-x-1 shrink-0">
-            <button
-              type="button"
-              aria-label="Опции"
-              className="text-slate-500 hover:text-slate-800 p-1.5 rounded-full transition-colors flex items-center justify-center cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[22px]">more_vert</span>
-            </button>
+            {post && (
+              <PostActionMenu
+                postId={post.id}
+                postTitle={post.title}
+                postContent={post.content}
+                isOwnerOrStaff={isStaff}
+                onDeleted={() => navigate('/feed')}
+              />
+            )}
           </div>
         </header>
 

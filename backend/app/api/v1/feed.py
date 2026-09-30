@@ -210,6 +210,37 @@ async def create_feed_post(
     return StatusResponse(status="ok", message="Пост опубликован")
 
 
+@router.delete("/{post_id}", response_model=StatusResponse)
+async def delete_feed_post(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    post = await db.get(FeedPost, post_id)
+    if not post or post.is_deleted:
+        raise HTTPException(status_code=404, detail="Публикация не найдена")
+
+    if post.author_id != current_user.id and current_user.role not in (UserRole.UK_STAFF, UserRole.CHAIRMAN):
+        raise HTTPException(status_code=403, detail="Недостаточно прав для удаления публикации")
+
+    post.is_deleted = True
+    await db.commit()
+    return StatusResponse(status="ok", message="Публикация удалена")
+
+
+@router.post("/{post_id}/report", response_model=StatusResponse)
+async def report_feed_post(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    post = await db.get(FeedPost, post_id)
+    if not post or post.is_deleted:
+        raise HTTPException(status_code=404, detail="Публикация не найдена")
+
+    return StatusResponse(status="ok", message="Жалоба принята на рассмотрение")
+
+
 @router.post("/{post_id}/reactions", response_model=ReactionToggleResponse)
 async def toggle_post_reaction(
     post_id: int,

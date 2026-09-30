@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHaptic } from '../../../../shared/hooks/useHaptic';
 import { useFeed } from '../hooks/useFeed';
-import { feedApi } from '../api';
 import { APP_LOGO_SRC } from '../../../../shared/constants/branding';
 import { useUnreadNotifications } from '../../../../shared/hooks/useUnreadNotifications';
+import { PostActionMenu } from '../components/PostActionMenu';
 
 export const FeedPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,12 +12,7 @@ export const FeedPage: React.FC = () => {
   const { hasUnread } = useUnreadNotifications();
 
   const [filter, setFilter] = useState<'all' | 'uk' | 'chairman'>('all');
-  const { posts, isLoading, createPost, toggleReaction } = useFeed(filter);
-  const [isComposerOpen, setIsComposerOpen] = useState(false);
-  const [newPostText, setNewPostText] = useState('');
-  const [uploadedPhotos, setUploadedPhotos] = useState<Array<{ url: string; id?: number }>>([]);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { posts, isLoading, toggleReaction, refetch } = useFeed(filter);
 
   const [currentUser, setCurrentUser] = useState({
     fullName: 'Елена Смирнова',
@@ -59,49 +54,6 @@ export const FeedPage: React.FC = () => {
     } catch {}
   };
 
-  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploadingPhoto(true);
-    impact('light');
-
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const res = await feedApi.uploadImage(file);
-        setUploadedPhotos((prev) => [...prev, { url: res.url, id: res.id }]);
-      }
-    } catch (err) {
-      console.error('Failed to upload image', err);
-    } finally {
-      setIsUploadingPhoto(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
-
-  const handleRemovePhoto = (index: number) => {
-    setUploadedPhotos((prev) => prev.filter((_, idx) => idx !== index));
-  };
-
-  const handleCreatePost = async () => {
-    if (!newPostText.trim() && uploadedPhotos.length === 0) return;
-    impact('medium');
-
-    try {
-      await createPost({
-        content: newPostText,
-        post_type: currentUser.role === 'chairman' ? 'announcement' : 'report',
-        image_ids: uploadedPhotos.map((p) => p.id).filter(Boolean) as number[],
-        images: uploadedPhotos.map((p) => p.url),
-      });
-      setNewPostText('');
-      setUploadedPhotos([]);
-      setIsComposerOpen(false);
-    } catch {}
-  };
-
-  // Safe client filter over feed results
   const filteredPosts = posts.filter((post) => {
     if (filter === 'uk') return post.type === 'uk';
     if (filter === 'chairman') return post.type === 'chairman';
@@ -255,14 +207,13 @@ export const FeedPage: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      aria-label="Опции публикации"
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                    </button>
+                    <PostActionMenu
+                      postId={post.id}
+                      postTitle={post.title}
+                      postContent={post.content}
+                      isOwnerOrStaff={currentUser.role === 'chairman' || currentUser.role === 'uk_staff'}
+                      onDeleted={refetch}
+                    />
                   </div>
 
                   <div>
@@ -344,93 +295,12 @@ export const FeedPage: React.FC = () => {
         <div className="fixed bottom-20 right-4 z-50">
           <button
             type="button"
-            onClick={() => setIsComposerOpen(true)}
+            onClick={() => navigate('/chairman/create-post')}
             className="flex items-center gap-2 px-4 py-3 bg-[#0284c7] hover:bg-sky-600 active:scale-95 text-white font-semibold text-[14px] rounded-full shadow-lg shadow-sky-600/30 transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-[20px]">add</span>
             <span>Новая публикация</span>
           </button>
-        </div>
-      )}
-
-      {isComposerOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-[28px] p-4 pb-8 max-w-md mx-auto w-full flex flex-col gap-3 shadow-2xl animate-fadeIn">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <span className="text-[16px] font-bold text-slate-900">Новая публикация</span>
-              <button
-                type="button"
-                onClick={() => setIsComposerOpen(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
-            </div>
-
-            <textarea
-              rows={4}
-              value={newPostText}
-              onChange={(e) => setNewPostText(e.target.value)}
-              placeholder="Напишите обращение к соседям или объявление Совета МКД..."
-              className="w-full bg-slate-50 rounded-2xl p-3 text-[14px] text-slate-800 outline-none resize-none border border-slate-200/80 focus:border-primary"
-            />
-
-            {uploadedPhotos.length > 0 && (
-              <div className="flex items-center gap-2 overflow-x-auto py-1">
-                {uploadedPhotos.map((photo, idx) => (
-                  <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200">
-                    <img src={photo.url} alt={`Загрузка ${idx + 1}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      aria-label="Удалить фото"
-                      onClick={() => handleRemovePhoto(idx)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer hover:bg-black"
-                    >
-                      <span className="material-symbols-outlined text-[13px]">close</span>
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handlePhotoSelect}
-            />
-
-            <div className="flex items-center justify-between pt-1">
-              <button
-                type="button"
-                disabled={isUploadingPhoto}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1 text-[13px] text-primary font-medium p-2 rounded-xl hover:bg-sky-50 cursor-pointer active:scale-95 transition-all disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined text-[20px]">
-                  {isUploadingPhoto ? 'sync' : 'add_photo_alternate'}
-                </span>
-                <span>
-                  {isUploadingPhoto
-                    ? 'Загрузка...'
-                    : uploadedPhotos.length > 0
-                    ? `Фото (${uploadedPhotos.length})`
-                    : 'Фото'}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCreatePost}
-                disabled={(!newPostText.trim() && uploadedPhotos.length === 0) || isUploadingPhoto}
-                className="px-5 py-2.5 bg-primary hover:bg-sky-700 disabled:opacity-50 text-white rounded-full font-semibold text-[14px] shadow-sm active:scale-95 transition-all cursor-pointer"
-              >
-                Опубликовать
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

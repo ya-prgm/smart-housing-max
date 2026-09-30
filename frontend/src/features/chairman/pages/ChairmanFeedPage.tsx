@@ -4,12 +4,13 @@ import { useFeed } from '../../mobile/feed/hooks/useFeed';
 import { Skeleton } from '../../../shared/ui/Skeleton';
 import { APP_LOGO_SRC } from '../../../shared/constants/branding';
 import { useUnreadNotifications } from '../../../shared/hooks/useUnreadNotifications';
+import { PostActionMenu } from '../../mobile/feed/components/PostActionMenu';
 
 export const ChairmanFeedPage: React.FC = () => {
   const navigate = useNavigate();
   const { hasUnread } = useUnreadNotifications();
   const [feedType, setFeedType] = React.useState<'all' | 'uk' | 'chairman'>('all');
-  const { posts, isLoading } = useFeed(feedType);
+  const { posts, isLoading, refetch } = useFeed(feedType);
 
   return (
     <div className="flex flex-col w-full min-h-screen pb-28 bg-[#f8fafc] text-slate-900 select-none">
@@ -129,13 +130,13 @@ export const ChairmanFeedPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                  </button>
+                  <PostActionMenu
+                    postId={post.id}
+                    postTitle={post.title}
+                    postContent={post.content}
+                    isOwnerOrStaff={true}
+                    onDeleted={refetch}
+                  />
                 </div>
 
                 {post.title && (

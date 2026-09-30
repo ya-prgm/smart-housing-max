@@ -29,6 +29,13 @@ export const useFeed = (type?: 'all' | 'uk' | 'chairman') => {
     },
   });
 
+  const deletePostMutation = useMutation({
+    mutationFn: (postId: string | number) => feedApi.deletePost(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+    },
+  });
+
   return {
     posts,
     isLoading,
@@ -37,6 +44,7 @@ export const useFeed = (type?: 'all' | 'uk' | 'chairman') => {
     createPost: createPostMutation.mutateAsync,
     isCreating: createPostMutation.isPending,
     toggleReaction: toggleReactionMutation.mutateAsync,
+    deletePost: deletePostMutation.mutateAsync,
   };
 };
 

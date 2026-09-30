@@ -62,3 +62,30 @@ async def test_add_and_get_comment(client: AsyncClient, resident_headers: dict):
     data = get_res.json()
     assert data["total"] == 1
     assert data["items"][0]["content"] == "Поддерживаю инициативу!"
+
+
+async def test_delete_post_chairman(client: AsyncClient, chairman_headers: dict):
+    feed_res = await client.get("/api/v1/feed", headers=chairman_headers)
+    post_id = feed_res.json()[0]["id"]
+
+    del_res = await client.delete(f"/api/v1/feed/{post_id}", headers=chairman_headers)
+    assert del_res.status_code == 200
+
+    after_res = await client.get("/api/v1/feed", headers=chairman_headers)
+    assert len(after_res.json()) == 0
+
+
+async def test_delete_post_resident_forbidden(client: AsyncClient, resident_headers: dict):
+    feed_res = await client.get("/api/v1/feed", headers=resident_headers)
+    post_id = feed_res.json()[0]["id"]
+
+    del_res = await client.delete(f"/api/v1/feed/{post_id}", headers=resident_headers)
+    assert del_res.status_code == 403
+
+
+async def test_report_post(client: AsyncClient, resident_headers: dict):
+    feed_res = await client.get("/api/v1/feed", headers=resident_headers)
+    post_id = feed_res.json()[0]["id"]
+
+    rep_res = await client.post(f"/api/v1/feed/{post_id}/report", headers=resident_headers)
+    assert rep_res.status_code == 200

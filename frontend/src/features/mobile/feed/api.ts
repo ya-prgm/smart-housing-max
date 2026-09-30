@@ -195,4 +195,14 @@ export const feedApi = {
     const res = await apiClient.delete<{ status: string }>(ENDPOINTS.FEED.DELETE_COMMENT(commentId));
     return res.data;
   },
+
+  async deletePost(postId: string | number): Promise<{ status: string }> {
+    const res = await apiClient.delete<{ status: string }>(`/feed/${postId}`);
+    return res.data;
+  },
+
+  async reportPost(postId: string | number): Promise<{ status: string }> {
+    const res = await apiClient.post<{ status: string }>(`/feed/${postId}/report`);
+    return res.data;
+  },
 };
