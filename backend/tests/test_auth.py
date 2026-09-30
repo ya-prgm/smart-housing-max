@@ -123,3 +123,28 @@ async def test_pin_setup_and_verify(client: AsyncClient, resident_headers: dict)
     verify_invalid = await client.post("/api/v1/auth/pin/verify", json={"pin": "0000"}, headers=resident_headers)
     assert verify_invalid.status_code == 200
     assert verify_invalid.json()["valid"] is False
+
+
+async def test_max_login_persistence_and_reopen(client: AsyncClient):
+    real_max_id = 998877665
+    init_data = make_valid_init_data(TEST_BOT_TOKEN, user_id=real_max_id)
+
+    # 1. First time opening miniapp
+    res1 = await client.post("/api/v1/auth/max-login", json={"initData": init_data})
+    assert res1.status_code == 200
+
+    # 2. ESIA login binds this max_user_id
+    esia_res = await client.post(
+        "/api/v1/auth/esia-login",
+        json={"identifier": "123-456-789 01", "password": "demo_password", "initData": init_data},
+    )
+    assert esia_res.status_code == 200
+    assert esia_res.json()["user"]["max_user_id"] == real_max_id
+
+    # 3. User reopens miniapp: max-login should find the authenticated resident, needsEsiaAuth must be False
+    res2 = await client.post("/api/v1/auth/max-login", json={"initData": init_data})
+    assert res2.status_code == 200
+    data2 = res2.json()
+    assert data2["user"]["max_user_id"] == real_max_id
+    assert data2["needsEsiaAuth"] is False
+    assert data2["hasPin"] is True

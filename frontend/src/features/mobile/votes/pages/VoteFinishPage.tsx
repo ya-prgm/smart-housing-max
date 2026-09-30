@@ -55,18 +55,18 @@ export const VoteFinishPage: React.FC = () => {
 
   return (
     <div className="bg-[#f7f9ff] text-slate-900 min-h-screen flex flex-col relative select-none pb-20">
-      <header className="sticky top-0 w-full z-40 bg-[#f7f9ff]/85 backdrop-blur-xl border-b border-slate-200/70 pt-safe">
-        <div className="h-14 px-4 flex items-center justify-between">
+      <header className="sticky top-0 w-full z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+        <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <button
               type="button"
               aria-label="Назад"
               onClick={() => navigate(-1)}
-              className="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-slate-800 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer shrink-0"
             >
               <span className="material-symbols-outlined text-[24px]">arrow_back</span>
             </button>
-            <h1 className="text-[16px] sm:text-[17px] font-semibold text-slate-900 tracking-tight truncate">
+            <h1 className="text-[17px] font-bold text-slate-900 tracking-tight truncate">
               {poll?.title || 'Завершение опроса'}
             </h1>
           </div>

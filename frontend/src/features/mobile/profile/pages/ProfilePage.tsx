@@ -14,8 +14,8 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full relative min-h-screen">
-      <header className="sticky top-0 w-full z-30 pt-safe bg-white/95 backdrop-blur-xl border-b border-slate-200/70">
-        <div className="px-4 h-14 flex items-center justify-between">
+      <header className="sticky top-0 w-full z-30 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+        <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img
               src={APP_LOGO_SRC}

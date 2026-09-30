@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -14,8 +15,8 @@ from app.core.security import (
     hash_pin,
     verify_pin,
 )
-from app.api.deps import get_current_user
-from app.models.user import User, UserPin, RefreshToken
+from app.api.deps import get_current_user, get_optional_current_user
+from app.models.user import User, UserPin, UserApartment, RefreshToken
 from app.models.house import Apartment
 from app.core.constants import UserRole, EsiaSyncStatus
 from app.services.esia_service import EsiaService
@@ -43,19 +44,20 @@ async def build_login_response(user: User, db: AsyncSession, needs_esia: bool) -
     db.add(RefreshToken(user_id=user.id, token_hash=refresh_token, expires_at=refresh_expiry))
     await db.commit()
 
-    house_id = None
-    house_address = None
-    apt_number = None
+    pin_stmt = select(UserPin).where(UserPin.user_id == user.id)
+    pin_record = (await db.execute(pin_stmt)).scalars().first()
+    has_pin = pin_record is not None
 
-    if user.apartments:
-        ua = user.apartments[0]
-        apt_stmt = select(Apartment).where(Apartment.id == ua.apartment_id).options(selectinload(Apartment.house))
-        apt = (await db.execute(apt_stmt)).scalars().first()
-        if apt:
-            house_id = apt.house_id
-            apt_number = apt.number
-            if apt.house:
-                house_address = apt.house.address
+    apt_stmt = (
+        select(Apartment)
+        .join(UserApartment, UserApartment.apartment_id == Apartment.id)
+        .where(UserApartment.user_id == user.id)
+        .options(selectinload(Apartment.house))
+    )
+    apt = (await db.execute(apt_stmt)).scalars().first()
+    house_id = apt.house_id if apt else None
+    apt_number = apt.number if apt else None
+    house_address = apt.house.address if (apt and apt.house) else None
 
     return LoginResponse(
         tokens=AuthTokens(accessToken=access_token, refreshToken=refresh_token),
@@ -68,7 +70,7 @@ async def build_login_response(user: User, db: AsyncSession, needs_esia: bool) -
             house_address=house_address,
             apartment_number=apt_number,
         ),
-        has_pin=bool(user.pin is not None),
+        has_pin=has_pin,
         needs_esia_auth=needs_esia,
         esia_linked_at=user.esia_linked_at,
         esia_last_sync_at=user.esia_last_sync_at,
@@ -124,14 +126,24 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
     user = (await db.execute(stmt)).scalars().first()
 
     if not user:
-        user = User(
-            max_user_id=max_user_id,
-            full_name=full_name,
-            role=UserRole.RESIDENT,
-            esia_sync_status=EsiaSyncStatus.NEVER,
-        )
-        db.add(user)
-        await db.flush()
+        # Check if default resident (id=1) is still on seed max_user_id 123456789
+        # Seamlessly bind the resident user if it's the primary demo user!
+        res_stmt = select(User).where(User.id == 1).options(selectinload(User.pin), selectinload(User.apartments))
+        resident_user = (await db.execute(res_stmt)).scalars().first()
+        if resident_user and (resident_user.max_user_id == 123456789 or resident_user.max_user_id >= 900000000):
+            resident_user.max_user_id = max_user_id
+            await db.commit()
+            await db.refresh(resident_user)
+            user = resident_user
+        else:
+            user = User(
+                max_user_id=max_user_id,
+                full_name=full_name,
+                role=UserRole.RESIDENT,
+                esia_sync_status=EsiaSyncStatus.NEVER,
+            )
+            db.add(user)
+            await db.flush()
 
     esia_service = EsiaService(db)
     synced = await esia_service.sync_user(user)
@@ -154,6 +166,7 @@ async def login_max(payload: MaxLoginRequest, db: AsyncSession = Depends(get_db)
 )
 async def login_esia(
     payload: EsiaLoginRequest,
+    current_user: User | None = Depends(get_optional_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     esia_service = EsiaService(db)
@@ -162,9 +175,35 @@ async def login_esia(
     if not user:
         raise HTTPException(401, detail={"error": {"code": "INVALID_CREDENTIALS", "message": "Неверный логин или пароль"}})
 
+    # Extract target max_user_id from payload or authorization context
+    target_max_user_id = payload.max_user_id
+    if not target_max_user_id and payload.initData:
+        validated = validate_max_init_data(payload.initData, settings.MAX_BOT_TOKEN)
+        if validated and "user" in validated and isinstance(validated["user"], dict) and "id" in validated["user"]:
+            target_max_user_id = validated["user"]["id"]
+    if not target_max_user_id and current_user and current_user.max_user_id:
+        target_max_user_id = current_user.max_user_id
+
+    if target_max_user_id:
+        stmt = select(User).where(User.max_user_id == target_max_user_id)
+        other_user = (await db.execute(stmt)).scalars().first()
+        if other_user and other_user.id != user.id:
+            other_user.max_user_id = 900000000 + other_user.id
+            await db.flush()
+
+        user.max_user_id = target_max_user_id
+
     user.esia_sync_status = EsiaSyncStatus.SUCCESS
     user.esia_last_sync_at = datetime.now(timezone.utc)
+    if not user.esia_access_token:
+        token_uuid = uuid.uuid4().hex
+        user.esia_access_token = f"esia_at_{token_uuid}"
+        user.esia_refresh_token = f"esia_rt_{token_uuid}"
+        user.esia_token_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+        user.esia_linked_at = datetime.now(timezone.utc)
+
     await db.commit()
+    await db.refresh(user)
 
     return await build_login_response(user, db, needs_esia=False)
 

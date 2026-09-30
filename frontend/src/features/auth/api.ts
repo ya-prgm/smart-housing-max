@@ -45,9 +45,11 @@ export const authApi = {
   },
 
   async loginWithEsia(identifier: string, password?: string): Promise<LoginResponse> {
+    const initData = typeof window !== 'undefined' ? window.WebApp?.initData : undefined;
     const response = await apiClient.post<LoginResponse>('/auth/esia-login', {
       identifier: identifier.trim(),
       password: password || 'demo_password',
+      initData,
     });
     setAuthTokens(response.data.tokens.accessToken, response.data.tokens.refreshToken);
     localStorage.setItem('current_user', JSON.stringify(response.data.user));

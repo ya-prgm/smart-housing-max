@@ -1,7 +1,13 @@
-from datetime import datetime, timezone
 import os
 import asyncio
+import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 
 import uvicorn
 from fastapi import FastAPI

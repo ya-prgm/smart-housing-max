@@ -58,6 +58,33 @@ async def get_current_user(
     return user
 
 
+async def get_optional_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User | None:
+    if not credentials:
+        return None
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+        sub: str = payload.get("sub")
+        if not sub:
+            return None
+        stmt = (
+            select(User)
+            .where(User.max_user_id == int(sub))
+            .options(selectinload(User.apartments), selectinload(User.pin))
+        )
+        res = await db.execute(stmt)
+        return res.scalars().first()
+    except Exception:
+        return None
+
+
 def require_roles(*allowed_roles: UserRole):
     async def role_checker(user: User = Depends(get_current_user)) -> User:
         if user.role not in allowed_roles:

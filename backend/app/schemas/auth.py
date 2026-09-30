@@ -11,6 +11,8 @@ class MaxLoginRequest(BaseModel):
 class EsiaLoginRequest(BaseModel):
     identifier: str
     password: str
+    initData: str | None = None
+    max_user_id: int | None = None
 
 
 class RefreshTokenRequest(BaseModel):

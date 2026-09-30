@@ -12,23 +12,23 @@ export const HouseInfoPage: React.FC = () => {
 
   return (
     <div className="bg-[#f7f9ff] font-sans text-slate-900 flex flex-col min-h-screen relative select-none pb-24">
-      <header className="fixed top-0 w-full z-40 pt-safe bg-white/90 backdrop-blur-xl shadow-xs border-b border-slate-200/70">
-        <div className="h-14 px-3 flex items-center justify-between">
-          <div className="flex items-center gap-1">
+      <header className="sticky top-0 w-full z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+        <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               aria-label="Назад"
               onClick={() => navigate(-1)}
-              className="w-11 h-11 flex items-center justify-center rounded-full text-slate-800 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
+              className="w-9 h-9 flex items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-[24px]">arrow_back</span>
             </button>
-            <h1 className="text-[18px] font-semibold text-slate-900">О доме</h1>
+            <h1 className="text-[17px] font-bold text-slate-900 tracking-tight">О доме</h1>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col relative w-full pt-16 px-4 max-w-md mx-auto">
+      <main className="flex-1 flex flex-col relative w-full px-4 max-w-md mx-auto">
         <div className="flex flex-col w-full space-y-4 pt-3">
           {isLoading ? (
             <div className="flex flex-col gap-4">

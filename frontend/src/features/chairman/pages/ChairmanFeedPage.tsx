@@ -14,8 +14,8 @@ export const ChairmanFeedPage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full min-h-screen pb-28 bg-[#f8fafc] text-slate-900 select-none">
-      <header className="sticky top-0 z-40 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
-        <div className="h-14 px-4 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+        <div className="px-4 pt-2.5 pb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-xs border border-slate-200/80">
               <img src={APP_LOGO_SRC} alt="Логотип" className="w-full h-full object-contain" />

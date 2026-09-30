@@ -98,26 +98,26 @@ export const TicketDetailsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900 flex justify-center selection:bg-primary/20">
       <div className="w-full max-w-[430px] min-h-screen bg-surface font-body-md text-body-md text-on-surface flex flex-col relative shadow-2xl overflow-x-hidden">
-        <header className="fixed top-0 max-w-[430px] w-full z-40 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] pt-safe">
-          <div className="h-14 px-margin flex items-center justify-between">
-            <div className="flex items-center gap-space-xs">
+        <header className="sticky top-0 max-w-[430px] w-full z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+          <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 aria-label="Назад"
                 onClick={() => navigate(-1)}
-                className="w-11 h-11 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-variant/40 active:scale-95 transition-all cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center rounded-full text-slate-700 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[24px]">arrow_back</span>
               </button>
-              <h1 className="font-headline-md text-headline-md text-on-surface tracking-tight truncate">
+              <h1 className="font-bold text-[17px] text-slate-900 tracking-tight truncate">
                 Обращение {formattedCode}
               </h1>
             </div>
-            <div className="flex items-center justify-end w-11 h-11" />
+            <div className="flex items-center justify-end w-9 h-9" />
           </div>
         </header>
 
-        <main className="flex flex-col relative w-full pt-14 pb-safe bg-surface min-h-screen">
+        <main className="flex flex-col relative w-full pb-safe bg-surface min-h-screen">
           {ticket.is_my ? (
             <div className="flex flex-col w-full px-margin pb-28 space-y-3 pt-2">
               <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex items-center justify-between">

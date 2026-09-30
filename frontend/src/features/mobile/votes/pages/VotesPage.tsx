@@ -43,30 +43,28 @@ export const VotesPage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full relative min-h-screen pb-24 bg-[#f7f9ff] text-slate-900 select-none">
-      <header className="sticky top-0 w-full z-40 pt-safe bg-[#f7f9ff]/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
-        <div className="h-14 px-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-xs border border-slate-200/80">
-              <img src={APP_LOGO_SRC} alt="Логотип" className="w-full h-full object-contain" />
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[17px] font-bold text-slate-900 tracking-tight truncate leading-none">
-                МОЙ ДОМ
-              </span>
-            </div>
+      <header className="sticky top-0 w-full z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+        <div className="px-4 pt-2.5 pb-3 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <img
+              src={APP_LOGO_SRC}
+              alt="Мой Дом"
+              className="w-8 h-8 rounded-full object-contain bg-white shadow-xs border border-slate-200/80 shrink-0"
+            />
+            <span className="font-bold text-[17px] text-slate-900 tracking-tight">МОЙ ДОМ</span>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="relative">
             <button
               type="button"
               aria-label="Уведомления"
               onClick={() => navigate('/notifications')}
-              className="relative w-10 h-10 flex items-center justify-center rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer"
+              className="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 border border-slate-200/60 flex items-center justify-center text-slate-700 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
-              {hasUnread && (
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#f7f9ff]" />
-              )}
+              <span className="material-symbols-outlined text-[21px]">notifications</span>
             </button>
+            {hasUnread && (
+              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
+            )}
           </div>
         </div>
       </header>

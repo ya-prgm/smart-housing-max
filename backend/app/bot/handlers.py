@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -10,21 +11,24 @@ logger = logging.getLogger(__name__)
 
 
 async def _bind_user_id_if_needed(max_user_id: int, db: AsyncSession, force_role: str | None = None) -> User | None:
-    stmt = select(User).where(User.max_user_id == max_user_id)
+    stmt = select(User).where(User.max_user_id == max_user_id).options(selectinload(User.apartments), selectinload(User.pin))
     user = (await db.execute(stmt)).scalars().first()
-    if user and not force_role:
+    if user and not force_role and (user.apartments or user.esia_access_token):
         return user
 
     target_id = 2 if force_role == "chairman" else 1
-    target = (await db.execute(select(User).where(User.id == target_id))).scalars().first()
+    target = (await db.execute(
+        select(User).where(User.id == target_id).options(selectinload(User.apartments), selectinload(User.pin))
+    )).scalars().first()
     if target:
         if user and user.id != target.id:
             user.max_user_id = 900000000 + user.id
+            await db.flush()
         target.max_user_id = max_user_id
         await db.commit()
         return target
 
-    return None
+    return user
 
 
 async def handle_bot_update(update_data: dict[str, Any], db: AsyncSession) -> dict[str, Any]:

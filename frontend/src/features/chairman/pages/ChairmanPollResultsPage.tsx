@@ -51,8 +51,8 @@ export const ChairmanPollResultsPage: React.FC = () => {
 
   return (
     <div className="flex flex-col w-full min-h-screen pb-12 bg-[#f8fafc] text-slate-900 select-none">
-      <header className="sticky top-0 z-40 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
-        <div className="h-14 px-4 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200/70 shadow-xs transition-all">
+        <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate(-1)}
