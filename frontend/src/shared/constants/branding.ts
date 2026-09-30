@@ -1,0 +1,2 @@
+export const APP_LOGO_SRC =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuAOfpCod_eXFwDjBP_k9vw2B-bXLAnDicRB7ZDBcwuFUcEEo3CE-jHMRNt7tnBbv_-9s3UCEcOhE7RFLkeLDFLlqysfCl1NnJOx5Ng6Tau4xpr9ezO8qDgSk_WF_Dnf2bMppBpYQvJ306OzjKWwMBycjbjGWNwV0UgezW0MHEKsI1mq6AYMKQAIymnp3476gLmGsT9Yv-XJYLz19OTQGZxtFM3nZA9VsZX46Hn0DDFXAG9_G_pTbD80HqvpX08a2dpB';

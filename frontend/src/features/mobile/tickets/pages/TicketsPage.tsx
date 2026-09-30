@@ -4,12 +4,13 @@ import { Ticket } from '../../../../shared/types/ticket';
 import { SupportModal } from '../components/SupportModal';
 import { useTickets } from '../hooks/useTickets';
 import { useHaptic } from '../../../../shared/hooks/useHaptic';
-
-const LOGO_SRC = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAOfpCod_eXFwDjBP_k9vw2B-bXLAnDicRB7ZDBcwuFUcEEo3CE-jHMRNt7tnBbv_-9s3UCEcOhE7RFLkeLDFLlqysfCl1NnJOx5Ng6Tau4xpr9ezO8qDgSk_WF_Dnf2bMppBpYQvJ306OzjKWwMBycjbjGWNwV0UgezW0MHEKsI1mq6AYMKQAIymnp3476gLmGsT9Yv-XJYLz19OTQGZxtFM3nZA9VsZX46Hn0DDFXAG9_G_pTbD80HqvpX08a2dpB';
+import { APP_LOGO_SRC } from '../../../../shared/constants/branding';
+import { useUnreadNotifications } from '../../../../shared/hooks/useUnreadNotifications';
 
 export const TicketsPage: React.FC = () => {
   const navigate = useNavigate();
   const { impact } = useHaptic();
+  const { hasUnread } = useUnreadNotifications();
   const [filter, setFilter] = useState<'all' | 'my' | 'active' | 'in_progress' | 'completed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
@@ -48,7 +49,7 @@ export const TicketsPage: React.FC = () => {
         <div className="px-4 pt-2.5 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img
-              src={LOGO_SRC}
+              src={APP_LOGO_SRC}
               alt="Логотип Мой Дом"
               onError={(e) => {
                 const target = e.currentTarget;
@@ -57,7 +58,7 @@ export const TicketsPage: React.FC = () => {
                   (target.nextElementSibling as HTMLElement).style.display = 'flex';
                 }
               }}
-              className="w-8 h-8 rounded-full object-cover shadow-xs border border-slate-200/80 shrink-0"
+              className="w-8 h-8 rounded-full object-contain bg-white shadow-xs border border-slate-200/80 shrink-0"
             />
             <div className="w-8 h-8 rounded-full bg-[#006591] hidden items-center justify-center text-white shrink-0 shadow-xs font-bold text-xs tracking-wider">
               МД
@@ -73,7 +74,9 @@ export const TicketsPage: React.FC = () => {
             >
               <span className="material-symbols-outlined text-[20px]">notifications</span>
             </button>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
+            {hasUnread && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
+            )}
           </div>
         </div>
       </header>

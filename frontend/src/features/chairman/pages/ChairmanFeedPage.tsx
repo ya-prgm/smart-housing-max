@@ -2,20 +2,22 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFeed } from '../../mobile/feed/hooks/useFeed';
 import { Skeleton } from '../../../shared/ui/Skeleton';
+import { APP_LOGO_SRC } from '../../../shared/constants/branding';
+import { useUnreadNotifications } from '../../../shared/hooks/useUnreadNotifications';
 
 export const ChairmanFeedPage: React.FC = () => {
   const navigate = useNavigate();
+  const { hasUnread } = useUnreadNotifications();
   const [feedType, setFeedType] = React.useState<'all' | 'uk' | 'chairman'>('all');
   const { posts, isLoading } = useFeed(feedType);
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-28 bg-[#f7f9ff] text-slate-900 select-none">
-      {/* Header — matches design */}
-      <header className="sticky top-0 z-40 pt-safe bg-[#f7f9ff]/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
+    <div className="flex flex-col w-full min-h-screen pb-28 bg-[#f8fafc] text-slate-900 select-none">
+      <header className="sticky top-0 z-40 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
         <div className="h-14 px-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-[#ecf4ff] flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-outlined text-[22px]">apartment</span>
+            <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-xs border border-slate-200/80">
+              <img src={APP_LOGO_SRC} alt="Логотип" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-2">
@@ -38,12 +40,13 @@ export const ChairmanFeedPage: React.FC = () => {
             className="relative w-10 h-10 flex items-center justify-center rounded-full text-slate-600 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-[22px]">notifications</span>
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#f7f9ff]" />
+            {hasUnread && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+            )}
           </button>
         </div>
       </header>
 
-      {/* Feed type filter tabs */}
       <div className="flex items-center gap-2 px-4 pt-3 pb-1.5">
         {[
           { id: 'all' as const, label: 'Все' },
@@ -69,7 +72,7 @@ export const ChairmanFeedPage: React.FC = () => {
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-48 w-full rounded-[20px]" />
+              <Skeleton key={i} className="h-48 w-full rounded-3xl" />
             ))}
           </div>
         ) : posts.length === 0 ? (
@@ -89,19 +92,26 @@ export const ChairmanFeedPage: React.FC = () => {
               <article
                 key={post.id}
                 onClick={() => navigate(`/feed/${post.id}`)}
-                className="bg-white rounded-[20px] p-4 border border-slate-100 shadow-sm cursor-pointer active:scale-[0.99] transition-transform flex flex-col gap-2.5"
+                className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-card cursor-pointer active:scale-[0.99] transition-transform flex flex-col gap-2.5"
               >
-                {/* Author row */}
                 <div className="flex items-center gap-2.5 justify-between">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-[14px] font-bold shrink-0 ${
-                      isChairman ? 'bg-indigo-500' : isOrg ? 'bg-blue-500' : 'bg-slate-500'
-                    }`}>
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white text-[14px] font-bold shrink-0 ${
+                        isChairman
+                          ? 'bg-gradient-to-tr from-[#006591] to-[#0088cc]'
+                          : isOrg
+                          ? 'bg-primary'
+                          : 'bg-slate-600'
+                      }`}
+                    >
                       {post.avatarText || post.authorName?.charAt(0) || 'A'}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[14px] font-semibold text-slate-900 truncate">{post.authorName}</span>
+                        <span className="text-[14px] font-semibold text-slate-900 truncate">
+                          {post.authorName}
+                        </span>
                         {post.roleBadge && (
                           <span className="px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">
                             {post.roleBadge}
@@ -128,20 +138,17 @@ export const ChairmanFeedPage: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Title */}
                 {post.title && (
                   <h2 className="text-[15px] font-bold text-slate-900 leading-snug">{post.title}</h2>
                 )}
 
-                {/* Content */}
                 <p className="text-[13px] text-slate-700 leading-relaxed line-clamp-4">{post.content}</p>
 
-                {/* Image */}
                 {post.image && (
-                  <div className="w-full h-40 rounded-xl overflow-hidden relative mt-0.5">
+                  <div className="w-full h-40 rounded-2xl overflow-hidden relative mt-0.5 border border-slate-100">
                     <img src={post.image} alt="" className="w-full h-full object-cover" />
                     {post.imageLabel && (
-                      <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2.5 py-1 bg-black/60 rounded-lg text-white text-[11px]">
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-lg text-white text-[11px]">
                         <span className="material-symbols-outlined text-[14px]">photo_camera</span>
                         {post.imageLabel}
                       </div>
@@ -149,7 +156,6 @@ export const ChairmanFeedPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Reactions */}
                 <div className="flex items-center gap-4 mt-1 pt-2 border-t border-slate-100/80">
                   <div className="flex items-center gap-1 text-[12px] text-primary font-semibold">
                     <span className="material-symbols-outlined text-[16px]">thumb_up</span>
@@ -174,12 +180,10 @@ export const ChairmanFeedPage: React.FC = () => {
         )}
       </main>
 
-      {/* FAB: New Post */}
       <button
         type="button"
         onClick={() => navigate('/chairman/create-post')}
-        className="fixed bottom-24 right-4 max-w-[430px] flex items-center gap-2 px-5 py-3.5 bg-primary text-white rounded-full font-bold text-[14px] shadow-xl active:scale-95 transition-transform cursor-pointer z-30"
-        style={{ boxShadow: '0 6px 20px rgba(0,86,196,0.35)' }}
+        className="fixed bottom-24 right-4 max-w-[430px] flex items-center gap-2 px-5 py-3.5 bg-primary hover:bg-[#00557a] text-white rounded-full font-bold text-[14px] shadow-card active:scale-95 transition-all cursor-pointer z-30"
       >
         <span className="material-symbols-outlined text-[18px]">add</span>
         Новая публикация

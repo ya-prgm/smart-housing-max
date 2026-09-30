@@ -34,7 +34,7 @@ export const VoteFinishPage: React.FC = () => {
         },
       });
       setIsSuccess(true);
-      showToast('Голос успешно принят и подписан', 'success');
+      showToast('Голос успешно принят', 'success');
     } catch {
       showToast('Ошибка при отправке голоса. Попробуйте снова.', 'error');
     }
@@ -99,7 +99,7 @@ export const VoteFinishPage: React.FC = () => {
           Вы ответили на все вопросы!
         </h2>
         <p className="text-[13px] text-slate-500 max-w-xs mb-5">
-          Проверьте сводку и подтвердите отправку ответов простой электронной подписью
+          Проверьте сводку и подтвердите отправку ответов
         </p>
 
         <div className="w-full bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-100 flex flex-col gap-3 text-left mb-6">
@@ -130,17 +130,9 @@ export const VoteFinishPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex items-center justify-between py-1 border-b border-slate-100">
+            <div className="flex items-center justify-between py-1">
               <span className="text-slate-400 font-medium">Дата и время</span>
               <span className="font-medium text-slate-800">{formattedDateTime}</span>
-            </div>
-
-            <div className="flex items-center justify-between py-1">
-              <span className="text-slate-400 font-medium">Способ подписания</span>
-              <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">lock</span>
-                ПЭП (Госуслуги / MAX)
-              </span>
             </div>
           </div>
         </div>
@@ -154,9 +146,9 @@ export const VoteFinishPage: React.FC = () => {
           />
 
           <div className="flex items-center gap-1.5 text-center mt-1">
-            <span className="material-symbols-outlined text-[15px] text-primary">lock</span>
+            <span className="material-symbols-outlined text-[15px] text-primary">send</span>
             <span className="text-[11px] text-slate-500 font-medium leading-snug">
-              Сдвиньте бегунок вправо до иконки дома для официальной отправки ответов
+              Сдвиньте бегунок вправо для отправки ответов
             </span>
           </div>
 
@@ -185,8 +177,7 @@ export const VoteFinishPage: React.FC = () => {
               Голос успешно принят!
             </h3>
             <p className="text-[13px] text-slate-600 mb-5 leading-relaxed">
-              Ваши ответы подписаны простой электронной подписью и внесены в протокол{' '}
-              {poll?.protocol_number || '№ 48-ОСС'}. Спасибо за участие!
+              Ваши ответы сохранены и учтены в опросе. Спасибо за участие!
             </p>
             <button
               type="button"

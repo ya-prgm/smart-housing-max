@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useVotes } from '../hooks/useVotes';
 import { Skeleton } from '../../../../shared/ui/Skeleton';
 import { EmptyState } from '../../../../shared/ui/EmptyState';
+import { APP_LOGO_SRC } from '../../../../shared/constants/branding';
+import { useUnreadNotifications } from '../../../../shared/hooks/useUnreadNotifications';
 
 export const VotesPage: React.FC = () => {
   const navigate = useNavigate();
   const { polls, isLoading } = useVotes();
+  const { hasUnread } = useUnreadNotifications();
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'archived'>('all');
   const [search, setSearch] = useState('');
 
@@ -43,8 +46,8 @@ export const VotesPage: React.FC = () => {
       <header className="sticky top-0 w-full z-40 pt-safe bg-[#f7f9ff]/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
         <div className="h-14 px-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-full bg-[#ecf4ff] flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-outlined text-[22px]">apartment</span>
+            <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-white shadow-xs border border-slate-200/80">
+              <img src={APP_LOGO_SRC} alt="Логотип" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-[17px] font-bold text-slate-900 tracking-tight truncate leading-none">
@@ -60,7 +63,9 @@ export const VotesPage: React.FC = () => {
               className="relative w-10 h-10 flex items-center justify-center rounded-full text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 active:scale-95 transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-[22px]">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#f7f9ff]" />
+              {hasUnread && (
+                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#f7f9ff]" />
+              )}
             </button>
           </div>
         </div>

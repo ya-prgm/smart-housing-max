@@ -185,7 +185,6 @@ export const PostDetailsPage: React.FC = () => {
               </p>
             </div>
 
-            {/* REAL PHOTO GALLERY / CAROUSEL */}
             {postImages.length > 0 && (
               <div className="mt-4">
                 <div
@@ -195,14 +194,12 @@ export const PostDetailsPage: React.FC = () => {
                   onTouchEnd={handleTouchEnd}
                   onClick={() => setIsLightboxOpen(true)}
                 >
-                  {/* Photo Display */}
                   <img
                     src={postImages[currentImageIdx]}
                     alt={`Фото ${currentImageIdx + 1}`}
                     className="w-full h-full object-cover transition-all duration-300 select-none"
                   />
 
-                  {/* Top Bar with Counter and Fullscreen Zoom */}
                   <div className="absolute top-3 inset-x-3 flex justify-between items-center z-10 pointer-events-none">
                     <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-white tracking-wider pointer-events-auto">
                       {currentImageIdx + 1} / {postImages.length}
@@ -221,7 +218,6 @@ export const PostDetailsPage: React.FC = () => {
                     </button>
                   </div>
 
-                  {/* Previous / Next Arrow Controls */}
                   {postImages.length > 1 && (
                     <>
                       <button
@@ -252,7 +248,6 @@ export const PostDetailsPage: React.FC = () => {
                     </>
                   )}
 
-                  {/* Bottom Indicators & Label */}
                   <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex flex-col gap-1.5 z-10 pointer-events-none">
                     {post?.imageLabel && (
                       <p className="text-white text-xs font-medium tracking-wide drop-shadow-sm px-1 truncate">
@@ -312,14 +307,12 @@ export const PostDetailsPage: React.FC = () => {
             </div>
           </article>
 
-          {/* COMMENTS SECTION */}
           <section className="px-4 py-3 bg-white mt-2">
             <div className="flex items-center justify-between pb-3 pt-1 border-b border-slate-100 relative">
               <span className="text-xs font-semibold text-slate-500 tracking-wider uppercase">
                 КОММЕНТАРИИ ({comments.length})
               </span>
 
-              {/* Sorting Dropdown */}
               <div className="relative">
                 <button
                   type="button"
@@ -457,7 +450,6 @@ export const PostDetailsPage: React.FC = () => {
           </section>
         </main>
 
-        {/* FULLSCREEN LIGHTBOX MODAL */}
         {isLightboxOpen && postImages.length > 0 && (
           <div
             className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-4 backdrop-blur-md animate-fadeIn"

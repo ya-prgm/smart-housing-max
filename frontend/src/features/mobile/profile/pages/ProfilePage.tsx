@@ -4,19 +4,24 @@ import { useProfile } from '../hooks/useProfile';
 import { UserCard } from '../components/UserCard';
 import { UtilityCard } from '../components/UtilityCard';
 import { Skeleton } from '../../../../shared/ui/Skeleton';
+import { APP_LOGO_SRC } from '../../../../shared/constants/branding';
+import { useUnreadNotifications } from '../../../../shared/hooks/useUnreadNotifications';
 
 export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { profile, isLoading } = useProfile();
+  const { hasUnread } = useUnreadNotifications();
 
   return (
     <div className="flex flex-col w-full relative min-h-screen">
       <header className="sticky top-0 w-full z-30 pt-safe bg-white/95 backdrop-blur-xl border-b border-slate-200/70">
         <div className="px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-primary font-bold">
-              <span className="material-symbols-outlined text-[20px]">person</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <img
+              src={APP_LOGO_SRC}
+              alt="Мой Дом"
+              className="w-8 h-8 rounded-full object-contain bg-white shadow-xs border border-slate-200/80 shrink-0"
+            />
             <span className="text-[17px] font-bold text-slate-900 tracking-tight">МОЙ ДОМ</span>
           </div>
 
@@ -30,6 +35,9 @@ export const ProfilePage: React.FC = () => {
               >
                 <span className="material-symbols-outlined text-[20px]">notifications</span>
               </button>
+              {hasUnread && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
+              )}
             </div>
             <button
               type="button"

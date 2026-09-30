@@ -1,7 +1,5 @@
 import { apiClient } from '../../shared/api/client';
 
-// ---- Types ----
-
 export interface TicketReply {
   id: number;
   ticket_id: number;
@@ -59,10 +57,7 @@ export interface PollResultsResponse {
   questions: PollQuestionResult[];
 }
 
-// ---- API ----
-
 export const chairmanApi = {
-  // Reply to a ticket
   replyToTicket: async (
     ticketId: number | string,
     content: string,
@@ -75,7 +70,6 @@ export const chairmanApi = {
     return data;
   },
 
-  // Create a new poll
   createPoll: async (payload: PollCreate): Promise<{ status: string; message: string }> => {
     const { data } = await apiClient.post<{ status: string; message: string }>(
       '/votes',
@@ -84,13 +78,11 @@ export const chairmanApi = {
     return data;
   },
 
-  // Get poll results (chairman only)
   getPollResults: async (pollId: number | string): Promise<PollResultsResponse> => {
     const { data } = await apiClient.get<PollResultsResponse>(`/votes/${pollId}/results`);
     return data;
   },
 
-  // Create a feed post (reusing feedApi.createPost)
   createPost: async (payload: {
     title?: string;
     content: string;
@@ -110,7 +102,6 @@ export const chairmanApi = {
     return data;
   },
 
-  // Upload image for a post
   uploadImage: async (file: File): Promise<{ id: number; url: string; filename: string }> => {
     const formData = new FormData();
     formData.append('file', file);

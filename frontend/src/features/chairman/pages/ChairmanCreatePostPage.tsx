@@ -41,7 +41,6 @@ export const ChairmanCreatePostPage: React.FC = () => {
     try {
       let imageIds: number[] = [];
 
-      // Upload image if selected
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
@@ -51,9 +50,7 @@ export const ChairmanCreatePostPage: React.FC = () => {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
           if (data?.id) imageIds = [data.id];
-        } catch {
-          // Image upload optional - continue without it
-        }
+        } catch {}
       }
 
       await apiClient.post('/feed', {
@@ -78,64 +75,61 @@ export const ChairmanCreatePostPage: React.FC = () => {
 
   if (isSuccess) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4ff] px-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-4 animate-bounce">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f8fafc] px-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
           <span className="material-symbols-outlined text-[40px] text-emerald-600">check_circle</span>
         </div>
         <h2 className="text-xl font-bold text-slate-900 mb-2">Пост опубликован!</h2>
-        <p className="text-sm text-slate-500">Жильцы дома увидят его в ленте</p>
+        <p className="text-sm text-slate-500">Жильцы дома увидят его в общей ленте</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen pb-10 bg-[#f0f4ff] text-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-40 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-sm">
+    <div className="flex flex-col w-full min-h-screen pb-12 bg-[#f8fafc] text-slate-900 select-none">
+      <header className="sticky top-0 z-40 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-xs">
         <div className="h-14 px-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-slate-600 cursor-pointer active:opacity-70 transition-opacity"
+            className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 cursor-pointer active:scale-95 transition-all"
           >
             <span className="material-symbols-outlined text-[22px]">arrow_back</span>
-            <span className="text-[15px] font-medium">Назад</span>
+            <span className="text-[14px] font-semibold">Назад</span>
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[16px] text-indigo-600">shield_person</span>
-            </div>
-            <span className="text-[13px] font-bold text-indigo-700">Председатель</span>
-          </div>
+          <span className="text-[15px] font-bold text-slate-900">Новая публикация</span>
+          <div className="w-12" />
         </div>
       </header>
 
-      <div className="px-4 pt-5 pb-6 flex flex-col gap-5">
-        {/* Title block */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <h1 className="text-xl font-bold text-slate-900 mb-1">Новый пост</h1>
-          <p className="text-sm text-slate-500">Публикация появится в ленте вашего дома</p>
+      <div className="px-4 pt-4 pb-6 flex flex-col gap-4 max-w-lg mx-auto w-full">
+        <div className="bg-white rounded-3xl p-5 shadow-card border border-slate-200/80">
+          <h1 className="text-lg font-bold text-slate-900 mb-1">Создание записи</h1>
+          <p className="text-xs text-slate-500">Публикация появится в ленте дома для всех собственников</p>
         </div>
 
-        {/* Post Type Selection */}
-        <div className="flex flex-col gap-2.5">
-          <span className="text-[13px] font-semibold text-slate-600 px-1">Тип публикации</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-[13px] font-bold text-slate-700 px-1">Тип публикации</span>
           <div className="grid grid-cols-2 gap-2">
             {POST_TYPES.map((type) => (
               <button
                 key={type.id}
                 type="button"
                 onClick={() => setPostType(type.id)}
-                className={`flex items-center gap-2.5 p-3.5 rounded-xl border-2 transition-all cursor-pointer active:scale-[0.97] ${
+                className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 transition-all cursor-pointer active:scale-[0.98] ${
                   postType === type.id
-                    ? 'border-indigo-500 bg-indigo-50 shadow-sm'
-                    : 'border-transparent bg-white hover:border-slate-200'
+                    ? 'border-primary bg-sky-50 shadow-xs'
+                    : 'border-slate-200/80 bg-white hover:border-slate-300'
                 }`}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${type.color}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${type.color}`}>
                   <span className="material-symbols-outlined text-[18px]">{type.icon}</span>
                 </div>
-                <span className={`text-[13px] font-semibold ${postType === type.id ? 'text-indigo-700' : 'text-slate-700'}`}>
+                <span
+                  className={`text-[13px] font-semibold ${
+                    postType === type.id ? 'text-primary' : 'text-slate-700'
+                  }`}
+                >
                   {type.label}
                 </span>
               </button>
@@ -143,44 +137,46 @@ export const ChairmanCreatePostPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Title Input */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-semibold text-slate-600 px-1">Заголовок (необязательно)</label>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-bold text-slate-700 px-1">
+            Заголовок (необязательно)
+          </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Например: Плановое отключение воды"
             maxLength={150}
-            className="w-full h-12 px-4 bg-white rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 transition-colors"
+            className="w-full h-11 px-4 bg-white rounded-2xl border border-slate-200/80 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary shadow-xs transition-colors"
           />
         </div>
 
-        {/* Content Input */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-semibold text-slate-600 px-1">
-            Текст поста <span className="text-red-400">*</span>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] font-bold text-slate-700 px-1">
+            Текст поста <span className="text-rose-500">*</span>
           </label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Напишите сообщение для жильцов дома..."
-            rows={6}
-            className="w-full p-4 bg-white rounded-xl border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 resize-none focus:outline-none focus:border-indigo-400 transition-colors leading-relaxed"
+            rows={5}
+            className="w-full p-4 bg-white rounded-2xl border border-slate-200/80 text-sm text-slate-900 placeholder:text-slate-400 resize-none focus:outline-none focus:border-primary shadow-xs transition-colors leading-relaxed"
           />
           <div className="text-right text-[11px] text-slate-400">{content.length} символов</div>
         </div>
 
-        {/* Image Upload */}
-        <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-semibold text-slate-600 px-1">Фото (необязательно)</span>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[13px] font-bold text-slate-700 px-1">Фото (необязательно)</span>
           {imagePreview ? (
-            <div className="relative w-full h-48 rounded-xl overflow-hidden group">
+            <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-200/80">
               <img src={imagePreview} alt="Превью" className="w-full h-full object-cover" />
               <button
                 type="button"
-                onClick={() => { setImagePreview(null); setImageFile(null); }}
-                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer"
+                onClick={() => {
+                  setImagePreview(null);
+                  setImageFile(null);
+                }}
+                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center cursor-pointer hover:bg-black/80 transition-colors"
               >
                 <span className="material-symbols-outlined text-[16px]">close</span>
               </button>
@@ -189,10 +185,10 @@ export const ChairmanCreatePostPage: React.FC = () => {
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center gap-2 text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-colors cursor-pointer active:scale-[0.98]"
+              className="w-full h-24 rounded-2xl border-2 border-dashed border-slate-300 bg-white flex flex-col items-center justify-center gap-1.5 text-slate-500 hover:border-primary hover:text-primary transition-colors cursor-pointer active:scale-[0.99]"
             >
-              <span className="material-symbols-outlined text-[28px]">add_photo_alternate</span>
-              <span className="text-[12px] font-medium">Выбрать фото</span>
+              <span className="material-symbols-outlined text-[26px]">add_photo_alternate</span>
+              <span className="text-[12px] font-semibold">Прикрепить фото</span>
             </button>
           )}
           <input
@@ -204,53 +200,56 @@ export const ChairmanCreatePostPage: React.FC = () => {
           />
         </div>
 
-        {/* Preview */}
         {(title || content) && (
-          <div className="flex flex-col gap-2">
-            <span className="text-[13px] font-semibold text-slate-600 px-1">Превью публикации</span>
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[16px] text-indigo-600">shield_person</span>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-bold text-slate-700 px-1">Предварительный просмотр</span>
+            <div className="bg-white rounded-3xl p-4 shadow-card border border-slate-200/80">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center text-primary font-bold text-xs">
+                  П
                 </div>
                 <div>
                   <span className="text-[13px] font-bold text-slate-900">Председатель ТСЖ</span>
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] text-slate-400">Только что</span>
                     <span className="w-1 h-1 rounded-full bg-slate-300" />
-                    <span className={`text-[10px] font-medium ${
-                      postType === 'emergency' ? 'text-red-500' : 'text-slate-500'
-                    }`}>
-                      {POST_TYPES.find(t => t.id === postType)?.label}
+                    <span className="text-[10px] font-semibold text-primary">
+                      {POST_TYPES.find((t) => t.id === postType)?.label}
                     </span>
                   </div>
                 </div>
               </div>
-              {title && <p className="text-[15px] font-bold text-slate-900 mb-1.5">{title}</p>}
-              <p className="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line line-clamp-3">{content}</p>
+              {title && <p className="text-[15px] font-bold text-slate-900 mb-1">{title}</p>}
+              <p className="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line line-clamp-3">
+                {content}
+              </p>
               {imagePreview && (
-                <img src={imagePreview} alt="" className="w-full h-32 object-cover rounded-xl mt-3" />
+                <img
+                  src={imagePreview}
+                  alt=""
+                  className="w-full h-32 object-cover rounded-2xl mt-2 border border-slate-100"
+                />
               )}
             </div>
           </div>
         )}
 
-        {/* Submit */}
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting || !content.trim()}
-          className="w-full h-14 rounded-2xl bg-indigo-600 text-white font-bold text-base flex items-center justify-center gap-2.5 shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer mt-2"
-          style={{ boxShadow: '0 8px 24px rgba(79,70,229,0.3)' }}
+          className="w-full h-12 rounded-full bg-primary hover:bg-[#00557a] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-card active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer mt-2"
         >
           {isSubmitting ? (
             <>
-              <span className="material-symbols-outlined text-[22px] animate-spin">progress_activity</span>
+              <span className="material-symbols-outlined text-[20px] animate-spin">
+                progress_activity
+              </span>
               Публикуем...
             </>
           ) : (
             <>
-              <span className="material-symbols-outlined text-[22px]">send</span>
+              <span className="material-symbols-outlined text-[20px]">send</span>
               Опубликовать для жильцов
             </>
           )}

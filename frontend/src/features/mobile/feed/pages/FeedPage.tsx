@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useHaptic } from '../../../../shared/hooks/useHaptic';
 import { useFeed } from '../hooks/useFeed';
 import { feedApi } from '../api';
+import { APP_LOGO_SRC } from '../../../../shared/constants/branding';
+import { useUnreadNotifications } from '../../../../shared/hooks/useUnreadNotifications';
 
 export const FeedPage: React.FC = () => {
   const navigate = useNavigate();
   const { impact } = useHaptic();
+  const { hasUnread } = useUnreadNotifications();
 
   const [filter, setFilter] = useState<'all' | 'uk' | 'chairman'>('all');
   const { posts, isLoading, createPost, toggleReaction } = useFeed(filter);
@@ -113,9 +116,9 @@ export const FeedPage: React.FC = () => {
             <div className="flex items-center">
               <div className="flex items-center gap-2">
                 <img
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkYm6uN-SPDRG3OYFTY77L_tQVs7uXdM0VPSlHs-fnsBXxTuGcfGvixZuyQom3idEHVU4ErZNB4YtLgOEhgYzYDB6kUBzznXy5yJzQZ0BiLDMWH7Ob1aiqdu5enNDia-kH6jGzb6Dzg2gLBcBcKmYwSAYTR0hpplcS0cu7JEZR5c1wn8nKknILRH8TIgg9xUemvj3BdGmxfdzd7q-GOHLvHmQwBxbOO18npMyTWhodoZGtWw2wvFk3L0HIj5YkRi6x"
+                  src={APP_LOGO_SRC}
                   alt="Мой Дом"
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-8 h-8 rounded-full object-contain bg-white shadow-xs border border-slate-200/80 shrink-0"
                 />
                 <span className="font-bold text-[17px] text-slate-900 tracking-tight">МОЙ ДОМ</span>
               </div>
@@ -129,7 +132,9 @@ export const FeedPage: React.FC = () => {
               >
                 <span className="material-symbols-outlined text-[21px]">notifications</span>
               </button>
-              <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
+              {hasUnread && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white pointer-events-none" />
+              )}
             </div>
           </div>
 
@@ -370,7 +375,6 @@ export const FeedPage: React.FC = () => {
               className="w-full bg-slate-50 rounded-2xl p-3 text-[14px] text-slate-800 outline-none resize-none border border-slate-200/80 focus:border-primary"
             />
 
-            {/* Uploaded photos preview strip */}
             {uploadedPhotos.length > 0 && (
               <div className="flex items-center gap-2 overflow-x-auto py-1">
                 {uploadedPhotos.map((photo, idx) => (
@@ -389,7 +393,6 @@ export const FeedPage: React.FC = () => {
               </div>
             )}
 
-            {/* Hidden file input */}
             <input
               type="file"
               ref={fileInputRef}

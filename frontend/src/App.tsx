@@ -19,6 +19,7 @@ import { VoteFinishPage } from './features/mobile/votes/pages/VoteFinishPage';
 import { ProfilePage } from './features/mobile/profile/pages/ProfilePage';
 import { HouseInfoPage } from './features/mobile/profile/pages/HouseInfoPage';
 import { SettingsPage } from './features/mobile/profile/pages/SettingsPage';
+import { UtilityPage } from './features/mobile/profile/pages/UtilityPage';
 import { NotificationsPage } from './features/mobile/notifications/pages/NotificationsPage';
 import { ChairmanLayout } from './features/chairman/ChairmanLayout';
 import { ChairmanTicketsPage } from './features/chairman/pages/ChairmanTicketsPage';
@@ -128,6 +129,8 @@ export const App: React.FC = () => {
         <Route path="/votes/:id/finish" element={<VoteFinishPage />} />
         <Route path="/profile/house" element={<HouseInfoPage />} />
         <Route path="/profile/house-info" element={<HouseInfoPage />} />
+        <Route path="/profile/utility" element={<UtilityPage />} />
+        <Route path="/utility" element={<UtilityPage />} />
         <Route path="/profile/settings" element={<SettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
 
