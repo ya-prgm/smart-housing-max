@@ -42,8 +42,8 @@ export interface ResidentResponse {
 
 export interface ResidentUpdateRequest {
   role: 'resident' | 'chairman' | 'uk_staff';
-  house_id: number;
-  apartment_id: number;
+  house_id?: number;
+  apartment_id?: number;
 }
 
 export interface TicketStatusUpdateRequest {
@@ -60,6 +60,27 @@ export interface UkFeedPostCreate {
   image_label?: string | null;
 }
 
+export interface FeedPostAuthor {
+  name: string;
+  role: string;
+  avatar_url?: string | null;
+}
+
+export interface FeedPostResponse {
+  id: number;
+  author: FeedPostAuthor;
+  title?: string | null;
+  content: string;
+  image_url?: string | null;
+  image_label?: string | null;
+  likes: number;
+  dislikes: number;
+  comments_count: number;
+  views: number;
+  post_type: string;
+  created_at: string;
+}
+
 export interface UkPollOptionCreate {
   option_text: string;
   subtext?: string | null;
@@ -68,7 +89,7 @@ export interface UkPollOptionCreate {
 export interface UkPollQuestionCreate {
   question_text: string;
   subtext?: string | null;
-  question_type: 'single' | 'multiple' | 'text';
+  question_type: 'single_choice' | 'multiple_choice' | 'text' | 'single' | 'multiple';
   options: UkPollOptionCreate[];
 }
 
@@ -172,6 +193,13 @@ export const ukApi = {
       `/uk/tickets/${ticketId}/status`,
       payload
     );
+    return data;
+  },
+
+  getFeed: async (houseId: number | string): Promise<FeedPostResponse[]> => {
+    const { data } = await apiClient.get<FeedPostResponse[]>('/uk/feed', {
+      params: { house_id: houseId }
+    });
     return data;
   },
 

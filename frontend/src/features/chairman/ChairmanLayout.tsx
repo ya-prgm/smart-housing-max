@@ -3,16 +3,16 @@ import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
 const NAV_ITEMS = [
   {
-    path: '/chairman/tickets',
-    label: 'Обращения',
-    icon: 'inbox',
-    activeIcon: 'inbox',
-  },
-  {
     path: '/chairman/feed',
     label: 'Лента',
     icon: 'article',
     activeIcon: 'article',
+  },
+  {
+    path: '/chairman/tickets',
+    label: 'Обращения',
+    icon: 'inbox',
+    activeIcon: 'inbox',
   },
   {
     path: '/chairman/polls',
@@ -35,12 +35,10 @@ export const ChairmanLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-900 flex justify-center">
       <div className="w-full max-w-[430px] min-h-screen bg-[#f0f4ff] relative flex flex-col shadow-2xl overflow-x-hidden">
-        {/* Page content */}
         <div className="flex-1 overflow-y-auto">
           <Outlet />
         </div>
 
-        {/* Bottom navigation */}
         <nav
           className="fixed bottom-0 max-w-[430px] w-full z-50 pb-safe"
           style={{ background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(0,0,0,0.08)' }}

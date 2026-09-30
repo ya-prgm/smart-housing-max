@@ -1,5 +1,6 @@
+from typing import Any
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from app.schemas.common import BaseSchema
 from app.core.constants import (
     UserRole,
@@ -52,8 +53,8 @@ class ResidentResponse(BaseSchema):
 
 class ResidentUpdateRequest(BaseModel):
     role: UserRole
-    house_id: int
-    apartment_id: int
+    house_id: int | None = None
+    apartment_id: int | None = None
 
 
 class TicketStatusUpdateRequest(BaseModel):
@@ -80,6 +81,19 @@ class UkPollQuestionCreate(BaseModel):
     subtext: str | None = None
     question_type: PollQuestionType
     options: list[UkPollOptionCreate] = []
+
+    @field_validator("question_type", mode="before")
+    @classmethod
+    def normalize_question_type(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            val = v.lower().strip()
+            if val in ("single", "single_choice"):
+                return PollQuestionType.SINGLE_CHOICE
+            if val in ("multiple", "multiple_choice"):
+                return PollQuestionType.MULTIPLE_CHOICE
+            if val == "text":
+                return PollQuestionType.TEXT
+        return v
 
 
 class UkPollCreate(BaseModel):

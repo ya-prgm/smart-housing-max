@@ -195,9 +195,26 @@ async def update_ticket_status(
     current_user: User = Depends(require_roles(UserRole.UK_STAFF)),
     db: AsyncSession = Depends(get_db),
 ):
-    ticket = await db.get(Ticket, ticket_id)
+    stmt = select(Ticket).where(Ticket.id == ticket_id).options(selectinload(Ticket.recipients))
+    ticket = (await db.execute(stmt)).scalars().first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
+
+    is_uk = True
+    if ticket.recipients:
+        is_uk = any(
+            r.category == "uk" or r.code in ("1", "19") or r.short_name in ("УО", "УК", "ТСЖ") or "управляющ" in (r.full_name or "").lower()
+            for r in ticket.recipients
+        )
+    elif ticket.recipient_name:
+        rn = ticket.recipient_name.lower()
+        is_uk = any(k in rn for k in ("ук", "уо", "управляющ", "жилкомфорт", "тсж"))
+
+    if not is_uk:
+        raise HTTPException(
+            status_code=403,
+            detail="Обращение адресовано сторонней организации. Управляющая организация не может изменять статус."
+        )
 
     old_status = ticket.status
     ticket.status = payload.status

@@ -20,8 +20,6 @@ import { ProfilePage } from './features/mobile/profile/pages/ProfilePage';
 import { HouseInfoPage } from './features/mobile/profile/pages/HouseInfoPage';
 import { SettingsPage } from './features/mobile/profile/pages/SettingsPage';
 import { NotificationsPage } from './features/mobile/notifications/pages/NotificationsPage';
-import { HousesListPage } from './features/uk/houses/pages/HousesListPage';
-import { DashboardPage } from './features/uk/dashboard/DashboardPage';
 import { ChairmanLayout } from './features/chairman/ChairmanLayout';
 import { ChairmanTicketsPage } from './features/chairman/pages/ChairmanTicketsPage';
 import { ChairmanFeedPage } from './features/chairman/pages/ChairmanFeedPage';
@@ -32,6 +30,7 @@ import { ChairmanCreatePollPage } from './features/chairman/pages/ChairmanCreate
 import { ChairmanPollResultsPage } from './features/chairman/pages/ChairmanPollResultsPage';
 import { authApi } from './features/auth/api';
 import { getAccessToken } from './shared/api/client';
+import UkRoutes from './features/uk/routes';
 
 const AppInitializer: React.FC = () => {
   const navigate = useNavigate();
@@ -132,19 +131,16 @@ export const App: React.FC = () => {
         <Route path="/profile/settings" element={<SettingsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
 
-        <Route path="/uk" element={<HousesListPage />} />
-        <Route path="/uk/houses" element={<HousesListPage />} />
-        <Route path="/uk/dashboard" element={<DashboardPage />} />
+        <Route path="/uk/*" element={<UkRoutes />} />
 
-        {/* Chairman routes */}
         <Route path="/chairman/create-post" element={<ChairmanCreatePostPage />} />
         <Route path="/chairman/create-poll" element={<ChairmanCreatePollPage />} />
         <Route path="/chairman/polls/:id/results" element={<ChairmanPollResultsPage />} />
 
         <Route path="/chairman" element={<ChairmanLayout />}>
-          <Route index element={<Navigate to="/chairman/tickets" replace />} />
-          <Route path="tickets" element={<ChairmanTicketsPage />} />
+          <Route index element={<Navigate to="/chairman/feed" replace />} />
           <Route path="feed" element={<ChairmanFeedPage />} />
+          <Route path="tickets" element={<ChairmanTicketsPage />} />
           <Route path="polls" element={<ChairmanPollsPage />} />
           <Route path="profile" element={<ChairmanProfilePage />} />
         </Route>

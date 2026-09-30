@@ -5,9 +5,10 @@ import { formatPhone } from '../../../../shared/lib/formatPhone';
 
 interface UserCardProps {
   profile: UserProfile;
+  roleBadgeAboveName?: string;
 }
 
-export const UserCard: React.FC<UserCardProps> = ({ profile }) => {
+export const UserCard: React.FC<UserCardProps> = ({ profile, roleBadgeAboveName }) => {
   const getInitials = (name?: string) => {
     if (!name) return 'Ж';
     const parts = name.trim().split(/\s+/);
@@ -38,6 +39,12 @@ export const UserCard: React.FC<UserCardProps> = ({ profile }) => {
           </div>
         )}
       </div>
+
+      {(roleBadgeAboveName || profile.role === 'chairman') && (
+        <span className="text-[12px] font-bold text-blue-600 tracking-wider uppercase mb-1">
+          {roleBadgeAboveName || 'Председатель'}
+        </span>
+      )}
 
       <h1 className="text-xl font-bold text-slate-900 leading-tight mb-2">
         {profile.full_name}

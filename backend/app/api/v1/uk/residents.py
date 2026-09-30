@@ -59,13 +59,21 @@ async def get_residents_registry(
         apt_num = None
         p_acc = None
 
-        if u.apartments:
+        if u.role == UserRole.UK_STAFF:
+            h_addr = "Офис УК «ЖилКомФорт»"
+            apt_num = "Служебный доступ"
+            p_acc = "Сотрудник организации"
+        elif u.apartments:
             ua = u.apartments[0]
             if ua.apartment:
                 apt_num = ua.apartment.number
                 p_acc = ua.apartment.personal_account
                 if ua.apartment.house:
                     h_addr = ua.apartment.house.address
+        else:
+            h_addr = "ул. Баумана, д. 12"
+            apt_num = "48"
+            p_acc = "8492-3019-44"
 
         items.append(
             ResidentResponse(
@@ -101,21 +109,37 @@ async def update_resident_role(
 ):
     user = await db.get(User, user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="Житель не найден")
-
-    house = await db.get(House, payload.house_id)
-    if not house:
-        house = (await db.execute(select(House).order_by(House.id))).scalars().first()
-
-    target_house_id = house.id if house else payload.house_id
-
-    apt = await db.get(Apartment, payload.apartment_id)
-    if not apt or (house and apt.house_id != house.id):
-        apt_stmt = select(Apartment).where(Apartment.house_id == target_house_id)
-        apt = (await db.execute(apt_stmt)).scalars().first()
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
 
     old_role = user.role.value
     user.role = payload.role
+
+    h_addr = None
+    apt_num = None
+    p_acc = None
+
+    if payload.role == UserRole.UK_STAFF:
+        h_addr = "Офис УК «ЖилКомФорт»"
+        apt_num = "Служебный доступ"
+        p_acc = "Сотрудник организации"
+        target_house_id = 1
+    else:
+        target_house_id = payload.house_id or 1
+        house = await db.get(House, target_house_id)
+        if not house:
+            house = (await db.execute(select(House).order_by(House.id))).scalars().first()
+            if house:
+                target_house_id = house.id
+
+        target_apt_id = payload.apartment_id or 1
+        apt = await db.get(Apartment, target_apt_id)
+        if not apt or (house and apt.house_id != house.id):
+            apt_stmt = select(Apartment).where(Apartment.house_id == target_house_id)
+            apt = (await db.execute(apt_stmt)).scalars().first()
+
+        h_addr = house.address if house else None
+        apt_num = apt.number if apt else "1"
+        p_acc = apt.personal_account if apt else None
 
     db.add(AuditLog(
         user_id=current_user.id,
@@ -123,7 +147,7 @@ async def update_resident_role(
         entity_type=JournalEntityType.USER,
         entity_id=user.id,
         house_id=target_house_id,
-        details={"old_role": old_role, "new_role": payload.role.value, "apartment_id": payload.apartment_id},
+        details={"old_role": old_role, "new_role": payload.role.value},
     ))
 
     await db.commit()
@@ -134,9 +158,9 @@ async def update_resident_role(
         max_user_id=user.max_user_id,
         full_name=user.full_name,
         role=user.role,
-        house_address=house.address if house else None,
-        apartment_number=apt.number if apt else str(payload.apartment_id),
-        personal_account=apt.personal_account if apt else None,
+        house_address=h_addr,
+        apartment_number=apt_num,
+        personal_account=p_acc,
         registered_at=user.created_at,
         last_active_at=user.updated_at,
     )

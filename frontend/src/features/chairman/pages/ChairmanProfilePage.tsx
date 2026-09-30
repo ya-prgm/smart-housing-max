@@ -1,175 +1,112 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../../mobile/profile/hooks/useProfile';
+import { UserCard } from '../../mobile/profile/components/UserCard';
+import { UtilityCard } from '../../mobile/profile/components/UtilityCard';
+import { Skeleton } from '../../../shared/ui/Skeleton';
 
 export const ChairmanProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { profile, isLoading } = useProfile();
 
-  const menuItems = [
-    {
-      id: 'settings',
-      label: 'Настройки аккаунта',
-      icon: 'settings',
-      onClick: () => navigate('/profile/settings'),
-    },
-    {
-      id: 'house-info',
-      label: 'Информация о доме',
-      icon: 'apartment',
-      onClick: () => navigate('/profile/house-info'),
-    },
-    {
-      id: 'docs',
-      label: 'Документы ТСЖ',
-      icon: 'folder_open',
-      onClick: () => navigate('/profile/documents'),
-    },
-  ];
-
   return (
-    <div className="flex flex-col w-full min-h-screen pb-28 bg-[#f0f4ff] text-slate-900">
-      {/* Header */}
-      <header className="sticky top-0 z-40 pt-safe bg-white/90 backdrop-blur-xl border-b border-slate-200/70 shadow-sm">
-        <div className="h-14 px-4 flex items-center justify-between">
-          <span className="text-[17px] font-bold text-slate-900">Мой профиль</span>
-          <button
-            type="button"
-            onClick={() => navigate('/profile/settings')}
-            className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 cursor-pointer hover:bg-slate-200 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">settings</span>
-          </button>
+    <div className="flex flex-col w-full relative min-h-screen">
+      <header className="sticky top-0 w-full z-30 pt-safe bg-white/95 backdrop-blur-xl border-b border-slate-200/70">
+        <div className="px-4 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-primary font-bold">
+              <span className="material-symbols-outlined text-[20px]">person</span>
+            </div>
+            <span className="text-[17px] font-bold text-slate-900 tracking-tight">МОЙ ДОМ</span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Уведомления"
+              onClick={() => navigate('/notifications')}
+              className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 border border-slate-200/60 flex items-center justify-center text-slate-600 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Настройки"
+              onClick={() => navigate('/profile/settings')}
+              className="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 flex items-center justify-center text-slate-600 active:scale-95 transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">settings</span>
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="px-4 pt-5 pb-6 flex flex-col gap-5">
-        {isLoading ? (
-          <div className="flex flex-col gap-4">
-            <div className="h-48 bg-white rounded-2xl animate-pulse" />
-            <div className="h-32 bg-white rounded-2xl animate-pulse" />
-          </div>
-        ) : (
-          <>
-            {/* Chairman Hero Card */}
-            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-              {/* BG decoration */}
-              <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10 blur-xl" />
-              <div className="absolute -bottom-6 -left-4 w-24 h-24 rounded-full bg-purple-400/20 blur-xl" />
+      <main className="flex-1 flex flex-col items-center w-full px-4 pt-4 pb-28">
+        <div className="w-full max-w-md flex flex-col gap-4">
+          {isLoading || !profile ? (
+            <div className="flex flex-col gap-4 w-full">
+              <Skeleton className="h-64 w-full rounded-3xl" />
+              <Skeleton className="h-24 w-full rounded-3xl" />
+              <Skeleton className="h-44 w-full rounded-3xl" />
+            </div>
+          ) : (
+            <>
+              <UserCard profile={profile} roleBadgeAboveName="Председатель" />
 
-              {/* Badge */}
-              <div className="flex items-center gap-2 mb-4 relative z-10">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[18px]">shield_person</span>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate('/profile/house')}
+                className="w-full bg-white rounded-3xl p-5 border border-slate-200/80 shadow-card flex items-center justify-between hover:bg-sky-50/40 active:scale-[0.99] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-50 to-blue-50 border border-slate-200/60 flex items-center justify-center text-primary shrink-0 group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[24px]">domain</span>
+                  </div>
+                  <div className="flex flex-col text-left min-w-0">
+                    <span className="text-[16px] font-bold text-slate-900 group-hover:text-primary transition-colors truncate">
+                      О доме
+                    </span>
+                    <span className="text-[12px] text-slate-500 leading-tight truncate">
+                      Паспорт дома, конструктив, управляющая организация, совет МКД
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[13px] font-bold text-white/90 bg-white/15 px-3 py-1 rounded-full">
-                  Председатель ТСЖ
+                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                </div>
+              </div>
+
+              <UtilityCard
+                debtAmount={profile.debt_amount ?? 0}
+                isDebtFree={profile.is_debt_free ?? true}
+              />
+
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate('/profile/settings')}
+                className="w-full bg-white rounded-2xl p-4 border border-slate-200/80 shadow-card flex items-center justify-between hover:bg-slate-50 active:scale-[0.99] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 group-hover:bg-sky-50 group-hover:text-primary transition-colors shrink-0">
+                    <span className="material-symbols-outlined text-[20px]">settings</span>
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[15px] font-semibold text-slate-900 group-hover:text-primary transition-colors">
+                      Настройки
+                    </span>
+                    <span className="text-[12px] text-slate-500">Безопасность, PIN-код, уведомления</span>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-[20px] text-slate-400 group-hover:translate-x-0.5 transition-transform">
+                  chevron_right
                 </span>
               </div>
-
-              {/* User info */}
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center text-white font-black text-[22px] border-2 border-white/30">
-                  {profile?.full_name?.charAt(0) || 'П'}
-                </div>
-                <div>
-                  <h1 className="text-[19px] font-black leading-tight">
-                    {profile?.full_name || 'Председатель'}
-                  </h1>
-                  <p className="text-[13px] text-white/70 mt-0.5">
-                    {profile?.apartment_number ? `Кв. ${profile.apartment_number}` : ''} {profile?.house_address || ''}
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats row */}
-              <div className="flex gap-3 mt-4 relative z-10">
-                <div className="flex-1 bg-white/15 rounded-xl p-3 text-center">
-                  <div className="text-[18px] font-black">ТСЖ</div>
-                  <div className="text-[10px] text-white/70">Организация</div>
-                </div>
-                <div className="flex-1 bg-white/15 rounded-xl p-3 text-center">
-                  <div className="text-[18px] font-black">∞</div>
-                  <div className="text-[10px] text-white/70">Привилегий</div>
-                </div>
-                <div className="flex-1 bg-white/15 rounded-xl p-3 text-center">
-                  <div className="text-[18px] font-black">PRO</div>
-                  <div className="text-[10px] text-white/70">Доступ</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Contact info */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-              <h2 className="text-[13px] font-bold text-slate-700">Контактные данные</h2>
-              {profile?.phone && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[16px] text-blue-600">phone</span>
-                  </div>
-                  <div>
-                    <div className="text-[12px] text-slate-400">Телефон</div>
-                    <div className="text-[14px] font-semibold text-slate-900">{profile.phone}</div>
-                  </div>
-                </div>
-              )}
-              {profile?.email && (
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[16px] text-purple-600">email</span>
-                  </div>
-                  <div>
-                    <div className="text-[12px] text-slate-400">Email</div>
-                    <div className="text-[14px] font-semibold text-slate-900">{profile.email}</div>
-                  </div>
-                </div>
-              )}
-              {!profile?.phone && !profile?.email && (
-                <p className="text-[13px] text-slate-400">Контактные данные не заполнены</p>
-              )}
-            </div>
-
-            {/* Menu */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              {menuItems.map((item, idx) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={item.onClick}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer ${
-                    idx < menuItems.length - 1 ? 'border-b border-slate-100' : ''
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[16px] text-indigo-600">{item.icon}</span>
-                  </div>
-                  <span className="flex-1 text-[14px] font-medium text-slate-800">{item.label}</span>
-                  <span className="material-symbols-outlined text-[18px] text-slate-300">chevron_right</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Chairman permissions */}
-            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="material-symbols-outlined text-[18px] text-indigo-600">verified</span>
-                <span className="text-[13px] font-bold text-indigo-800">Права председателя</span>
-              </div>
-              {[
-                'Публикация постов для жильцов',
-                'Ответы на обращения и смена статуса',
-                'Создание опросов и просмотр результатов',
-                'Полный доступ к обращениям дома',
-              ].map((perm) => (
-                <div key={perm} className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[14px] text-emerald-600">check</span>
-                  <span className="text-[12px] text-indigo-700">{perm}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 };

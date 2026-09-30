@@ -281,12 +281,29 @@ class TicketService:
     async def add_reply(
         self, ticket_id: int, payload: TicketReplyCreate, current_user: User
     ) -> TicketReplyResponse:
-        """Председатель или УК отвечает на обращение."""
-        t = await self.db.get(Ticket, ticket_id)
+        stmt = select(Ticket).where(Ticket.id == ticket_id).options(selectinload(Ticket.recipients))
+        t = (await self.db.execute(stmt)).scalars().first()
         if not t or t.is_deleted:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
         if current_user.role not in (UserRole.CHAIRMAN, UserRole.UK_STAFF):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
+
+        if current_user.role == UserRole.UK_STAFF:
+            is_uk = True
+            if t.recipients:
+                is_uk = any(
+                    r.category == "uk" or r.code in ("1", "19") or r.short_name in ("УО", "УК", "ТСЖ") or "управляющ" in (r.full_name or "").lower()
+                    for r in t.recipients
+                )
+            elif t.recipient_name:
+                rn = t.recipient_name.lower()
+                is_uk = any(k in rn for k in ("ук", "уо", "управляющ", "жилкомфорт", "тсж"))
+
+            if not is_uk:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Обращение адресовано сторонней организации. УК не может отвечать на него."
+                )
 
         reply = TicketReply(
             ticket_id=ticket_id,
