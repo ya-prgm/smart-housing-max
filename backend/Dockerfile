@@ -1,8 +1,8 @@
 FROM python:3.12-slim
 
 WORKDIR /app
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
     libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -15,4 +15,8 @@ COPY . .
 RUN mkdir -p /app/data/uploads
 
 EXPOSE 8000
-CMD ["sh", "-c", "alembic upgrade head 2>/dev/null || true && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["sh", "-c", "python -m app.scripts.init_db || true && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

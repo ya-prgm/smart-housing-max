@@ -40,30 +40,48 @@ async def ensure_database_exists():
     parsed = urlparse(db_url)
     target_db = parsed.path.lstrip("/")
 
-    conn = await asyncpg.connect(
-        user=parsed.username,
-        password=parsed.password,
-        host=parsed.hostname or "127.0.0.1",
-        port=parsed.port or 5432,
-        database="postgres",
-        ssl=False,
-    )
     try:
-        exists = await conn.fetchval(
-            "SELECT 1 FROM pg_database WHERE datname = $1", target_db
+        conn = await asyncpg.connect(
+            user=parsed.username,
+            password=parsed.password,
+            host=parsed.hostname or "127.0.0.1",
+            port=parsed.port or 5432,
+            database=target_db,
+            ssl=False,
         )
-        if not exists:
-            await conn.execute(f'CREATE DATABASE "{target_db}"')
-    finally:
         await conn.close()
+        return
+    except Exception:
+        pass
+
+    for maintenance_db in ["template1", "postgres"]:
+        try:
+            conn = await asyncpg.connect(
+                user=parsed.username,
+                password=parsed.password,
+                host=parsed.hostname or "127.0.0.1",
+                port=parsed.port or 5432,
+                database=maintenance_db,
+                ssl=False,
+            )
+            exists = await conn.fetchval(
+                "SELECT 1 FROM pg_database WHERE datname = $1", target_db
+            )
+            if not exists:
+                await conn.execute(f'CREATE DATABASE "{target_db}"')
+            await conn.close()
+            return
+        except Exception:
+            continue
 
 
-async def seed_data():
+async def seed_data(drop: bool = True):
     await ensure_database_exists()
 
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent;"))
-        await conn.run_sync(Base.metadata.drop_all)
+        if drop:
+            await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
