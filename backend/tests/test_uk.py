@@ -60,3 +60,29 @@ async def test_uk_update_resident_role(client: AsyncClient, uk_headers: dict):
     journal_res = await client.get("/api/v1/uk/journal", headers=uk_headers)
     assert journal_res.status_code == 200
     assert any(ev["action"] == "role_change" for ev in journal_res.json()["items"])
+
+
+async def test_create_uk_poll(client: AsyncClient, uk_headers: dict):
+    houses_res = await client.get("/api/v1/uk/houses", headers=uk_headers)
+    assert houses_res.status_code == 200
+    house_id = houses_res.json()[0]["id"]
+
+    payload = {
+        "house_id": house_id,
+        "title": "Установка шлагбаума во дворе",
+        "description": "Опрос жителей о согласии на установку шлагбаума",
+        "deadline": "2026-10-07T18:59:59",
+        "questions": [
+            {
+                "question_text": "Поддерживаете ли вы данную инициативу?",
+                "question_type": "single_choice",
+                "options": [
+                    {"option_text": "Да, поддерживаю"},
+                    {"option_text": "Нет, против"},
+                ],
+            }
+        ],
+    }
+    res = await client.post("/api/v1/uk/votes", json=payload, headers=uk_headers)
+    assert res.status_code == 201
+    assert res.json()["status"] == "ok"

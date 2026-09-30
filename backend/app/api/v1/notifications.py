@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.notification import Notification
 from app.schemas.notification import NotificationResponse
 from app.schemas.common import StatusResponse
+from app.utils.formatters import format_russian_datetime
 
 router = APIRouter()
 
@@ -36,7 +37,7 @@ async def get_notifications(
             is_read=n.is_read,
             action_url=n.action_url,
             created_at=n.created_at,
-            time_formatted=n.created_at.strftime("%d %b, %H:%M"),
+            time_formatted=format_russian_datetime(n.created_at),
         )
         for n in notifications
     ]

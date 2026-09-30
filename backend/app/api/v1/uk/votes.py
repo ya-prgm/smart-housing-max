@@ -10,6 +10,7 @@ from app.core.constants import JournalAction, JournalEntityType
 from app.bot.notifications import notify_new_poll_published
 from app.schemas.uk import UkPollCreate, UkPollUpdate, UkPollStatusUpdate
 from app.schemas.common import StatusResponse
+from app.utils.formatters import format_deadline_text
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ async def create_uk_poll(
         title=payload.title,
         description=payload.description,
         status=PollStatus.ACTIVE,
-        deadline_text=payload.deadline.strftime("До %d %b"),
+        deadline_text=format_deadline_text(payload.deadline),
     )
     db.add(poll)
     await db.flush()
@@ -89,7 +90,7 @@ async def update_uk_poll(
     if payload.description is not None:
         poll.description = payload.description
     if payload.deadline is not None:
-        poll.deadline_text = payload.deadline.strftime("До %d %b")
+        poll.deadline_text = format_deadline_text(payload.deadline)
 
     db.add(AuditLog(
         user_id=current_user.id,

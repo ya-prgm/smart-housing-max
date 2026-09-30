@@ -5,6 +5,7 @@ from app.models.user import User
 from app.core.constants import NotificationCategory
 from app.schemas.notification import NotificationResponse
 from app.bot.client import bot_client
+from app.utils.formatters import format_russian_datetime
 
 
 class NotificationService:
@@ -25,7 +26,7 @@ class NotificationService:
                 is_read=n.is_read,
                 action_url=n.action_url,
                 created_at=n.created_at,
-                time_formatted=n.created_at.strftime("%d %b, %H:%M"),
+                time_formatted=format_russian_datetime(n.created_at),
             )
             for n in items
         ]
