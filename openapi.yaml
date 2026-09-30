@@ -1,0 +1,4101 @@
+openapi: 3.1.0
+info:
+  title: Мой Дом
+  version: 1.0.0
+paths:
+  /api/v1/auth/max-login:
+    post:
+      tags:
+      - Auth
+      summary: Login Max
+      operationId: login_max_api_v1_auth_max_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MaxLoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: INVALID_INIT_DATA или INIT_DATA_EXPIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/esia-login:
+    post:
+      tags:
+      - Auth
+      summary: Login ESIA (MOCK)
+      description: Имитация входа через ЕСИА (Госуслуги). Реальная интеграция требует
+        аккредитации в Минцифры и подключения к СМЭВ ЕСИА. Для демонстрации используются
+        тестовые учётные записи.
+      operationId: login_esia_api_v1_auth_esia_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EsiaLoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: INVALID_CREDENTIALS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/esia-sync:
+    post:
+      tags:
+      - Auth
+      summary: Sync Esia Profile
+      operationId: sync_esia_profile_api_v1_auth_esia_sync_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: ESIA_TOKEN_EXPIRED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/esia-unlink:
+    post:
+      tags:
+      - Auth
+      summary: Unlink Esia Profile
+      operationId: unlink_esia_profile_api_v1_auth_esia_unlink_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/refresh:
+    post:
+      tags:
+      - Auth
+      summary: Refresh Tokens
+      operationId: refresh_tokens_api_v1_auth_refresh_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/pin/setup:
+    post:
+      tags:
+      - Auth
+      summary: Setup Pin
+      operationId: setup_pin_api_v1_auth_pin_setup_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinSetupRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/pin/verify:
+    post:
+      tags:
+      - Auth
+      summary: Verify User Pin
+      operationId: verify_user_pin_api_v1_auth_pin_verify_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/auth/pin/reset:
+    post:
+      tags:
+      - Auth
+      summary: Reset User Pin
+      operationId: reset_user_pin_api_v1_auth_pin_reset_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /api/v1/users/me:
+    get:
+      tags:
+      - Users
+      summary: Get My Profile
+      operationId: get_my_profile_api_v1_users_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+      security:
+      - HTTPBearer: []
+    patch:
+      tags:
+      - Users
+      summary: Update My Profile
+      operationId: update_my_profile_api_v1_users_me_patch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/users/me/pay-utility:
+    post:
+      tags:
+      - Users
+      summary: Pay My Utility
+      operationId: pay_my_utility_api_v1_users_me_pay_utility_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/houses/my:
+    get:
+      tags:
+      - Houses
+      summary: Get My House
+      operationId: get_my_house_api_v1_houses_my_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HouseDetailResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/houses/{house_id}:
+    get:
+      tags:
+      - Houses
+      summary: Get House By Id
+      operationId: get_house_by_id_api_v1_houses__house_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: house_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: House Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HouseDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tickets:
+    get:
+      tags:
+      - Tickets
+      summary: Get Tickets
+      operationId: get_tickets_api_v1_tickets_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/TicketStatus'
+          - type: 'null'
+          title: Status
+      - name: my
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: My
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketResponse'
+                title: Response Get Tickets Api V1 Tickets Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Tickets
+      summary: Create Ticket
+      operationId: create_ticket_api_v1_tickets_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tickets/{ticket_id}:
+    get:
+      tags:
+      - Tickets
+      summary: Get Ticket By Id
+      operationId: get_ticket_by_id_api_v1_tickets__ticket_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - Tickets
+      summary: Update Ticket
+      operationId: update_ticket_api_v1_tickets__ticket_id__put
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Tickets
+      summary: Delete Ticket
+      operationId: delete_ticket_api_v1_tickets__ticket_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tickets/{ticket_id}/support:
+    post:
+      tags:
+      - Tickets
+      summary: Toggle Ticket Support
+      operationId: toggle_ticket_support_api_v1_tickets__ticket_id__support_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketSupportResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/tickets/{ticket_id}/reply:
+    post:
+      tags:
+      - Tickets
+      summary: Reply To Ticket
+      description: Председатель или УК отвечает на обращение жильца.
+      operationId: reply_to_ticket_api_v1_tickets__ticket_id__reply_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketReplyCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketReplyResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/topics/search:
+    get:
+      tags:
+      - Topics
+      summary: Search Or List Topics
+      operationId: search_or_list_topics_api_v1_topics_search_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Q
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopicSearchItem'
+                title: Response Search Or List Topics Api V1 Topics Search Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/topics:
+    get:
+      tags:
+      - Topics
+      summary: Search Or List Topics
+      operationId: search_or_list_topics_api_v1_topics_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Q
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TopicSearchItem'
+                title: Response Search Or List Topics Api V1 Topics Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/topics/all-recipients:
+    get:
+      tags:
+      - Topics
+      summary: Get All Recipients
+      operationId: get_all_recipients_api_v1_topics_all_recipients_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/RecipientItem'
+                type: array
+                title: Response Get All Recipients Api V1 Topics All Recipients Get
+      security:
+      - HTTPBearer: []
+  /api/v1/topics/{code}:
+    get:
+      tags:
+      - Topics
+      summary: Get Topic By Code
+      operationId: get_topic_by_code_api_v1_topics__code__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Code
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/topics/{code}/recipients:
+    get:
+      tags:
+      - Topics
+      summary: Get Topic Recipients
+      operationId: get_topic_recipients_api_v1_topics__code__recipients_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: code
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Code
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipientItem'
+                title: Response Get Topic Recipients Api V1 Topics  Code  Recipients
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/feed:
+    get:
+      tags:
+      - Feed
+      summary: Get Feed
+      operationId: get_feed_api_v1_feed_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: type
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Type
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedPostResponse'
+                title: Response Get Feed Api V1 Feed Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Feed
+      summary: Create Feed Post
+      operationId: create_feed_post_api_v1_feed_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedPostCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/feed/{post_id}:
+    get:
+      tags:
+      - Feed
+      summary: Get Post
+      operationId: get_post_api_v1_feed__post_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedPostResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Feed
+      summary: Delete Feed Post
+      operationId: delete_feed_post_api_v1_feed__post_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/feed/{post_id}/report:
+    post:
+      tags:
+      - Feed
+      summary: Report Feed Post
+      operationId: report_feed_post_api_v1_feed__post_id__report_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/feed/{post_id}/reactions:
+    post:
+      tags:
+      - Feed
+      summary: Toggle Post Reaction
+      operationId: toggle_post_reaction_api_v1_feed__post_id__reactions_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionToggleResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/feed/{post_id}/comments:
+    get:
+      tags:
+      - Feed
+      summary: Get Post Comments
+      operationId: get_post_comments_api_v1_feed__post_id__comments_get
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 50
+          title: Page Size
+      - name: parent_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Id
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          default: oldest
+          title: Sort
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse_CommentResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - Feed
+      summary: Add Post Comment
+      operationId: add_post_comment_api_v1_feed__post_id__comments_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/feed/comments/{comment_id}:
+    delete:
+      tags:
+      - Feed
+      summary: Delete Post Comment
+      operationId: delete_post_comment_api_v1_feed_comments__comment_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: comment_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Comment Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/votes:
+    get:
+      tags:
+      - Votes
+      summary: Get Polls
+      operationId: get_polls_api_v1_votes_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/PollCardResponse'
+                type: array
+                title: Response Get Polls Api V1 Votes Get
+      security:
+      - HTTPBearer: []
+    post:
+      tags:
+      - Votes
+      summary: Create Poll
+      operationId: create_poll_api_v1_votes_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PollCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/votes/{poll_id}:
+    get:
+      tags:
+      - Votes
+      summary: Get Poll
+      operationId: get_poll_api_v1_votes__poll_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Poll Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/votes/{poll_id}/submit:
+    post:
+      tags:
+      - Votes
+      summary: Submit Poll Answers
+      operationId: submit_poll_answers_api_v1_votes__poll_id__submit_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Poll Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PollSubmitRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/votes/{poll_id}/results:
+    get:
+      tags:
+      - Votes
+      summary: Get Poll Results
+      operationId: get_poll_results_api_v1_votes__poll_id__results_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Poll Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollResultsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/files/upload:
+    post:
+      tags:
+      - Files
+      summary: Upload File
+      operationId: upload_file_api_v1_files_upload_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_file_api_v1_files_upload_post'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/files/{file_id}:
+    get:
+      tags:
+      - Files
+      summary: Download File
+      operationId: download_file_api_v1_files__file_id__get
+      parameters:
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: File Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Files
+      summary: Delete File
+      operationId: delete_file_api_v1_files__file_id__delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: File Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/notifications:
+    get:
+      tags:
+      - Notifications
+      summary: Get Notifications
+      operationId: get_notifications_api_v1_notifications_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+                type: array
+                title: Response Get Notifications Api V1 Notifications Get
+      security:
+      - HTTPBearer: []
+  /api/v1/notifications/mark-all-read:
+    post:
+      tags:
+      - Notifications
+      summary: Mark All Read
+      operationId: mark_all_read_api_v1_notifications_mark_all_read_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/uk/dashboard:
+    get:
+      tags:
+      - UK
+      - UK-Dashboard
+      summary: Get Dashboard
+      operationId: get_dashboard_api_v1_uk_dashboard_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UkDashboardResponse'
+      security:
+      - HTTPBearer: []
+  /api/v1/uk/houses:
+    get:
+      tags:
+      - UK
+      - UK-Houses
+      summary: Get Uk Houses
+      operationId: get_uk_houses_api_v1_uk_houses_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/HouseCardResponse'
+                type: array
+                title: Response Get Uk Houses Api V1 Uk Houses Get
+      security:
+      - HTTPBearer: []
+  /api/v1/uk/houses/{house_id}:
+    get:
+      tags:
+      - UK
+      - UK-Houses
+      summary: Get Uk House Details
+      operationId: get_uk_house_details_api_v1_uk_houses__house_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: house_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: House Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HouseDetailResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/residents:
+    get:
+      tags:
+      - UK
+      - UK-Residents
+      summary: Get Residents Registry
+      operationId: get_residents_registry_api_v1_uk_residents_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: house_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: House Id
+      - name: role
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/UserRole'
+          - type: 'null'
+          title: Role
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Page Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse_ResidentResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/residents/{user_id}:
+    patch:
+      tags:
+      - UK
+      - UK-Residents
+      summary: Update Resident Role
+      operationId: update_resident_role_api_v1_uk_residents__user_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResidentUpdateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResidentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/tickets:
+    get:
+      tags:
+      - UK
+      - UK-Tickets
+      summary: Get Uk All Tickets
+      operationId: get_uk_all_tickets_api_v1_uk_tickets_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: house_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: House Id
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - $ref: '#/components/schemas/TicketStatus'
+          - type: 'null'
+          title: Status
+      - name: category
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Category
+      - name: search
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Search
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Page Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse_TicketResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/tickets/{ticket_id}:
+    get:
+      tags:
+      - UK
+      - UK-Tickets
+      summary: Get Uk Ticket Details
+      operationId: get_uk_ticket_details_api_v1_uk_tickets__ticket_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/tickets/{ticket_id}/status:
+    patch:
+      tags:
+      - UK
+      - UK-Tickets
+      summary: Update Ticket Status
+      operationId: update_ticket_status_api_v1_uk_tickets__ticket_id__status_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: ticket_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Ticket Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketStatusUpdateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/feed:
+    get:
+      tags:
+      - UK
+      - UK-Feed
+      summary: Get Uk Feed
+      operationId: get_uk_feed_api_v1_uk_feed_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: house_id
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+          title: House Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedPostResponse'
+                title: Response Get Uk Feed Api V1 Uk Feed Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - UK
+      - UK-Feed
+      summary: Create Uk Feed Post
+      operationId: create_uk_feed_post_api_v1_uk_feed_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UkFeedPostCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/feed/{post_id}:
+    get:
+      tags:
+      - UK
+      - UK-Feed
+      summary: Get Uk Post Details
+      operationId: get_uk_post_details_api_v1_uk_feed__post_id__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: post_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Post Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedPostResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/votes:
+    post:
+      tags:
+      - UK
+      - UK-Votes
+      summary: Create Uk Poll
+      operationId: create_uk_poll_api_v1_uk_votes_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UkPollCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/uk/votes/{poll_id}:
+    patch:
+      tags:
+      - UK
+      - UK-Votes
+      summary: Update Uk Poll
+      operationId: update_uk_poll_api_v1_uk_votes__poll_id__patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Poll Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UkPollUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/votes/{poll_id}/status:
+    patch:
+      tags:
+      - UK
+      - UK-Votes
+      summary: Update Uk Poll Status
+      operationId: update_uk_poll_status_api_v1_uk_votes__poll_id__status_patch
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: poll_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Poll Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UkPollStatusUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/documents:
+    get:
+      tags:
+      - UK
+      - UK-Documents
+      summary: Get Uk Documents
+      operationId: get_uk_documents_api_v1_uk_documents_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: house_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: House Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UkDocumentResponse'
+                title: Response Get Uk Documents Api V1 Uk Documents Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - UK
+      - UK-Documents
+      summary: Attach Uk Document
+      operationId: attach_uk_document_api_v1_uk_documents_post
+      security:
+      - HTTPBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UkDocumentCreate'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/uk/journal:
+    get:
+      tags:
+      - UK
+      - UK-Journal
+      summary: Get Uk Journal
+      operationId: get_uk_journal_api_v1_uk_journal_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+          title: Page
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Page Size
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse_JournalEventResponse_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/webhook:
+    post:
+      tags:
+      - Bot
+      summary: Receive Max Webhook
+      operationId: receive_max_webhook_api_v1_bot_webhook_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              title: Update Data
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - Bot
+      summary: Delete Bot Webhook
+      operationId: delete_bot_webhook_api_v1_bot_webhook_delete
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: webhook_url
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Webhook Url
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/bot/info:
+    get:
+      tags:
+      - Bot
+      summary: Get Bot Status
+      operationId: get_bot_status_api_v1_bot_info_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/bot/setup:
+    post:
+      tags:
+      - Bot
+      summary: Setup Bot
+      operationId: setup_bot_api_v1_bot_setup_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/WebhookSetupRequest'
+              - type: 'null'
+              title: Payload
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/bot/test-notification:
+    post:
+      tags:
+      - Bot
+      summary: Send Test Notification
+      operationId: send_test_notification_api_v1_bot_test_notification_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/TestNotificationRequest'
+              - type: 'null'
+              title: Payload
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /health:
+    get:
+      tags:
+      - Health
+      summary: Health Check
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    ActivityType:
+      type: string
+      enum:
+      - ticket_created
+      - ticket_status
+      - post_published
+      - poll_started
+      - role_assigned
+      title: ActivityType
+    AuthTokens:
+      properties:
+        accessToken:
+          type: string
+          title: Accesstoken
+        refreshToken:
+          type: string
+          title: Refreshtoken
+      type: object
+      required:
+      - accessToken
+      - refreshToken
+      title: AuthTokens
+    AuthUser:
+      properties:
+        id:
+          type: integer
+          title: Id
+        max_user_id:
+          type: integer
+          title: Max User Id
+        full_name:
+          type: string
+          title: Full Name
+        role:
+          $ref: '#/components/schemas/UserRole'
+        house_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: House Id
+        house_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Address
+        apartment_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Apartment Number
+      type: object
+      required:
+      - id
+      - max_user_id
+      - full_name
+      - role
+      title: AuthUser
+    Body_upload_file_api_v1_files_upload_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+        context:
+          $ref: '#/components/schemas/FileContext'
+          default: ticket
+      type: object
+      required:
+      - file
+      title: Body_upload_file_api_v1_files_upload_post
+    CommentCreate:
+      properties:
+        content:
+          type: string
+          title: Content
+        parent_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Id
+      type: object
+      required:
+      - content
+      title: CommentCreate
+    CommentResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        author_name:
+          type: string
+          title: Author Name
+        author_role:
+          $ref: '#/components/schemas/UserRole'
+        author_avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Author Avatar
+        content:
+          type: string
+          title: Content
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        replies:
+          items:
+            $ref: '#/components/schemas/CommentResponse'
+          type: array
+          title: Replies
+          default: []
+      type: object
+      required:
+      - id
+      - author_name
+      - author_role
+      - content
+      - created_at
+      title: CommentResponse
+    ErrorDetail:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+      type: object
+      required:
+      - error
+      title: ErrorResponse
+    EsiaLoginRequest:
+      properties:
+        identifier:
+          type: string
+          title: Identifier
+        password:
+          type: string
+          title: Password
+        initData:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Initdata
+        max_user_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max User Id
+      type: object
+      required:
+      - identifier
+      - password
+      title: EsiaLoginRequest
+    EsiaSyncStatus:
+      type: string
+      enum:
+      - never
+      - success
+      - failed
+      - expired
+      title: EsiaSyncStatus
+    FeedPostCreate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        content:
+          type: string
+          title: Content
+        post_type:
+          $ref: '#/components/schemas/PostType'
+          default: info
+        image_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Image Id
+        image_ids:
+          items:
+            type: integer
+          type: array
+          title: Image Ids
+          default: []
+        images:
+          items:
+            type: string
+          type: array
+          title: Images
+          default: []
+        image_label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Label
+      type: object
+      required:
+      - content
+      title: FeedPostCreate
+    FeedPostResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        author:
+          $ref: '#/components/schemas/PostAuthor'
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        content:
+          type: string
+          title: Content
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
+        image_label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Label
+        images:
+          items:
+            type: string
+          type: array
+          title: Images
+          default: []
+        likes:
+          type: integer
+          title: Likes
+        dislikes:
+          type: integer
+          title: Dislikes
+        comments_count:
+          type: integer
+          title: Comments Count
+        views:
+          type: integer
+          title: Views
+        post_type:
+          $ref: '#/components/schemas/PostType'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        my_reaction:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionType'
+          - type: 'null'
+      type: object
+      required:
+      - id
+      - author
+      - content
+      - likes
+      - dislikes
+      - comments_count
+      - views
+      - post_type
+      - created_at
+      title: FeedPostResponse
+    FileContext:
+      type: string
+      enum:
+      - ticket
+      - feed
+      - document
+      title: FileContext
+    FileUploadResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        url:
+          type: string
+          title: Url
+        filename:
+          type: string
+          title: Filename
+        mime_type:
+          type: string
+          title: Mime Type
+        size:
+          type: integer
+          title: Size
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - url
+      - filename
+      - mime_type
+      - size
+      - created_at
+      title: FileUploadResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+        version:
+          type: string
+          title: Version
+        database:
+          type: string
+          title: Database
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+      type: object
+      required:
+      - status
+      - version
+      - database
+      - timestamp
+      title: HealthResponse
+    HouseCardResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        address:
+          type: string
+          title: Address
+        city:
+          type: string
+          title: City
+        district:
+          type: string
+          title: District
+        apartments_count:
+          type: integer
+          title: Apartments Count
+        residents_count:
+          type: integer
+          title: Residents Count
+        residents_percent:
+          type: integer
+          title: Residents Percent
+        active_tickets:
+          type: integer
+          title: Active Tickets
+        active_polls:
+          type: integer
+          title: Active Polls
+        new_posts:
+          type: integer
+          title: New Posts
+      type: object
+      required:
+      - id
+      - address
+      - city
+      - district
+      - apartments_count
+      - residents_count
+      - residents_percent
+      - active_tickets
+      - active_polls
+      - new_posts
+      title: HouseCardResponse
+    HouseDetailResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        address:
+          type: string
+          title: Address
+        city:
+          type: string
+          title: City
+        district:
+          type: string
+          title: District
+        postal_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Postal Code
+        fias_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Fias Code
+        cadastral_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cadastral Number
+        oktmo:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Oktmo
+        year_built:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Year Built
+        wear_percentage:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Wear Percentage
+        total_area:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Total Area
+        living_area:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Living Area
+        floors:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Floors
+        entrances:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Entrances
+        apartments_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Apartments Count
+        project_series:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Project Series
+        wall_material:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Wall Material
+        management_type:
+          anyOf:
+          - $ref: '#/components/schemas/ManagementType'
+          - type: 'null'
+        uk_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Uk Name
+        uk_inn:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Uk Inn
+        chairman_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Chairman Name
+        dispatcher_phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Dispatcher Phone
+        emergency_phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Emergency Phone
+        providers:
+          items:
+            $ref: '#/components/schemas/HouseServiceProviderResponse'
+          type: array
+          title: Providers
+          default: []
+      type: object
+      required:
+      - id
+      - address
+      - city
+      - district
+      title: HouseDetailResponse
+    HouseServiceProviderResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        category:
+          $ref: '#/components/schemas/ProviderCategory'
+        name:
+          type: string
+          title: Name
+        service_description:
+          type: string
+          title: Service Description
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        brand_badge:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Brand Badge
+      type: object
+      required:
+      - id
+      - category
+      - name
+      - service_description
+      title: HouseServiceProviderResponse
+    JournalAction:
+      type: string
+      enum:
+      - create
+      - update
+      - delete
+      - status_change
+      - role_change
+      - assign
+      title: JournalAction
+    JournalEntityType:
+      type: string
+      enum:
+      - ticket
+      - post
+      - poll
+      - user
+      - comment
+      - file
+      title: JournalEntityType
+    JournalEventResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        action:
+          $ref: '#/components/schemas/JournalAction'
+        entity_type:
+          $ref: '#/components/schemas/JournalEntityType'
+        entity_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Entity Id
+        user_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Name
+        house_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Address
+        details:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Details
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - action
+      - entity_type
+      - created_at
+      title: JournalEventResponse
+    LoginResponse:
+      properties:
+        tokens:
+          $ref: '#/components/schemas/AuthTokens'
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        hasPin:
+          type: boolean
+          title: Haspin
+        needsEsiaAuth:
+          type: boolean
+          title: Needsesiaauth
+        esiaLinkedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Esialinkedat
+        esiaLastSyncAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Esialastsyncat
+        esiaSyncStatus:
+          $ref: '#/components/schemas/EsiaSyncStatus'
+          default: never
+        esiaTokenExpiresAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Esiatokenexpiresat
+      type: object
+      required:
+      - tokens
+      - user
+      - hasPin
+      - needsEsiaAuth
+      title: LoginResponse
+    ManagementType:
+      type: string
+      enum:
+      - uk
+      - tszh
+      title: ManagementType
+    MaxLoginRequest:
+      properties:
+        initData:
+          type: string
+          title: Initdata
+      type: object
+      required:
+      - initData
+      title: MaxLoginRequest
+    NotificationCategory:
+      type: string
+      enum:
+      - system
+      - uk
+      - chairman
+      title: NotificationCategory
+    NotificationResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        category:
+          $ref: '#/components/schemas/NotificationCategory'
+        author_name:
+          type: string
+          title: Author Name
+        author_badge:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Author Badge
+        title:
+          type: string
+          title: Title
+        text:
+          type: string
+          title: Text
+        is_read:
+          type: boolean
+          title: Is Read
+        action_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Action Url
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        time_formatted:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Time Formatted
+      type: object
+      required:
+      - id
+      - category
+      - author_name
+      - title
+      - text
+      - is_read
+      - created_at
+      title: NotificationResponse
+    PaginatedResponse_CommentResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/CommentResponse'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+        page:
+          type: integer
+          title: Page
+        page_size:
+          type: integer
+          title: Page Size
+        pages:
+          type: integer
+          title: Pages
+      type: object
+      required:
+      - items
+      - total
+      - page
+      - page_size
+      - pages
+      title: PaginatedResponse[CommentResponse]
+    PaginatedResponse_JournalEventResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/JournalEventResponse'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+        page:
+          type: integer
+          title: Page
+        page_size:
+          type: integer
+          title: Page Size
+        pages:
+          type: integer
+          title: Pages
+      type: object
+      required:
+      - items
+      - total
+      - page
+      - page_size
+      - pages
+      title: PaginatedResponse[JournalEventResponse]
+    PaginatedResponse_ResidentResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/ResidentResponse'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+        page:
+          type: integer
+          title: Page
+        page_size:
+          type: integer
+          title: Page Size
+        pages:
+          type: integer
+          title: Pages
+      type: object
+      required:
+      - items
+      - total
+      - page
+      - page_size
+      - pages
+      title: PaginatedResponse[ResidentResponse]
+    PaginatedResponse_TicketResponse_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/TicketResponse'
+          type: array
+          title: Items
+        total:
+          type: integer
+          title: Total
+        page:
+          type: integer
+          title: Page
+        page_size:
+          type: integer
+          title: Page Size
+        pages:
+          type: integer
+          title: Pages
+      type: object
+      required:
+      - items
+      - total
+      - page
+      - page_size
+      - pages
+      title: PaginatedResponse[TicketResponse]
+    PinSetupRequest:
+      properties:
+        pin:
+          type: string
+          title: Pin
+      type: object
+      required:
+      - pin
+      title: PinSetupRequest
+    PinVerifyRequest:
+      properties:
+        pin:
+          type: string
+          title: Pin
+      type: object
+      required:
+      - pin
+      title: PinVerifyRequest
+    PollAnswerSubmission:
+      properties:
+        question_id:
+          type: integer
+          title: Question Id
+        selected_option_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Selected Option Id
+        selected_option_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Selected Option Ids
+        text_answer:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Text Answer
+      type: object
+      required:
+      - question_id
+      title: PollAnswerSubmission
+    PollCardResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        author:
+          $ref: '#/components/schemas/PostAuthor'
+        status:
+          $ref: '#/components/schemas/PollStatus'
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        deadline:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deadline
+        deadline_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deadline Text
+        estimated_time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Estimated Time
+        questions_count:
+          type: integer
+          title: Questions Count
+        participants_count:
+          type: integer
+          title: Participants Count
+        is_completed:
+          type: boolean
+          title: Is Completed
+      type: object
+      required:
+      - id
+      - author
+      - status
+      - title
+      - description
+      - created_at
+      - questions_count
+      - participants_count
+      - is_completed
+      title: PollCardResponse
+    PollCreate:
+      properties:
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        deadline_text:
+          type: string
+          title: Deadline Text
+          default: До 31 октября
+        estimated_time:
+          type: string
+          title: Estimated Time
+          default: ~3 мин
+        protocol_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Protocol Number
+        questions:
+          items:
+            $ref: '#/components/schemas/PollQuestionCreate'
+          type: array
+          title: Questions
+      type: object
+      required:
+      - title
+      - description
+      - questions
+      title: PollCreate
+    PollDetailResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        author:
+          $ref: '#/components/schemas/PostAuthor'
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
+        status:
+          $ref: '#/components/schemas/PollStatus'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        deadline:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deadline
+        deadline_text:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Deadline Text
+        estimated_time:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Estimated Time
+        protocol_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Protocol Number
+        total_questions:
+          type: integer
+          title: Total Questions
+        is_completed_by_me:
+          type: boolean
+          title: Is Completed By Me
+        questions:
+          items:
+            $ref: '#/components/schemas/PollQuestionResponse'
+          type: array
+          title: Questions
+          default: []
+      type: object
+      required:
+      - id
+      - author
+      - title
+      - description
+      - status
+      - created_at
+      - total_questions
+      - is_completed_by_me
+      title: PollDetailResponse
+    PollOptionCreate:
+      properties:
+        option_text:
+          type: string
+          title: Option Text
+        subtext:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtext
+      type: object
+      required:
+      - option_text
+      title: PollOptionCreate
+    PollOptionResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        order_num:
+          type: integer
+          title: Order Num
+        option_text:
+          type: string
+          title: Option Text
+        subtext:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtext
+      type: object
+      required:
+      - id
+      - order_num
+      - option_text
+      title: PollOptionResponse
+    PollOptionResult:
+      properties:
+        id:
+          type: integer
+          title: Id
+        option_text:
+          type: string
+          title: Option Text
+        votes:
+          type: integer
+          title: Votes
+        percent:
+          type: number
+          title: Percent
+      type: object
+      required:
+      - id
+      - option_text
+      - votes
+      - percent
+      title: PollOptionResult
+    PollQuestionCreate:
+      properties:
+        question_text:
+          type: string
+          title: Question Text
+        subtext:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtext
+        question_type:
+          $ref: '#/components/schemas/PollQuestionType'
+          default: single_choice
+        options:
+          items:
+            $ref: '#/components/schemas/PollOptionCreate'
+          type: array
+          title: Options
+          default: []
+      type: object
+      required:
+      - question_text
+      title: PollQuestionCreate
+    PollQuestionResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        order_num:
+          type: integer
+          title: Order Num
+        question_text:
+          type: string
+          title: Question Text
+        subtext:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtext
+        question_type:
+          $ref: '#/components/schemas/PollQuestionType'
+        image_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Url
+        options:
+          items:
+            $ref: '#/components/schemas/PollOptionResponse'
+          type: array
+          title: Options
+          default: []
+      type: object
+      required:
+      - id
+      - order_num
+      - question_text
+      - question_type
+      title: PollQuestionResponse
+    PollQuestionResult:
+      properties:
+        id:
+          type: integer
+          title: Id
+        question_text:
+          type: string
+          title: Question Text
+        question_type:
+          $ref: '#/components/schemas/PollQuestionType'
+        total_answers:
+          type: integer
+          title: Total Answers
+        options:
+          items:
+            $ref: '#/components/schemas/PollOptionResult'
+          type: array
+          title: Options
+          default: []
+        text_answers:
+          items:
+            type: string
+          type: array
+          title: Text Answers
+          default: []
+      type: object
+      required:
+      - id
+      - question_text
+      - question_type
+      - total_answers
+      title: PollQuestionResult
+    PollQuestionType:
+      type: string
+      enum:
+      - single_choice
+      - multiple_choice
+      - text
+      title: PollQuestionType
+    PollResultsResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        status:
+          $ref: '#/components/schemas/PollStatus'
+        total_participants:
+          type: integer
+          title: Total Participants
+        questions:
+          items:
+            $ref: '#/components/schemas/PollQuestionResult'
+          type: array
+          title: Questions
+          default: []
+      type: object
+      required:
+      - id
+      - title
+      - description
+      - status
+      - total_participants
+      title: PollResultsResponse
+    PollStatus:
+      type: string
+      enum:
+      - draft
+      - active
+      - completed
+      - archived
+      title: PollStatus
+    PollSubmitRequest:
+      properties:
+        answers:
+          items:
+            $ref: '#/components/schemas/PollAnswerSubmission'
+          type: array
+          title: Answers
+      type: object
+      required:
+      - answers
+      title: PollSubmitRequest
+    PostAuthor:
+      properties:
+        name:
+          type: string
+          title: Name
+        role:
+          $ref: '#/components/schemas/UserRole'
+        avatar_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Avatar Url
+      type: object
+      required:
+      - name
+      - role
+      title: PostAuthor
+    PostType:
+      type: string
+      enum:
+      - announcement
+      - report
+      - info
+      - emergency
+      title: PostType
+    ProviderCategory:
+      type: string
+      enum:
+      - heating
+      - water
+      - electricity
+      - internet
+      - intercom
+      - municipal
+      title: ProviderCategory
+    ReactionCreate:
+      properties:
+        reaction_type:
+          $ref: '#/components/schemas/ReactionType'
+      type: object
+      required:
+      - reaction_type
+      title: ReactionCreate
+    ReactionToggleResponse:
+      properties:
+        post_id:
+          type: integer
+          title: Post Id
+        likes:
+          type: integer
+          title: Likes
+        dislikes:
+          type: integer
+          title: Dislikes
+        my_reaction:
+          anyOf:
+          - $ref: '#/components/schemas/ReactionType'
+          - type: 'null'
+      type: object
+      required:
+      - post_id
+      - likes
+      - dislikes
+      title: ReactionToggleResponse
+    ReactionType:
+      type: string
+      enum:
+      - like
+      - dislike
+      title: ReactionType
+    RecentActivityItem:
+      properties:
+        type:
+          $ref: '#/components/schemas/ActivityType'
+        house_address:
+          type: string
+          title: House Address
+        title:
+          type: string
+          title: Title
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - type
+      - house_address
+      - title
+      - created_at
+      title: RecentActivityItem
+    RecipientItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        code:
+          type: string
+          title: Code
+        short_name:
+          type: string
+          title: Short Name
+        full_name:
+          type: string
+          title: Full Name
+        category:
+          type: string
+          title: Category
+        icon:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Icon
+      type: object
+      required:
+      - id
+      - code
+      - short_name
+      - full_name
+      - category
+      title: RecipientItem
+    RefreshTokenRequest:
+      properties:
+        refreshToken:
+          type: string
+          title: Refreshtoken
+      type: object
+      required:
+      - refreshToken
+      title: RefreshTokenRequest
+    ResidentResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        max_user_id:
+          type: integer
+          title: Max User Id
+        full_name:
+          type: string
+          title: Full Name
+        role:
+          $ref: '#/components/schemas/UserRole'
+        house_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Address
+        apartment_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Apartment Number
+        personal_account:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Personal Account
+        registered_at:
+          type: string
+          format: date-time
+          title: Registered At
+        last_active_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Active At
+      type: object
+      required:
+      - id
+      - max_user_id
+      - full_name
+      - role
+      - registered_at
+      title: ResidentResponse
+    ResidentUpdateRequest:
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+        house_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: House Id
+        apartment_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Apartment Id
+      type: object
+      required:
+      - role
+      title: ResidentUpdateRequest
+    StatusResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+      type: object
+      required:
+      - status
+      title: StatusResponse
+    TestNotificationRequest:
+      properties:
+        message:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Message
+      type: object
+      title: TestNotificationRequest
+    TicketAttachmentResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        url:
+          type: string
+          title: Url
+        filename:
+          type: string
+          title: Filename
+        size:
+          type: integer
+          title: Size
+        mime_type:
+          type: string
+          title: Mime Type
+      type: object
+      required:
+      - id
+      - url
+      - filename
+      - size
+      - mime_type
+      title: TicketAttachmentResponse
+    TicketCreate:
+      properties:
+        topic_code:
+          type: string
+          title: Topic Code
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        recipient_codes:
+          items:
+            type: string
+          type: array
+          title: Recipient Codes
+          default: []
+        is_public_in_feed:
+          type: boolean
+          title: Is Public In Feed
+          default: true
+        attachment_ids:
+          items:
+            type: integer
+          type: array
+          title: Attachment Ids
+          default: []
+      type: object
+      required:
+      - topic_code
+      - title
+      - description
+      title: TicketCreate
+    TicketPriority:
+      type: string
+      enum:
+      - low
+      - medium
+      - high
+      - critical
+      title: TicketPriority
+    TicketReplyCreate:
+      properties:
+        content:
+          type: string
+          title: Content
+        new_status:
+          anyOf:
+          - $ref: '#/components/schemas/TicketStatus'
+          - type: 'null'
+      type: object
+      required:
+      - content
+      title: TicketReplyCreate
+    TicketReplyResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        ticket_id:
+          type: integer
+          title: Ticket Id
+        author_id:
+          type: integer
+          title: Author Id
+        author_name:
+          type: string
+          title: Author Name
+        author_role:
+          type: string
+          title: Author Role
+        content:
+          type: string
+          title: Content
+        new_status:
+          anyOf:
+          - $ref: '#/components/schemas/TicketStatus'
+          - type: 'null'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - ticket_id
+      - author_id
+      - author_name
+      - author_role
+      - content
+      - created_at
+      title: TicketReplyResponse
+    TicketResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        code:
+          type: string
+          title: Code
+        category:
+          type: string
+          title: Category
+        topic_code:
+          type: string
+          title: Topic Code
+        topic_title:
+          type: string
+          title: Topic Title
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        priority:
+          $ref: '#/components/schemas/TicketPriority'
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        resolved_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Resolved At
+        is_my:
+          type: boolean
+          title: Is My
+        votes_count:
+          type: integer
+          title: Votes Count
+        is_voted:
+          type: boolean
+          title: Is Voted
+        recipients:
+          items:
+            $ref: '#/components/schemas/RecipientItem'
+          type: array
+          title: Recipients
+          default: []
+        house_address:
+          type: string
+          title: House Address
+        author_full_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Author Full Name
+        attachments:
+          items:
+            $ref: '#/components/schemas/TicketAttachmentResponse'
+          type: array
+          title: Attachments
+          default: []
+        replies:
+          items:
+            $ref: '#/components/schemas/TicketReplyResponse'
+          type: array
+          title: Replies
+          default: []
+      type: object
+      required:
+      - id
+      - code
+      - category
+      - topic_code
+      - topic_title
+      - title
+      - description
+      - status
+      - priority
+      - created_at
+      - is_my
+      - votes_count
+      - is_voted
+      - house_address
+      title: TicketResponse
+    TicketStatus:
+      type: string
+      enum:
+      - active
+      - in_progress
+      - completed
+      - rejected
+      title: TicketStatus
+    TicketStatusUpdateRequest:
+      properties:
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+        comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Comment
+      type: object
+      required:
+      - status
+      title: TicketStatusUpdateRequest
+    TicketSupportResponse:
+      properties:
+        ticket_id:
+          type: integer
+          title: Ticket Id
+        votes_count:
+          type: integer
+          title: Votes Count
+        is_supported_by_me:
+          type: boolean
+          title: Is Supported By Me
+      type: object
+      required:
+      - ticket_id
+      - votes_count
+      - is_supported_by_me
+      title: TicketSupportResponse
+    TicketUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+      type: object
+      title: TicketUpdate
+    TicketsByStatus:
+      properties:
+        active:
+          type: integer
+          title: Active
+          default: 0
+        in_progress:
+          type: integer
+          title: In Progress
+          default: 0
+        completed:
+          type: integer
+          title: Completed
+          default: 0
+        rejected:
+          type: integer
+          title: Rejected
+          default: 0
+      type: object
+      title: TicketsByStatus
+    TopicDetail:
+      properties:
+        id:
+          type: integer
+          title: Id
+        code:
+          type: string
+          title: Code
+        section_num:
+          type: integer
+          title: Section Num
+        section_title:
+          type: string
+          title: Section Title
+        title:
+          type: string
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        recipients:
+          items:
+            $ref: '#/components/schemas/RecipientItem'
+          type: array
+          title: Recipients
+          default: []
+      type: object
+      required:
+      - id
+      - code
+      - section_num
+      - section_title
+      - title
+      title: TopicDetail
+    TopicSearchItem:
+      properties:
+        id:
+          type: integer
+          title: Id
+        code:
+          type: string
+          title: Code
+        section_num:
+          type: integer
+          title: Section Num
+        section_title:
+          type: string
+          title: Section Title
+        title:
+          type: string
+          title: Title
+        full_title:
+          type: string
+          title: Full Title
+      type: object
+      required:
+      - id
+      - code
+      - section_num
+      - section_title
+      - title
+      - full_title
+      title: TopicSearchItem
+    UkDashboardResponse:
+      properties:
+        total_houses:
+          type: integer
+          title: Total Houses
+        total_apartments:
+          type: integer
+          title: Total Apartments
+        total_residents_in_app:
+          type: integer
+          title: Total Residents In App
+        active_tickets:
+          type: integer
+          title: Active Tickets
+        active_polls:
+          type: integer
+          title: Active Polls
+        new_posts_today:
+          type: integer
+          title: New Posts Today
+        tickets_by_status:
+          $ref: '#/components/schemas/TicketsByStatus'
+        recent_activity:
+          items:
+            $ref: '#/components/schemas/RecentActivityItem'
+          type: array
+          title: Recent Activity
+      type: object
+      required:
+      - total_houses
+      - total_apartments
+      - total_residents_in_app
+      - active_tickets
+      - active_polls
+      - new_posts_today
+      - tickets_by_status
+      - recent_activity
+      title: UkDashboardResponse
+    UkDocumentCreate:
+      properties:
+        house_id:
+          type: integer
+          title: House Id
+        title:
+          type: string
+          title: Title
+        file_id:
+          type: integer
+          title: File Id
+      type: object
+      required:
+      - house_id
+      - title
+      - file_id
+      title: UkDocumentCreate
+    UkDocumentResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        house_id:
+          type: integer
+          title: House Id
+        house_address:
+          type: string
+          title: House Address
+        title:
+          type: string
+          title: Title
+        file_url:
+          type: string
+          title: File Url
+        size:
+          type: integer
+          title: Size
+        mime_type:
+          type: string
+          title: Mime Type
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - house_id
+      - house_address
+      - title
+      - file_url
+      - size
+      - mime_type
+      - created_at
+      title: UkDocumentResponse
+    UkFeedPostCreate:
+      properties:
+        house_id:
+          type: integer
+          title: House Id
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        content:
+          type: string
+          title: Content
+        post_type:
+          $ref: '#/components/schemas/PostType'
+          default: announcement
+        image_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Image Id
+        image_label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Image Label
+      type: object
+      required:
+      - house_id
+      - content
+      title: UkFeedPostCreate
+    UkPollCreate:
+      properties:
+        house_id:
+          type: integer
+          title: House Id
+        title:
+          type: string
+          title: Title
+        description:
+          type: string
+          title: Description
+        deadline:
+          type: string
+          format: date-time
+          title: Deadline
+        questions:
+          items:
+            $ref: '#/components/schemas/UkPollQuestionCreate'
+          type: array
+          title: Questions
+      type: object
+      required:
+      - house_id
+      - title
+      - description
+      - deadline
+      - questions
+      title: UkPollCreate
+    UkPollOptionCreate:
+      properties:
+        option_text:
+          type: string
+          title: Option Text
+        subtext:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtext
+      type: object
+      required:
+      - option_text
+      title: UkPollOptionCreate
+    UkPollQuestionCreate:
+      properties:
+        question_text:
+          type: string
+          title: Question Text
+        subtext:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Subtext
+        question_type:
+          $ref: '#/components/schemas/PollQuestionType'
+        options:
+          items:
+            $ref: '#/components/schemas/UkPollOptionCreate'
+          type: array
+          title: Options
+          default: []
+      type: object
+      required:
+      - question_text
+      - question_type
+      title: UkPollQuestionCreate
+    UkPollStatusUpdate:
+      properties:
+        status:
+          $ref: '#/components/schemas/PollStatus'
+      type: object
+      required:
+      - status
+      title: UkPollStatusUpdate
+    UkPollUpdate:
+      properties:
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        deadline:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Deadline
+      type: object
+      title: UkPollUpdate
+    UserProfileResponse:
+      properties:
+        id:
+          type: integer
+          title: Id
+        max_user_id:
+          type: integer
+          title: Max User Id
+        full_name:
+          type: string
+          title: Full Name
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+        snils:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Snils
+        role:
+          $ref: '#/components/schemas/UserRole'
+        house_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: House Id
+        house_address:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: House Address
+        apartment_number:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Apartment Number
+        personal_account:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Personal Account
+        debt_amount:
+          type: number
+          title: Debt Amount
+          default: 0.0
+        is_debt_free:
+          type: boolean
+          title: Is Debt Free
+          default: true
+        notifications_enabled:
+          type: boolean
+          title: Notifications Enabled
+          default: true
+        esiaLinked:
+          type: boolean
+          title: Esialinked
+          default: false
+        esiaLinkedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Esialinkedat
+        esiaLastSyncAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Esialastsyncat
+        esiaSyncStatus:
+          $ref: '#/components/schemas/EsiaSyncStatus'
+          default: never
+        esiaTokenExpiresAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Esiatokenexpiresat
+      type: object
+      required:
+      - id
+      - max_user_id
+      - full_name
+      - role
+      title: UserProfileResponse
+    UserRole:
+      type: string
+      enum:
+      - resident
+      - chairman
+      - uk_staff
+      title: UserRole
+    UserUpdateRequest:
+      properties:
+        full_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Full Name
+        email:
+          anyOf:
+          - type: string
+            format: email
+          - type: 'null'
+          title: Email
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Phone
+        notifications_enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Notifications Enabled
+      type: object
+      title: UserUpdateRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    WebhookSetupRequest:
+      properties:
+        webhook_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Webhook Url
+      type: object
+      title: WebhookSetupRequest
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer

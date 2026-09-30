@@ -1,0 +1,378 @@
+# DATA-API 1.0
+# Спецификация обязательных HTTP-проверок сервиса «Мой Дом»
+# Проект оценки решений хакатона 2026
+
+schemaVersion: "1.0"
+
+solution:
+  name: "Мой Дом — Единая цифровая среда управления МКД"
+  teamId: "t739"
+
+api:
+  baseUrl: "https://obsuzhdalych.ru"
+  openapi: "./openapi.yaml"
+  defaultHeaders:
+    Accept: "application/json"
+
+checks:
+  - id: "health-check"
+    name: "Проверка работоспособности сервиса и БД"
+    description: "Базовая проверка доступности бэкенда и состояния подключения к PostgreSQL"
+    method: "GET"
+    path: "/health"
+    role: "public"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "status"
+        - "version"
+        - "database"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "bot-info"
+    name: "Информация о боте платформы MAX"
+    description: "Проверка конфигурации и статуса интеграции MAX Bot API"
+    method: "GET"
+    path: "/api/v1/bot/info"
+    role: "public"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "bot_name"
+        - "is_configured"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "get-topics"
+    name: "Классификатор тем обращений ЖКХ"
+    description: "Получение справочника категорий проблем для подачи обращений"
+    method: "GET"
+    path: "/api/v1/topics"
+    role: "public"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "auth-resident"
+    name: "Авторизация жителя через ЕСИА (Mock)"
+    description: "Аутентификация жителя Смирнова А.С. и получение JWT access-токена"
+    method: "POST"
+    path: "/api/v1/auth/esia-login"
+    role: "public"
+    request:
+      headers:
+        Content-Type: "application/json"
+      body:
+        identifier: "123-456-789 01"
+        password: "demo_password"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "user"
+        - "tokens"
+    timeoutMs: 5000
+    repeatable: true
+    extract:
+      residentToken: "$.tokens.accessToken"
+      residentUserId: "$.user.id"
+
+  - id: "get-user-profile"
+    name: "Получение профиля жителя"
+    description: "Просмотр данных жителя, адреса проживания и статуса привязки"
+    method: "GET"
+    path: "/api/v1/users/me"
+    role: "resident"
+    dependsOn:
+      - "auth-resident"
+    request:
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "full_name"
+        - "role"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "get-house-info"
+    name: "Паспорт многоквартирного дома"
+    description: "Просмотр характеристик МКД, этажности, управляющей компании и телефонов служб"
+    method: "GET"
+    path: "/api/v1/houses/my"
+    role: "resident"
+    dependsOn:
+      - "auth-resident"
+    request:
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "address"
+        - "uk_name"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "create-ticket"
+    name: "Подача обращения в управляющую компанию"
+    description: "Создание заявки по теме ЖКХ с фиксацией проблемы"
+    method: "POST"
+    path: "/api/v1/tickets"
+    role: "resident"
+    dependsOn:
+      - "auth-resident"
+    request:
+      headers:
+        Authorization: "Bearer ${residentToken}"
+        Content-Type: "application/json"
+      body:
+        topic_id: 1
+        title: "Тестовая проверка API Judge"
+        description: "Временное обращение, созданное в рамках автоматизированной технической проверки DATA-API"
+        is_public_in_feed: false
+    expected:
+      statusCodes: [200, 201]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "code"
+        - "title"
+        - "status"
+    timeoutMs: 5000
+    repeatable: false
+    extract:
+      createdTicketId: "$.id"
+
+  - id: "read-ticket"
+    name: "Просмотр карточки обращения"
+    description: "Получение детальной информации о созданном обращении по его ID"
+    method: "GET"
+    path: "/api/v1/tickets/{ticket_id}"
+    role: "resident"
+    dependsOn:
+      - "create-ticket"
+    request:
+      path:
+        ticket_id: "${createdTicketId}"
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "id"
+        - "code"
+        - "title"
+        - "status"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "auth-chairman"
+    name: "Авторизация председателя совета МКД"
+    description: "Вход под учетной записью председателя Смирновой Е.В."
+    method: "POST"
+    path: "/api/v1/auth/esia-login"
+    role: "public"
+    request:
+      headers:
+        Content-Type: "application/json"
+      body:
+        identifier: "987-654-321 00"
+        password: "demo_password"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "user"
+        - "tokens"
+    timeoutMs: 5000
+    repeatable: true
+    extract:
+      chairmanToken: "$.tokens.accessToken"
+
+  - id: "support-ticket"
+    name: "Подтверждение проблемы «У меня тоже»"
+    description: "Голосование соседа/председателя в поддержку созданной заявки"
+    method: "POST"
+    path: "/api/v1/tickets/{ticket_id}/support"
+    role: "chairman"
+    dependsOn:
+      - "create-ticket"
+      - "auth-chairman"
+    request:
+      path:
+        ticket_id: "${createdTicketId}"
+      headers:
+        Authorization: "Bearer ${chairmanToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "ticket_id"
+        - "votes_count"
+        - "is_supported_by_me"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "get-feed"
+    name: "Лента новостей дома"
+    description: "Просмотр общедомовой ленты публикаций и объявлений"
+    method: "GET"
+    path: "/api/v1/feed"
+    role: "resident"
+    dependsOn:
+      - "auth-resident"
+    request:
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "get-votes"
+    name: "Реестр опросов и голосований"
+    description: "Получение списка активных голосований по дому"
+    method: "GET"
+    path: "/api/v1/votes"
+    role: "resident"
+    dependsOn:
+      - "auth-resident"
+    request:
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "get-notifications"
+    name: "Центр уведомлений жителя"
+    description: "Получение персональных уведомлений о статусах заявок и событиях"
+    method: "GET"
+    path: "/api/v1/notifications"
+    role: "resident"
+    dependsOn:
+      - "auth-resident"
+    request:
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "auth-uk"
+    name: "Авторизация диспетчера УК"
+    description: "Вход сотрудника управляющей организации Демьянова И. в АРМ УК"
+    method: "POST"
+    path: "/api/v1/auth/esia-login"
+    role: "public"
+    request:
+      headers:
+        Content-Type: "application/json"
+      body:
+        identifier: "111-222-333 44"
+        password: "demo_password"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "user"
+        - "tokens"
+    timeoutMs: 5000
+    repeatable: true
+    extract:
+      ukToken: "$.tokens.accessToken"
+
+  - id: "uk-dashboard"
+    name: "Сводный дашборд УК"
+    description: "Просмотр аналитики по домам, заявкам и инцидентам"
+    method: "GET"
+    path: "/api/v1/uk/dashboard"
+    role: "uk"
+    dependsOn:
+      - "auth-uk"
+    request:
+      headers:
+        Authorization: "Bearer ${ukToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "total_houses"
+        - "total_apartments"
+        - "active_tickets"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "uk-houses"
+    name: "Реестр домов под управлением УК"
+    description: "Получение списка объектов жилого фонда УК"
+    method: "GET"
+    path: "/api/v1/uk/houses"
+    role: "uk"
+    dependsOn:
+      - "auth-uk"
+    request:
+      headers:
+        Authorization: "Bearer ${ukToken}"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+    timeoutMs: 5000
+    repeatable: true
+
+  - id: "uk-update-ticket-status"
+    name: "Смена статуса заявки диспетчером"
+    description: "Перевод заявки в работу с направлением push-уведомления жителю"
+    method: "PATCH"
+    path: "/api/v1/uk/tickets/{ticket_id}/status"
+    role: "uk"
+    dependsOn:
+      - "create-ticket"
+      - "auth-uk"
+    request:
+      path:
+        ticket_id: "${createdTicketId}"
+      headers:
+        Authorization: "Bearer ${ukToken}"
+        Content-Type: "application/json"
+      body:
+        status: "in_progress"
+        comment: "Принято диспетчерской службой, мастер назначен"
+    expected:
+      statusCodes: [200]
+      contentType: "application/json"
+      requiredFields:
+        - "status"
+    timeoutMs: 5000
+    repeatable: false
+
+cleanup:
+  - id: "delete-test-ticket"
+    method: "DELETE"
+    path: "/api/v1/tickets/{ticket_id}"
+    role: "resident"
+    request:
+      path:
+        ticket_id: "${createdTicketId}"
+      headers:
+        Authorization: "Bearer ${residentToken}"
+    expected:
+      statusCodes: [200, 204, 404]
+    timeoutMs: 5000
