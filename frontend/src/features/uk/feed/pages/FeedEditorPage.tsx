@@ -6,7 +6,6 @@ import { useToast } from '../../../../shared/hooks/useToast';
 
 interface NewsTemplate {
   name: string;
-  category: 'announcement' | 'report' | 'emergency';
   title: string;
   content: string;
 }
@@ -14,19 +13,16 @@ interface NewsTemplate {
 const TEMPLATES: NewsTemplate[] = [
   {
     name: 'Плановая опрессовка и промывка сетей',
-    category: 'announcement',
     title: 'Плановая гидравлическая опрессовка и подготовка к отопительному сезону',
     content: 'Уважаемые жители!\n\nВ период с 15 по 18 октября управляющая компания совместно с ресурсоснабжающей организацией проводит плановые гидравлические испытания тепловых сетей дома.\n\nПросим обратить внимание на радиаторы отопления и при обнаружении подтеков незамедлительно обращаться в аварийно-диспетчерскую службу по круглосуточному номеру +7 (843) 236-00-00.',
   },
   {
     name: 'Отчет: замена светильников на LED',
-    category: 'report',
     title: 'Отчет: завершена модернизация освещения в подъездах и входных группах',
     content: 'Управляющая компания отчитывается о выполненных работах:\n\nВо всех 4 подъездах дома произведена плановая замена устаревших люминесцентных ламп на энергоэффективные светодиодные светильники с оптико-акустическими датчиками движения.\n\nЭто позволит снизить общедомовой расход электроэнергии более чем на 35%. Гарантия на оборудование составляет 3 года.',
   },
   {
-    name: 'Срочные аварийно-восстановительные работы',
-    category: 'emergency',
+    name: 'Аварийно-восстановительные работы',
     title: 'Аварийное перекрытие стояка ХВС в 1 подъезде',
     content: 'Внимание жителей 1 подъезда!\n\nВ связи с устранением локального свища на магистральном трубопроводе холодного водоснабжения временно приостановлена подача воды с 11:30 до 14:00.\n\nАварийная бригада уже работает на объекте. Приносим извинения за временные неудобства.',
   },
@@ -41,7 +37,6 @@ export const FeedEditorPage: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [postType, setPostType] = useState<'announcement' | 'report' | 'emergency'>('announcement');
   const [houseId, setHouseId] = useState(storedHouseId);
 
   const { data: houses = [] } = useQuery({
@@ -57,7 +52,7 @@ export const FeedEditorPage: React.FC = () => {
         house_id: houseId,
         title: title.trim() || undefined,
         content: content.trim(),
-        post_type: postType,
+        post_type: 'uk',
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
@@ -76,7 +71,6 @@ export const FeedEditorPage: React.FC = () => {
   const applyTemplate = (tpl: NewsTemplate) => {
     setTitle(tpl.title);
     setContent(tpl.content);
-    setPostType(tpl.category);
     showToast(`Применен шаблон «${tpl.name}»`, 'info');
   };
 
@@ -97,7 +91,7 @@ export const FeedEditorPage: React.FC = () => {
             Публикация в ленту МКД
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Официальные уведомления жителей, фотоотчеты ремонтов и аварийные оповещения
+            Публикация записей и сообщений для собственников дома
           </p>
         </div>
 
@@ -130,11 +124,6 @@ export const FeedEditorPage: React.FC = () => {
               className="p-3.5 rounded-xl bg-white hover:bg-blue-600 hover:text-white border border-slate-200 text-left transition-all group shadow-xs cursor-pointer flex flex-col justify-between"
             >
               <div>
-                <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1 ${
-                  tpl.category === 'emergency' ? 'text-rose-600 group-hover:text-rose-100' : 'text-blue-600 group-hover:text-blue-100'
-                }`}>
-                  {tpl.category === 'emergency' ? 'Авария' : tpl.category === 'report' ? 'Отчет' : 'Объявление'}
-                </span>
                 <span className="text-xs font-bold text-slate-900 group-hover:text-white block line-clamp-2">
                   {tpl.name}
                 </span>
@@ -153,58 +142,17 @@ export const FeedEditorPage: React.FC = () => {
             Параметры сообщения
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-700">Целевой дом</label>
-              <select
-                value={houseId}
-                onChange={(e) => setHouseId(Number(e.target.value))}
-                className="h-10 px-3 rounded-xl border border-slate-200 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {houses.map((house) => (
-                  <option key={house.id} value={house.id}>{house.address}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-slate-700">Тип публикации</label>
-              <div className="grid grid-cols-3 gap-1">
-                <button
-                  type="button"
-                  onClick={() => setPostType('announcement')}
-                  className={`h-10 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                    postType === 'announcement'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Объявление
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPostType('report')}
-                  className={`h-10 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                    postType === 'report'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Отчет
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPostType('emergency')}
-                  className={`h-10 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                    postType === 'emergency'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Авария
-                </button>
-              </div>
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-slate-700">Целевой дом</label>
+            <select
+              value={houseId}
+              onChange={(e) => setHouseId(Number(e.target.value))}
+              className="h-10 px-3 rounded-xl border border-slate-200 text-xs font-semibold bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {houses.map((house) => (
+                <option key={house.id} value={house.id}>{house.address}</option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -273,13 +221,6 @@ export const FeedEditorPage: React.FC = () => {
                   </span>
                 </div>
               </div>
-
-              {postType === 'emergency' && (
-                <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-bold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
-                  <span>СРОЧНОЕ АВАРИЙНОЕ ОПОВЕЩЕНИЕ</span>
-                </div>
-              )}
 
               {title && (
                 <h4 className="text-sm font-bold text-slate-900 leading-snug">

@@ -3,13 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../../shared/api/client';
 import { useToast } from '../../../shared/hooks/useToast';
 
-const POST_TYPES = [
-  { id: 'announcement', label: 'Объявление', icon: 'campaign', color: 'bg-blue-50 text-blue-600 border-blue-100' },
-  { id: 'info', label: 'Информация', icon: 'info', color: 'bg-slate-50 text-slate-600 border-slate-200' },
-  { id: 'emergency', label: 'Авария / Срочно', icon: 'warning', color: 'bg-red-50 text-red-600 border-red-100' },
-  { id: 'report', label: 'Отчёт', icon: 'receipt_long', color: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
-];
-
 export const ChairmanCreatePostPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -17,7 +10,6 @@ export const ChairmanCreatePostPage: React.FC = () => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [postType, setPostType] = useState('announcement');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +48,7 @@ export const ChairmanCreatePostPage: React.FC = () => {
       await apiClient.post('/feed', {
         title: title.trim() || null,
         content: content.trim(),
-        post_type: postType,
+        post_type: 'announcement',
         image_ids: imageIds,
         images: [],
         image_label: null,
@@ -108,35 +100,6 @@ export const ChairmanCreatePostPage: React.FC = () => {
           <p className="text-xs text-slate-500">Публикация появится в ленте дома для всех собственников</p>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-[13px] font-bold text-slate-700 px-1">Тип публикации</span>
-          <div className="grid grid-cols-2 gap-2">
-            {POST_TYPES.map((type) => (
-              <button
-                key={type.id}
-                type="button"
-                onClick={() => setPostType(type.id)}
-                className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 transition-all cursor-pointer active:scale-[0.98] ${
-                  postType === type.id
-                    ? 'border-primary bg-sky-50 shadow-xs'
-                    : 'border-slate-200/80 bg-white hover:border-slate-300'
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${type.color}`}>
-                  <span className="material-symbols-outlined text-[18px]">{type.icon}</span>
-                </div>
-                <span
-                  className={`text-[13px] font-semibold ${
-                    postType === type.id ? 'text-primary' : 'text-slate-700'
-                  }`}
-                >
-                  {type.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] font-bold text-slate-700 px-1">
             Заголовок (необязательно)
@@ -145,7 +108,7 @@ export const ChairmanCreatePostPage: React.FC = () => {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Например: Плановое отключение воды"
+            placeholder="Например: Плановые работы или объявление"
             maxLength={150}
             className="w-full h-11 px-4 bg-white rounded-2xl border border-slate-200/80 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-primary shadow-xs transition-colors"
           />
@@ -210,13 +173,7 @@ export const ChairmanCreatePostPage: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[13px] font-bold text-slate-900">Председатель ТСЖ</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-400">Только что</span>
-                    <span className="w-1 h-1 rounded-full bg-slate-300" />
-                    <span className="text-[10px] font-semibold text-primary">
-                      {POST_TYPES.find((t) => t.id === postType)?.label}
-                    </span>
-                  </div>
+                  <div className="text-[10px] text-slate-400">Только что</div>
                 </div>
               </div>
               {title && <p className="text-[15px] font-bold text-slate-900 mb-1">{title}</p>}
