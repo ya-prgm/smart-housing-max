@@ -20,6 +20,7 @@ from app.schemas.feed import (
     PostAuthor,
 )
 from app.schemas.common import PaginatedResponse, StatusResponse
+from app.bot.notifications import notify_new_feed_post
 
 router = APIRouter()
 
@@ -206,6 +207,16 @@ async def create_feed_post(
         views_count=1,
     )
     db.add(post)
+    await db.flush()
+
+    await notify_new_feed_post(
+        db=db,
+        house_id=house_id,
+        post_title=post.title,
+        author=current_user,
+        content=post.content,
+        post_id=post.id,
+    )
     await db.commit()
     return StatusResponse(status="ok", message="Пост опубликован")
 

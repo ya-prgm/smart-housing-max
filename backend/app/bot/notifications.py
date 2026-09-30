@@ -131,11 +131,9 @@ async def notify_new_feed_post(
 ) -> None:
     try:
         residents = await get_house_residents(db, house_id)
-        if not residents:
-            return
-
-        badge = "Председатель" if author.role.value == "chairman" else "УК"
-        category = NotificationCategory.CHAIRMAN if author.role.value == "chairman" else NotificationCategory.UK
+        role_val = author.role.value if hasattr(author.role, "value") else str(author.role)
+        badge = "Председатель" if role_val == "chairman" else "УК"
+        category = NotificationCategory.CHAIRMAN if role_val == "chairman" else NotificationCategory.UK
         excerpt = content[:200] + ("..." if len(content) > 200 else "")
 
         db_notifs = [
@@ -149,14 +147,27 @@ async def notify_new_feed_post(
                 is_read=False,
                 action_url=f"/feed/{post_id}" if post_id else "/feed",
             )
-            for r in residents
+            for r in (residents or [])
             if r.id != author.id
         ]
+        # In-app notification for author
+        db_notifs.append(
+            Notification(
+                user_id=author.id,
+                category=NotificationCategory.SYSTEM,
+                author_name="Система «Мой Дом»",
+                author_badge="Система",
+                title=f"Публикация размещена: {post_title}",
+                text="Ваша публикация успешно размещена в ленте дома и разослана жителям.",
+                is_read=False,
+                action_url=f"/feed/{post_id}" if post_id else "/feed",
+            )
+        )
         db.add_all(db_notifs)
         await db.flush()
 
         if bot_client.is_configured:
-            for r in residents:
+            for r in (residents or []):
                 if r.id != author.id and r.max_user_id:
                     await bot_client.notify_new_post(
                         user_id=r.max_user_id,
@@ -184,11 +195,9 @@ async def notify_new_poll_published(
 ) -> None:
     try:
         residents = await get_house_residents(db, house_id)
-        if not residents:
-            return
-
-        badge = "Председатель" if author.role.value == "chairman" else "УК"
-        category = NotificationCategory.CHAIRMAN if author.role.value == "chairman" else NotificationCategory.UK
+        role_val = author.role.value if hasattr(author.role, "value") else str(author.role)
+        badge = "Председатель" if role_val == "chairman" else "УК"
+        category = NotificationCategory.CHAIRMAN if role_val == "chairman" else NotificationCategory.UK
 
         db_notifs = [
             Notification(
@@ -201,14 +210,27 @@ async def notify_new_poll_published(
                 is_read=False,
                 action_url=f"/votes/{poll_id}" if poll_id else "/votes",
             )
-            for r in residents
+            for r in (residents or [])
             if r.id != author.id
         ]
+        # In-app notification for author
+        db_notifs.append(
+            Notification(
+                user_id=author.id,
+                category=NotificationCategory.SYSTEM,
+                author_name="Система «Мой Дом»",
+                author_badge="Система",
+                title=f"Опрос опубликован: {poll_title}",
+                text=f"Опрос успешно опубликован и направлен жителям дома. Срок голосования: {deadline_text}.",
+                is_read=False,
+                action_url=f"/votes/{poll_id}" if poll_id else "/votes",
+            )
+        )
         db.add_all(db_notifs)
         await db.flush()
 
         if bot_client.is_configured:
-            for r in residents:
+            for r in (residents or []):
                 if r.id != author.id and r.max_user_id:
                     await bot_client.notify_new_poll(
                         user_id=r.max_user_id,
@@ -224,3 +246,4 @@ async def notify_new_poll_published(
                 )
     except Exception as exc:
         logger.exception("Error in notify_new_poll_published: %s", exc)
+

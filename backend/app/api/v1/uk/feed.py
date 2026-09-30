@@ -13,6 +13,7 @@ from app.core.constants import JournalAction, JournalEntityType, ReactionType, P
 from app.schemas.uk import UkFeedPostCreate
 from app.schemas.feed import FeedPostResponse, PostAuthor
 from app.schemas.common import StatusResponse
+from app.bot.notifications import notify_new_feed_post
 
 router = APIRouter()
 
@@ -142,6 +143,15 @@ async def create_uk_feed_post(
         house_id=payload.house_id,
         details={"title": payload.title},
     ))
+
+    await notify_new_feed_post(
+        db=db,
+        house_id=payload.house_id,
+        post_title=post.title,
+        author=current_user,
+        content=post.content,
+        post_id=post.id,
+    )
 
     await db.commit()
     return StatusResponse(status="ok", message="Публикация добавлена")
