@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     MAX_BOT_TOKEN: str = ""
+    MAX_BOT_API_URL: str = "https://platform-api2.max.ru"
+    MAX_BOT_NAME: str = "t739_hakaton_max_bot"
     POSTGRES_DB: str = "my_home_database"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "44558833"
@@ -32,7 +34,7 @@ class Settings(BaseSettings):
     ]
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore"

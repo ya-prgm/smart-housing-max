@@ -9,6 +9,7 @@ from app.models.user import User, UserRole
 from app.models.ticket import Ticket, TicketStatus, TicketStatusHistory
 from app.models.audit import AuditLog
 from app.core.constants import JournalAction, JournalEntityType
+from app.bot.notifications import notify_ticket_status_changed
 from app.schemas.ticket import TicketResponse, TicketAttachmentResponse
 from app.schemas.topic import RecipientItem
 from app.schemas.uk import TicketStatusUpdateRequest
@@ -195,7 +196,7 @@ async def update_ticket_status(
     current_user: User = Depends(require_roles(UserRole.UK_STAFF)),
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(Ticket).where(Ticket.id == ticket_id).options(selectinload(Ticket.recipients))
+    stmt = select(Ticket).where(Ticket.id == ticket_id).options(selectinload(Ticket.recipients), selectinload(Ticket.author))
     ticket = (await db.execute(stmt)).scalars().first()
     if not ticket:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
@@ -235,6 +236,14 @@ async def update_ticket_status(
         house_id=ticket.house_id,
         details={"old_status": old_status.value, "new_status": payload.status.value, "comment": payload.comment},
     ))
+
+    await notify_ticket_status_changed(
+        db=db,
+        ticket=ticket,
+        old_status=old_status,
+        new_status=payload.status,
+        comment=payload.comment,
+    )
 
     await db.commit()
     return {"status": "ok"}

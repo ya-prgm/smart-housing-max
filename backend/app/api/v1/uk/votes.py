@@ -7,6 +7,7 @@ from app.models.user import User, UserRole
 from app.models.vote import Poll, PollQuestion, PollOption, PollStatus
 from app.models.audit import AuditLog
 from app.core.constants import JournalAction, JournalEntityType
+from app.bot.notifications import notify_new_poll_published
 from app.schemas.uk import UkPollCreate, UkPollUpdate, UkPollStatusUpdate
 from app.schemas.common import StatusResponse
 
@@ -58,6 +59,15 @@ async def create_uk_poll(
         house_id=payload.house_id,
         details={"title": payload.title},
     ))
+
+    await notify_new_poll_published(
+        db=db,
+        house_id=payload.house_id,
+        poll_title=payload.title,
+        deadline_text=poll.deadline_text,
+        author=current_user,
+        poll_id=poll.id,
+    )
 
     await db.commit()
     return StatusResponse(status="ok", message="Опрос создан")

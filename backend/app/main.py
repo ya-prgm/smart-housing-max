@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 import os
+import asyncio
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI
@@ -9,6 +11,22 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.v1.router import api_router
 from app.schemas.common import HealthResponse
+from app.bot.client import bot_client
+from app.bot.polling import run_bot_polling
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    polling_task = None
+    if bot_client.is_configured:
+        polling_task = asyncio.create_task(run_bot_polling())
+    yield
+    if polling_task:
+        polling_task.cancel()
+        try:
+            await polling_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
@@ -17,6 +35,7 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url=f"{settings.API_V1_STR}/docs",
     redoc_url=f"{settings.API_V1_STR}/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

@@ -5,6 +5,7 @@ from app.models.user import User, UserRole
 from app.core.constants import ReactionType, PostType
 from app.repositories.feed_repo import FeedRepository
 from app.schemas.feed import FeedPostCreate, FeedPostResponse, PostAuthor
+from app.bot.notifications import notify_new_feed_post
 
 
 class FeedService:
@@ -99,6 +100,14 @@ class FeedService:
             image_url=img_url,
             image_label=payload.image_label,
             views_count=1,
+        )
+        await notify_new_feed_post(
+            db=self.db,
+            house_id=house_id,
+            post_title=payload.title,
+            author=author,
+            content=payload.content,
+            post_id=post.id,
         )
         await self.db.commit()
         return post

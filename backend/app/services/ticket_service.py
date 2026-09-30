@@ -13,6 +13,7 @@ from app.core.constants import TicketStatus
 from app.repositories.ticket_repo import TicketRepository
 from app.schemas.ticket import TicketCreate, TicketUpdate, TicketResponse, TicketSupportResponse, TicketAttachmentResponse, TicketReplyCreate, TicketReplyResponse
 from app.schemas.topic import RecipientItem
+from app.bot.notifications import notify_ticket_status_changed, notify_ticket_reply_added
 
 
 class TicketService:
@@ -281,7 +282,7 @@ class TicketService:
     async def add_reply(
         self, ticket_id: int, payload: TicketReplyCreate, current_user: User
     ) -> TicketReplyResponse:
-        stmt = select(Ticket).where(Ticket.id == ticket_id).options(selectinload(Ticket.recipients))
+        stmt = select(Ticket).where(Ticket.id == ticket_id).options(selectinload(Ticket.recipients), selectinload(Ticket.author))
         t = (await self.db.execute(stmt)).scalars().first()
         if not t or t.is_deleted:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Обращение не найдено")
@@ -305,6 +306,7 @@ class TicketService:
                     detail="Обращение адресовано сторонней организации. УК не может отвечать на него."
                 )
 
+        old_status = t.status
         reply = TicketReply(
             ticket_id=ticket_id,
             author_id=current_user.id,
@@ -315,6 +317,11 @@ class TicketService:
 
         if payload.new_status is not None:
             t.status = payload.new_status
+            await notify_ticket_status_changed(
+                self.db, t, old_status, payload.new_status, payload.content
+            )
+
+        await notify_ticket_reply_added(self.db, t, current_user, payload.content)
 
         await self.db.commit()
         await self.db.refresh(reply)

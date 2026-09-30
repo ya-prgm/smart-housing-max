@@ -15,6 +15,7 @@ from app.schemas.vote import (
 )
 from app.schemas.common import StatusResponse
 from app.core.constants import PollQuestionType
+from app.bot.notifications import notify_new_poll_published
 
 router = APIRouter()
 
@@ -66,7 +67,6 @@ async def create_poll(
     current_user: User = Depends(require_roles(UserRole.CHAIRMAN, UserRole.UK_STAFF)),
     db: AsyncSession = Depends(get_db),
 ):
-    """Председатель создаёт новый опрос для жильцов дома."""
     stmt = (
         select(Apartment.house_id)
         .join(UserApartment, UserApartment.apartment_id == Apartment.id)
@@ -109,6 +109,15 @@ async def create_poll(
             )
             db.add(option)
 
+    await notify_new_poll_published(
+        db=db,
+        house_id=house_id,
+        poll_title=payload.title,
+        deadline_text=payload.deadline_text,
+        author=current_user,
+        poll_id=poll.id,
+    )
+
     await db.commit()
     return StatusResponse(status="ok", message="Опрос успешно создан")
 
@@ -119,7 +128,6 @@ async def get_poll_results(
     current_user: User = Depends(require_roles(UserRole.CHAIRMAN, UserRole.UK_STAFF)),
     db: AsyncSession = Depends(get_db),
 ):
-    """Председатель просматривает результаты опроса."""
     stmt = (
         select(Poll)
         .where(Poll.id == poll_id, Poll.is_deleted == False)
